@@ -9,8 +9,8 @@ function add_variable(e) {
   const tr = variables.insertRow();
   tr.classList.add("variableTr")
   var removevar = make_remove_button(tr);
-  var varname = document.createElement("input");
-  var stackframeval = document.createElement("input");
+  var varname = make_variable_length_input("stackFrameVarInput")
+  var stackframeval = make_variable_length_input("stackFrameValueInput")
 
   var td = tr.insertCell();
   td.classList.add()
@@ -33,14 +33,22 @@ function make_remove_button(target) {
 }
 
 function make_parent_marker(elemType) {
-  var frame_parent_input = document.createElement("input");
-  frame_parent_input.className = "frameParentHeader";
+  var frame_parent_input = make_variable_length_input("frameParentHeader")
   marker = document.createElement(elemType)
-  marker.innerHTML = "[Parent = ";
+  marker.innerHTML = " [Parent = ";
   marker.type = "text";
   marker.appendChild(frame_parent_input);
   marker.innerHTML += "]";
   return marker
+}
+
+function make_variable_length_input(className) {
+  let input = document.createElement("input")
+  input.className = className
+  input.addEventListener("keydown", function () {
+    input.style.width = (input.value.length + 1) + "ch"
+  });
+  return input
 }
 
 function add_frame() {
@@ -48,14 +56,13 @@ function add_frame() {
   var removeframe = document.createElement("button");
   var frame_name_label = document.createElement("label");
   var frame_parent_label = document.createElement("label");
-  var frame_name = document.createElement("input");
+  var frame_name = make_variable_length_input("frameHeader")
   var variables = document.createElement("table");
   var variable_button = document.createElement("button");
   var test = document.createElement("div");
   
   frame.className = "stackFrame";
   frame_name_label.className = "frameHeader";
-  frame_name.className = "frameHeader";
   
   test.className = "stackFrameValue";
   
@@ -69,22 +76,23 @@ function add_frame() {
   if (frameCount === 0) {
       frame_name_label.innerHTML = "Global frame";
   } else {
-      frame_name_label.innerHTML = "f" + frameCount;
+      frame_name_label.innerHTML = "f" + frameCount + ": ";
       frame_name_label.inner
   }
-
-  frame_parent_label = make_parent_marker("label")
   
   //frame.appendChild(test);
   frame.appendChild(removeframe);
   frame.appendChild(frame_name_label);
   frame.appendChild(frame_name);
-  frame.appendChild(frame_parent_label);
+  if (frameCount > 0) {
+    frame.appendChild(make_parent_marker("label"));
+  }
   frame.appendChild(variables);
   frame.appendChild(variable_button);
 
   frameCount++;
   document.getElementById("globals_area").appendChild(frame);
+  return frame
   //document.body.appendChild(frame);
 }
 
@@ -100,21 +108,19 @@ function add_heap_object(content) {
   heapObject.className = "heapObject";
   topLevelHeapObject.appendChild(heapObject)
   heapObject.appendChild(content)
-  document.getElementById("heap").appendChild(heapObject);
+  document.getElementById("heap").appendChild(heapRow);
 }
 
 function add_function_object() {
   let funcObj = document.createElement("div")
   funcObj.className = "funcObj"
   funcObj.innerText = "func "
-  let funcNameInput = document.createElement("input")
-  funcNameInput.className = "funcNameInput"
+  let funcNameInput = make_variable_length_input("funcNameInput")
   funcObj.appendChild(funcNameInput)
   funcObj.appendChild(make_parent_marker("span"))
   add_heap_object(funcObj)
 }
 
-let globalFrame = document.getElementById("globalFrame")
-globalFrame.querySelector(".addVarButton").addEventListener("click", add_variable)
+let globalFrame = add_frame()
 document.querySelector("#addFrameButton").addEventListener("click", add_frame)
 document.querySelector("#addFuncButton").addEventListener("click", add_function_object)

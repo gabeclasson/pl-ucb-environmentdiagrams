@@ -53,6 +53,8 @@ div.ExecutionVisualizer input {
   font-size: 14pt;
   color: #006;
   display: inline-block;
+  width: 70px;
+  min-width: 70px;
 }
 
 div.ExecutionVisualizer .removeButton {
@@ -613,6 +615,7 @@ div.ExecutionVisualizer .stackFrameVarTable {
   /* right-align the table */
   margin-left: auto;
   margin-right: 0px;
+  width: 100%;
 
   /* hack to counteract possible nasty CSS reset styles from parent divs */
   border-collapse: separate;
