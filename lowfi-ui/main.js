@@ -28,6 +28,7 @@ function add_variable(variables) {
 }
 function add_frame(cell, name) {
 	var frame = document.createElement("div");
+  var removeframe = document.createElement("button");
   var frame_name_label = document.createElement("label");
   var frame_name = document.createElement("input");
   var variables = document.createElement("table");
@@ -44,7 +45,11 @@ function add_frame(cell, name) {
   test.className = "stackFrameValue";
   
   variables.className = "frameTable";
-  
+  removeframe.innerHTML = "x";
+  removeframe.onclick = function() {
+    // Remove the frame when the button is clicked
+    cell.removeChild(frame);
+};  
   variable_button.innerHTML = "add variable";
   variable_button.onclick = function(){
     add_variable(variables); 
@@ -52,6 +57,7 @@ function add_frame(cell, name) {
     };
   
   //frame.appendChild(test);
+  frame.appendChild(removeframe);
   frame.appendChild(frame_name_label);
   frame.appendChild(frame_name);
   frame.appendChild(variables);
