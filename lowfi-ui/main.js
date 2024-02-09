@@ -1,3 +1,5 @@
+var frameCount = 0;
+
 function add_variable(variables) {
 	//var newvar = document.createElement("div");
   const tr = variables.insertRow();
@@ -30,6 +32,8 @@ function add_frame(cell, name) {
 	var frame = document.createElement("div");
   var removeframe = document.createElement("button");
   var frame_name_label = document.createElement("label");
+  var frame_parent_label = document.createElement("label");
+  var frame_parent_input = document.createElement("input");
   var frame_name = document.createElement("input");
   var variables = document.createElement("table");
   var variable_button = document.createElement("button");
@@ -37,9 +41,8 @@ function add_frame(cell, name) {
   var test = document.createElement("div");
   
   frame.className = "stackFrame";
-  frame_name_label.innerHTML = "frame name: ";
   frame_name_label.className = "frameHeader";
-  //frame_name.innerHTML = name;
+  frame_parent_input.className = "frameParentHeader";
   frame_name.className = "frameHeader";
   
   test.className = "stackFrameValue";
@@ -47,7 +50,6 @@ function add_frame(cell, name) {
   variables.className = "frameTable";
   removeframe.innerHTML = "x";
   removeframe.onclick = function() {
-    // Remove the frame when the button is clicked
     cell.removeChild(frame);
 };  
   variable_button.innerHTML = "add variable";
@@ -55,14 +57,29 @@ function add_frame(cell, name) {
     add_variable(variables); 
     variable_count = variable_count + 1;
     };
+
+  if (frameCount === 0) {
+      frame_name_label.innerHTML = "Global frame";
+  } else {
+      frame_name_label.innerHTML = "f" + frameCount;
+      frame_name_label.inner
+  }
+
+  frame_parent_label.innerHTML = "[Parent = ";
+  frame_parent_input.type = "text";
+  frame_parent_label.appendChild(frame_parent_input);
+  frame_parent_label.innerHTML += "]";
   
   //frame.appendChild(test);
   frame.appendChild(removeframe);
   frame.appendChild(frame_name_label);
   frame.appendChild(frame_name);
+  frame.appendChild(frame_parent_label);
   frame.appendChild(variables);
   frame.appendChild(variable_button);
   cell.appendChild(frame);
+
+  frameCount++;
   //document.body.appendChild(frame);
 }
 
@@ -85,12 +102,6 @@ function load_environment_diagram() {
   Objects.innerHTML = "Objects";
   function_button.innerHTML = "add function";
   list_button.innerHTML = "add list";
-  
-  /*var tr = stackHeapTable.insertRow();
-  var td = tr.insertCell();
-  td.appendChild(Frames);
-  var td = tr.insertCell();
-  td.appendChild(Objects);*/
   
   var tr = stackHeapTable.insertRow();
   var td1 = tr.insertCell();
