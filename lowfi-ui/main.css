@@ -43,6 +43,34 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 div.ExecutionVisualizer {
   /* none for now */
+  font-family: Andale mono, monospace;
+}
+
+div.ExecutionVisualizer input {
+  background: none;
+  border: none;
+  font-family: Andale mono, monospace;
+  font-size: 14pt;
+  color: #006;
+  display: inline-block;
+}
+
+div.ExecutionVisualizer .removeButton {
+  display: inline;
+  background: none;
+	border: none;
+	padding: 0;
+  /* icon is from bootstap icons, licensed under MIT license */
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" class="bi bi-trash-fill" viewBox="0 0 16 16"><path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/></svg>');
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+div.ExecutionVisualizer .removeButton:hover {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-trash-fill" viewBox="0 0 16 16"><path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/></svg>');
+  cursor: pointer;
 }
 
 div.ExecutionVisualizer table.visualizer {
@@ -514,7 +542,7 @@ div.ExecutionVisualizer div#globals_area {
 
 div.ExecutionVisualizer div.stackFrame,
 div.ExecutionVisualizer div.zombieStackFrame {
-  background-color: #ffffff;
+  background-color: #e2ebf6;
   margin-bottom: 15px;
   padding: 2px;
   padding-left: 6px;
@@ -556,6 +584,10 @@ div.ExecutionVisualizer td.stackFrameVar {
   padding-right: 8px;
   padding-top: 3px;
   padding-bottom: 3px;
+}
+
+div.ExecutionVisualizer td.stackFrameVar input {
+  text-align: right;
 }
 
 div.ExecutionVisualizer td.stackFrameValue {
