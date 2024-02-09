@@ -1,26 +1,44 @@
 var frameCount = 0;
 
-function add_variable(e) {
+function add_variable_listener(e) {
   console.log(e)
   button = e.target
   frame = button.closest(".stackFrame")
   variables = frame.querySelector(".stackFrameVarTable")
 	//var newvar = document.createElement("div");
-  const tr = variables.insertRow();
+  if (frame.id == "globalFrame") {
+    variables.appendChild(make_variable())
+  } else {
+    returnVal = frame.querySelector(".returnValueTr");
+    variables.insertBefore(make_variable(), returnVal)
+  }
+}
+
+function make_variable(returnValue=false) {
+  const tr = document.createElement("tr");
   tr.classList.add("variableTr")
-  var removevar = make_remove_button(tr);
-  var varname = make_variable_length_input("stackFrameVarInput")
+  tr.classList.add("returnValueTr")
+  var varname; 
+  if (returnValue == true) {
+    varname = document.createElement("span")
+    varname.innerText = "Return Value"
+  } else {
+    varname = make_variable_length_input("stackFrameVarInput")
+  }
   var stackframeval = make_variable_length_input("stackFrameValueInput")
 
   var td = tr.insertCell();
   td.classList.add()
-  td.appendChild(removevar);
+  if (!returnValue) {
+    td.appendChild(make_remove_button(tr));
+  }
   var td = tr.insertCell();
   td.classList.add("stackFrameVar")
   td.appendChild(varname);
   var td = tr.insertCell();
   td.classList.add("stackFrameValue")
 	td.appendChild(stackframeval);
+  return tr;
 }
 
 function make_remove_button(target) {
@@ -71,13 +89,15 @@ function add_frame() {
   removeframe = make_remove_button(frame);
   
   variable_button.innerHTML = "add variable";
-  variable_button.onclick = add_variable
+  variable_button.onclick = add_variable_listener
 
-  if (frameCount === 0) {
+  if (frameCount == 0) {
       frame_name_label.innerHTML = "Global frame";
+      frame.id = "globalFrame"
   } else {
       frame_name_label.innerHTML = "f" + frameCount + ": ";
       frame_name_label.inner
+      variables.appendChild(make_variable(true))
   }
   
   //frame.appendChild(test);

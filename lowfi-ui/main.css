@@ -623,7 +623,6 @@ div.ExecutionVisualizer .stackFrameVarTable {
 }
 
 div.ExecutionVisualizer div#heap {
-  float: left;
   padding-left: 30px;
 }
 
