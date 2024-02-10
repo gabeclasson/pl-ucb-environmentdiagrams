@@ -17,9 +17,9 @@ function add_variable_listener(e) {
 function make_variable(returnValue=false) {
   const tr = document.createElement("tr");
   tr.classList.add("variableTr")
-  tr.classList.add("returnValueTr")
   var varname; 
-  if (returnValue == true) {
+  if (returnValue) {
+    tr.classList.add("returnValueTr")
     varname = document.createElement("span")
     varname.innerText = "Return Value"
   } else {
