@@ -5,7 +5,6 @@ function add_variable_listener(e) {
   button = e.target
   frame = button.closest(".stackFrame")
   variables = frame.querySelector(".stackFrameVarTable")
-	//var newvar = document.createElement("div");
   if (frame.id == "globalFrame") {
     variables.appendChild(make_variable())
   } else {
