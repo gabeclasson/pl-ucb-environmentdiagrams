@@ -3,5 +3,11 @@
     "title": "Environment Diagram",
     "topic": "Graphs",
     "tags": ["mwest", "tpl101", "v3"],
-    "type": "v3"
+    "type": "v3",
+    "dependencies": {
+        "nodeModulesScripts": ["three/build/three.min.js"],
+        "elementScripts": ["pl-my-element.js"],
+        "elementStyles": ["pl-my-element.css"],
+        "clientFilesCourseStyles": ["courseStylesheet1.css", "courseStylesheet2.css"]
+      }
 }
