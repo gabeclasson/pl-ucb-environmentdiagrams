@@ -1,0 +1,7 @@
+{
+    "controller": "pl-my-element.py",
+    "dependencies": {
+      "elementScripts": ["pl-my-element.js"],
+      "elementStyles": ["pl-my-element.css"]
+    }
+  }
