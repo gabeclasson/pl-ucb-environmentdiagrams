@@ -3,9 +3,5 @@
     "title": "Environment Diagram",
     "topic": "Graphs",
     "tags": ["mwest", "tpl101", "v3"],
-    "type": "v3",
-    "dependencies": {
-        "elementScripts": ["main.js"],
-        "elementStyles": ["main.css"]
-      }
+    "type": "v3"
     }
