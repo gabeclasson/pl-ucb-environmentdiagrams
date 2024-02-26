@@ -13,3 +13,5 @@ class Frame():
 def generate(data):
     data["params"]["code"] = "x = 3"
     data["correct_answers"] = pl.to_json({"frame": "Global", "variables": {"x": 3}})
+
+def parse()
