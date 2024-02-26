@@ -46,7 +46,8 @@ function make_variable(plKey, returnValue=false) {
 
 function make_remove_button(target) {
   var removeframe = document.createElement("button");
-  removeframe.className = "removeButton"
+  removeframe.classList.add("btn", "removeButton")
+  removeframe.type = "button";
   removeframe.onclick = function() {
     target.parentElement.removeChild(target);
   }
@@ -75,7 +76,6 @@ function make_variable_length_input(className, plKey) {
 
 function add_frame() {
 	var frame = document.createElement("div");
-  var removeframe = document.createElement("button");
   var frame_name_label = document.createElement("label");
   var frame_parent_label = document.createElement("label");
   var frame_name = make_variable_length_input("frameHeader", "f" + frameCount + "-name")
@@ -90,8 +90,10 @@ function add_frame() {
   
   variables.className = "stackFrameVarTable";
 
-  removeframe = make_remove_button(frame);
+  let removeframe = make_remove_button(frame);
   
+  variable_button.className = "btn"
+  variable_button.type = "button"
   variable_button.innerHTML = "add variable";
   variable_button.onclick = add_variable_listener
 
