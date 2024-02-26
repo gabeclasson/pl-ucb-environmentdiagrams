@@ -16,26 +16,26 @@ def parse(element_html, data):
     #     data["submitted_answers"][key] = value
     pass
 
-def render(element_html, data):
-    with open("editor.mustache", "r") as f:
-        return chevron.render(f, {}).strip()
-
 class Frame():
     is_global = False
 
-    def __init__(self, bindings=None, parent=None, parent_fobj = None, children = []):
+    def __init__(self, bindings=None, parent=None, parent_fobj = None, children = None):
         self.parent = parent
-        self.children = children
+        if children is None:
+            children = set()
+        else: 
+            self.children = children
         if bindings is None:
             self.bindings = {}
+        else:
+            self.bindings = bindings
         self.name = None
         self.parent_fobj = parent_fobj
 
-    def bind(self, name, value):
-        self.bindings[name] = value # Note: this will allow for duplicate entries. need to figure out a better way to do this. 
-    
-    def set_name(self, name):
-        self.name = name
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return self.bindings == other.bindings and self.children == other.children
 
 class Environment():
     def __init__(self, *frames):
@@ -60,11 +60,14 @@ def grade(element_html, data):
                 vanguard[component] = {} # created unnecessary dicts at end
                 vanguard = vanguard[component]
         vanguard[key_components[-1]] = value
+
+    internal_representations = []
+    for key in parsed_response:
+        if key[0] == "f" and key[1] in '1234567890':
+            internal_representations[key] = Frame()
     
-    total_correct = int('var0' in parsed_response['f0'] and parsed_response['f0']['var0'] == {'name': 'x', 'val': '5'}) \
-        + int('var1' in parsed_response['f0'] and parsed_response['f0']['var1'] == {'name': 'y', 'val': '17'})
-    data['partial_scores']['f0'] = {'score':max(min(total_correct, 2), 0)/2,
-                                    'feedback':'',
-                                    'weight':1}
+    for key in parsed_response:
+        if key[0] == "f" and key[1] in '1234567890':
+            frame = internal_representations[key]
     
     return data
