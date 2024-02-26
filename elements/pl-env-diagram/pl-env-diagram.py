@@ -32,6 +32,9 @@ class Frame():
         self.name = None
         self.parent_fobj = parent_fobj
 
+    def bind(self, name, val):
+        self.bindings[name] = val; # Note that this does not check for duplicate bindings
+
     def __eq__(self, other):
         if type(self) != type(other):
             return False
@@ -69,5 +72,6 @@ def grade(element_html, data):
     for key in parsed_response:
         if key[0] == "f" and key[1] in '1234567890':
             frame = internal_representations[key]
+            frame.bind
     
     return data
