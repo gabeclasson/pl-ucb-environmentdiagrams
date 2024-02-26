@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <div class="ExecutionVisualizer">
+    <div class="vizLayoutTd" id="vizLayoutTdSecond"><div id="progOutputs">         <div id="printOutputDocs">Print output (drag lower right corner to resize)</div>
+        <div class="ui-wrapper" style="overflow: hidden; position: relative; width: 346.28px; height: 41.28px; top: auto; left: auto; margin: 0px; padding-right: 6.12px; padding-bottom: 16px;"><textarea id="pyStdout" cols="40" rows="5" wrap="off" readonly="" class="ui-resizable" style="width: 340.28px; height: 35.28px; margin: 0px; resize: none; position: static; zoom: 1; display: block;"></textarea><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div></div>       </div>
+     <div id="selectiveHideStatus"></div>
+     <div id="dataViz">
+        <table id="stackHeapTable">
+          <tbody><tr>
+            <td id="stack_td">
+              <div id="globals_area">
+                <div id="stackHeader">Frames</div>
+            </div>
+            <button id="addFrameButton">Add Frame</button>
+            </td>
+            <td id="heap_td">
+              <div id="heap">
+                <div id="heapHeader">Objects</div>
+            </div>
+            <button id="addFuncButton">Add function</button>
+            </td>
+        </tr>
+        </tbody></table>
+      </div></div></div>
+<!--<div class="stackFrame"></div>-->
+<p>This tool is based on Python Tutor: <a href="https://pythontutor.com/">pythontutor.com</a></p>
+</body>
+</html> 

@@ -1,18 +1,7 @@
 {
     "uuid": "65d2f099-5484-442a-95b8-cc4a7dc2e23e",
     "title": "Environment Diagram",
-<<<<<<< HEAD
     "topic": "Environment Diagrams",
     "type": "v3",
-    "singleVariant": true, 
-    "dependencies": {
-      "clientFilesQuestionScripts": ["main.js"],
-      "clientFilesQuestionStyles": ["main.css"]
-    }
+    "singleVariant": true
   }
-=======
-    "topic": "Graphs",
-    "tags": ["mwest", "tpl101", "v3"],
-    "type": "v3"
-    }
->>>>>>> Question-Type
