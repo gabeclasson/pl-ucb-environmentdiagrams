@@ -55,7 +55,7 @@ function make_remove_button(target) {
 }
 
 function make_parent_marker(elemType, plKey) {
-  var frame_parent_input = make_variable_length_input("frameParentHeader", plKey + "parent")
+  var frame_parent_input = make_variable_length_input("frameParentHeader", plKey + "-parent")
   marker = document.createElement(elemType)
   marker.innerHTML = " [Parent = ";
   marker.type = "text";
@@ -67,7 +67,10 @@ function make_parent_marker(elemType, plKey) {
 function make_variable_length_input(className, plKey) {
   let input = document.createElement("input")
   input.classList.add(className, "pl-html-input")
-  input.setAttribute("pl-html-key", plKey)
+  input.id = plKey
+  input.name = plKey
+  input.value = ""
+  input.setAttribute("data-instavalue", "submittedValues." + plKey)
   input.addEventListener("keydown", function () {
     input.style.width = (input.value.length + 1) + "ch"
   });
@@ -108,7 +111,9 @@ function add_frame() {
   frame.id = "f" + frameCount
   
   //frame.appendChild(test);
-  frame.appendChild(removeframe);
+  if (frameCount > 0) {
+    frame.appendChild(removeframe);
+  }
   frame.appendChild(frame_name_label);
   frame.appendChild(frame_name);
   if (frameCount > 0) {
