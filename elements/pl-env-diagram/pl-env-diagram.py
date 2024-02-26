@@ -59,7 +59,10 @@ def grade(element_html, data):
                 vanguard = vanguard[component]
         vanguard[key_components[-1]] = value
     
-    total_correct = int('var0' in parsed_response and parsed_response['f0']['var0'] == {'val': 'x', 'name': '5'}) \
-        + int('var1' in parsed_response['f0'] and parsed_response['f0']['var1'] == {'val': 'y', 'name': '17'})
-    data["score"] = 1.0 #max(min(total_correct, 2), 0)/2
+    total_correct = int('var0' in parsed_response['f0'] and parsed_response['f0']['var0'] == {'name': 'x', 'val': '5'}) \
+        + int('var1' in parsed_response['f0'] and parsed_response['f0']['var1'] == {'name': 'y', 'val': '17'})
+    data['partial_scores']['f0'] = {'score':max(min(total_correct, 2), 0)/2,
+                                    'feedback':'',
+                                    'weight':1}
+    
     return data
