@@ -23,11 +23,13 @@ def render(element_html, data):
 class Frame():
     is_global = False
 
-    def __init__(self, bindings=None, parent=None):
+    def __init__(self, bindings=None, parent=None, parent_fobj = None, children = []):
         self.parent = parent
+        self.children = children
         if bindings is None:
             self.bindings = {}
         self.name = None
+        self.parent_fobj = parent_fobj
 
     def bind(self, name, value):
         self.bindings[name] = value # Note: this will allow for duplicate entries. need to figure out a better way to do this. 
