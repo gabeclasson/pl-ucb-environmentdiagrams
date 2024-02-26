@@ -50,7 +50,7 @@ class Environment():
         self.frames.append(frame)
         return frame
 
-correct_env = Environment([Frame({'x': 5})])
+correct_env = Environment([Frame({'x': 5, 'y': 17})])
 def grade(element_html, data):
     parsed_response = {}
     for key, value in data['submitted_answers'].items():
@@ -71,7 +71,15 @@ def grade(element_html, data):
     
     for key in parsed_response:
         if key[0] == "f" and key[1] in '1234567890':
+            frame_data = parsed_response[key]
             frame = internal_representations[key]
-            frame.bind
+            for val_key in frame_data:
+                if val_key == "return":
+                    frame.bind("#return", frame_data[val_key])
+                elif val_key == "parent": 
+                    frame.parent = internal_representations[val_key]
+                    frame.parent.children.append(frame)
+                else: 
+                    frame.bind(frame_data[val_key]['name'], frame_data[val_key]['val'])
     
-    return data
+    return int(internal_representations['f0'] == correct_env)
