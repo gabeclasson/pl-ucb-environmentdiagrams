@@ -23,7 +23,7 @@ class Frame():
     def __init__(self, bindings=None, parent=None, parent_fobj = None, children = None):
         self.parent = parent
         if children is None:
-            self.children = set()
+            self.children = []
         else: 
             self.children = children
         if bindings is None:
@@ -35,6 +35,9 @@ class Frame():
 
     def bind(self, name, val):
         self.bindings[name] = val; # Note that this does not check for duplicate bindings
+    
+    def freeze(self):
+        return FrozenFrame(bindings = frozenset(item for item in self.bindings.items()), children = frozenset(child.freeze() for child in self.children))
 
     def __eq__(self, other):
         if type(self) != type(other):
@@ -43,6 +46,11 @@ class Frame():
     
     def __repr__(self):
         return f"Frame(bindings={self.bindings}, children={self.children})"
+    
+class FrozenFrame(Frame):
+
+    def __hash__(self) -> int:
+        return hash(self.bindings) + hash(self.children)
 
 correct_env = Frame({'x': '5', 'y': '17'})
 def grade(element_html, data):
@@ -71,10 +79,12 @@ def grade(element_html, data):
                 if val_key == "return":
                     frame.bind("#return", frame_data[val_key])
                 elif val_key == "parent": 
-                    frame.parent = internal_representations[val_key]
-                    frame.parent.children.add(frame)
+                    frame.parent = internal_representations[frame_data[val_key]]
+                    frame.parent.children.append(frame)
                 elif val_key[:3] == "var": 
                     frame.bind(frame_data[val_key]['name'], frame_data[val_key]['val'])
+    internal_representations['f0'].freeze()
+    correct_env.freeze()
     score = int(internal_representations['f0'] == correct_env)
     data['partial_scores']['problem'] = {'score':score,
                                     'feedback':'',
