@@ -1,6 +1,6 @@
 
 import inspect
-import heapq # only used for second step of code modification with bindings tracking and in exitlines_pqfunc
+import heapq
 
 class Frame():
     # I, Noemi, will refer to this as a FrameNode for the time being to remove ambiguity with FrameObjects for the time being. 
@@ -27,21 +27,6 @@ class Frame():
     def add_child(self, child):
         self.children.add(child)
     
-    def set_exitline(self, exitline):
-        self.exitline = exitline
-    
-    def get_simplenode(self):
-        self.fobj = None
-        for binding in self.bindings:
-            val = self.bindings[binding]
-            match type(val):
-                case "ffweefw":
-                    print("wkefjbjfew")
-
-            self.bindings[binding] = val # TEMP
-        for children in self.children:
-
-    
     def __str__(self, level=0):
         ret = "\t"*level+repr(self.name)+"\n"
         for child in self.children:
@@ -51,6 +36,16 @@ class Frame():
     def __repr__(self):
         return '<frame node representation>'
 
+class Binding():
+    def __init__(self, value):
+        self.value = value
+        self.referencees = set()
+    
+    def set_binding(self, framenode, bindingname):
+        """ adds the binding to our list of references. Then assign ourself to the binding. """
+        # not sure bindingname is necessary but better safe than sorry, and I can see some weird bugs happening if we leave it out. 
+        self.referencees.add((framenode, bindingname))
+        framenode.binding = self
 
 class FrameTree():
     originalcodestring = None
@@ -72,10 +67,9 @@ class FrameTree():
         self.fobj_framenode_dict = {}
         self.env_mutables = {}
         self.debugmessages = debugmessages
-        #self.insertFrameTracking()
-        self.getevaldiag()
+        self.get_evaldiag()
     
-    def add_new_frame(self, name = None): # func should always refer to the caller
+    def add_newframe(self, name = None): # func should always refer to the caller
         fobj = inspect.currentframe().f_back
         # if no frame nodes have been initialized, set the frame as the global frame and the root
         if len(self.fobj_framenode_dict.keys()) == 0:
@@ -107,76 +101,7 @@ class FrameTree():
         self.lastcreatedframe = frame
         return frame
     
-    # TODO: do this for lambda as well
-    def insertFrameTracking(self):
-        # TODO: maybe make it so you can input a func directly
-        """This function adds a new line of code initializing the FrameNode in each function definition. 
-        It then runs the new code made to get exitlines."""
-        # does this by finding a 'def' statement, then inserting the init immediately after
-        # if code is given as a string
-        code_list = self.codestring.split("\n")
-
-        # TODO: add mutables
-        # first init all of the vars
-
-        #code_list.insert(0, "envframes_dict = {'global':{}}")
-        #code_list.insert(1, "fobj_framenode_dict = {}")
-        #code_list.insert(2, "fobj_name_dict = {}")
-        #code_list.insert(def_line + 1, ' '*whitespace + "print(fobj_framenode_dict)")
-        #code_list.insert(0, "print('test glob', self.fobj_framenode_dict)")
-        code_list.insert(0, "self.add_new_frame()")
-        #  loop through all remaining code.
-        i = 3 # modify to consider initalized vars
-        while i < len(code_list):
-            if code_list[i].lstrip(' ')[:4] == "def ":
-                def_line = i
-                # find the indent size after the def
-                whitespace = 0
-                while whitespace == 0:
-                    i = i + 1
-                    # check to make sure it's not just an empty line
-                    if len(code_list[i].split()) > 0:
-                        # get size of whitespace before code
-                        whitespace = len(code_list[i]) - len(code_list[i].lstrip(' '))
-                        # set this back to the previous line just in case the first non-empty line is a def statement.
-                        i = i - 1
-                # insert the code to create the FrameNode
-                # TODO: make sure none of the variables are already in scope in the code.
-                #code_list.insert(def_line + 1, ' '*whitespace + "print('test', self.fobj_framenode_dict)")
-                #code_list.insert(def_line + 1, ' '*whitespace + "print('test', self.lastcreatedframe.parent)")
-                code_list.insert(def_line + 1, ' '*whitespace + "self.add_new_frame()") 
-            i = i + 1
-        #code_list.insert(i, "print('len in exec():',len(self.fobj_framenode_dict))")
-        #code_list.insert(i, "print('end in exec():', self.fobj_framenode_dict)")
-        self.codestring = str.join("\n", code_list)
-        #print(self.codestring)
-        d =  {"self":self}#{"add_new_frame":self.add_new_frame, "self":self}
-        exec(self.codestring, d, {})
-
-        # END-LINE TRACING
-    def getexitlines(self):
-        # TODO: might get rid of: edits all FrameNodes to include a reference to which line it ends on (in the modified code)
-        """edits all FrameNodes to include a reference to which line it ends on in .exitline. 
-        Additionally returns a max heap of exit lines, and a dictionary mapping exit lines to Frame objects."""
-        if self.debugmessages: print("========== RUNNING getexitlines_pq==========") # TODO: make self.debugmessages a decorator and apply it to all funcs?
-
-        exitlines_pq = []
-        exitlines_fobj_dict = {} # might be able to replace this with an exitlines_pqto var list mapping. if so, change description of this func. 
-        for fobj in self.fobj_framenode_dict:
-            frame = self.fobj_framenode_dict[fobj]
-            if fobj == "global":
-                fobj = frame.fobj
-            exitline = frame.fobj.f_lineno - 1
-            exitlines_pq.append(exitline)
-            exitlines_fobj_dict[exitline] = fobj
-            frame.set_exitline(exitline)
-
-        if self.debugmessages: print("========== COMPLETED getexitlines_pq==========")
-        heapq._heapify_max(exitlines_pq)
-        return exitlines_pq, exitlines_fobj_dict
-        exitlines, exitlines_fobj_dict = getexitlines()
-
-    def getevaldiag(self):
+    def get_evaldiag(self):
 
         ##### FRAME TRACKING #####
 
@@ -195,7 +120,7 @@ class FrameTree():
         #code_list.insert(2, "fobj_name_dict = {}")
         #code_list.insert(def_line + 1, ' '*whitespace + "print(fobj_framenode_dict)")
         #code_list.insert(0, "print('test glob', self.fobj_framenode_dict)")
-        code_list.insert(0, "frame = self.add_new_frame()")
+        code_list.insert(0, "frame = self.add_newframe()")
         #  loop through all remaining code.
         i = 3 # modify to consider initalized vars
         while i < len(code_list):
@@ -215,7 +140,7 @@ class FrameTree():
                 # TODO: make sure none of the variables are already in scope in the code.
                 #code_list.insert(def_line + 1, ' '*whitespace + "print('test', self.fobj_framenode_dict)")
                 #code_list.insert(def_line + 1, ' '*whitespace + "print('test', self.lastcreatedframe.parent)")
-                code_list.insert(def_line + 1, ' '*whitespace + "self.add_new_frame()") 
+                code_list.insert(def_line + 1, ' '*whitespace + "self.add_newframe()") 
             i = i + 1
         #code_list.insert(i, "print('len in exec():',len(self.fobj_framenode_dict))")
         #code_list.insert(i, "print('end in exec():', self.fobj_framenode_dict)")
@@ -239,7 +164,6 @@ class FrameTree():
             exitline = frame.fobj.f_lineno - 1
             exitlines_pq.append(exitline)
             exitlines_fobj_dict[exitline] = fobj
-            frame.set_exitline(exitline)
 
         heapq._heapify_max(exitlines_pq)
         if self.debugmessages: print("========== COMPLETED exit line tracing ==========")
@@ -314,9 +238,28 @@ class FrameTree():
         exec(newcode, d, {})
         del self.root.bindings["globvar"]
 
-    def getsimpletree():
+    def get_simpletree(self):
+        self.bindings_set = set()
+        bindings_dict = self.simplify_node(self.root, {})
+        self.bindings_set.update(bindings_dict.values())
+        return self.root
 
-        print("Not implemented")
+    def simplify_node(self, framenode, bindings_dict):
+        framenode.fobj = None
+        framenode.name = None
+        new_bindings = {}
+        for bindingname in framenode.bindings:
+            b = framenode.bindings[bindingname]
+            if not id(b) in bindings_dict:
+                bindings_dict[id(b)] = Binding(b)
+            new_bindings[bindingname] = bindings_dict[id(b)]
+            new_bindings[bindingname].set_binding(framenode, bindingname)
+        framenode.bindings = new_bindings
+        # TODO: make sure this tree recrusion is valid?
+        for child in framenode.children:
+            bindings_dict = self.simplify_node(child, bindings_dict)
+
+        return bindings_dict
 
 example_meow = """
 # TEST: meow
@@ -333,6 +276,4 @@ glob_meow()"""
 
 ft = FrameTree(example_meow, debugmessages=True)
 print("root:", ft.root)
-for key in ft.fobj_framenode_dict:
-    frame = ft.fobj_framenode_dict[key]
-    print(frame.name, frame.bindings)
+print(ft.get_simpletree())
