@@ -276,4 +276,7 @@ glob_meow()"""
 
 ft = FrameTree(example_meow, debugmessages=True)
 print("root:", ft.root)
-print(ft.get_simpletree())
+ft.get_simpletree()
+ft2 = FrameTree(example_meow, debugmessages=True)
+ft2.get_simpletree()
+print(ft == ft2)
