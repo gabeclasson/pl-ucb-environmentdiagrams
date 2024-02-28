@@ -52,7 +52,7 @@ class FrameTree():
     # this is for debugging
     lastcreatedframe = None
 
-    def __init__(self, codestring):
+    def __init__(self, codestring, debugmessages = False):
         self.originalcodestring = codestring
         self.codestring = codestring
         # a dictionary containing frames with associated variables in the form of a tuple: (type, name, mem loc, value)
@@ -62,6 +62,7 @@ class FrameTree():
         self.fobj_framenode_dict = {}
         self.env_mutables = {}
         self.insertFrameTracking()
+        self.debugmessages = debugmessages
     
     def add_new_frame(self, name = None): # func should always refer to the caller
         fobj = inspect.currentframe().f_back
@@ -140,6 +141,139 @@ class FrameTree():
         d =  {"self":self}#{"add_new_frame":self.add_new_frame, "self":self}
         exec(self.codestring, d, {})
 
+        # END-LINE TRACING
+    def getexitlines(self):
+        # TODO: might get rid of: edits all FrameNodes to include a reference to which line it ends on (in the modified code)
+        """edits all FrameNodes to include a reference to which line it ends on in .exitline. 
+        Additionally returns a max heap of exit lines, and a dictionary mapping exit lines to Frame objects."""
+        if self.debugmessages: print("========== RUNNING getexitlines ==========") # TODO: make self.debugmessages a decorator and apply it to all funcs?
+
+        exitlines_pq = []
+        exitlines_fobj_dict = {} # might be able to replace this with an exitlines to var list mapping. if so, change description of this func. 
+        for fobj in self.fobj_framenode_dict:
+            frame = self.fobj_framenode_dict[fobj]
+            if fobj == "global":
+                fobj = frame.fobj
+            exitline = frame.fobj.f_lineno - 1
+            exitlines_pq.append(exitline)
+            exitlines_fobj_dict[exitline] = fobj
+            frame.set_exitline(exitline)
+
+        if self.debugmessages: print("========== COMPLETED getexitlines ==========")
+        heapq._heapify_max(exitlines_pq)
+        return exitlines_pq, exitlines_fobj_dict
+        exitlines, exitlines_fobj_dict = getexitlines()
+
+    def getevaldiag(self):
+
+        ##### FRAME TRACKING #####
+
+        # TODO: maybe make it so you can input a func directly
+        """This function adds a new line of code initializing the FrameNode in each function definition. 
+        It then runs the new code made to get exitlines."""
+        # does this by finding a 'def' statement, then inserting the init immediately after
+        # if code is given as a string
+        code_list = self.codestring.split("\n")
+
+        # TODO: add mutables
+        # first init all of the vars
+
+        #code_list.insert(0, "envframes_dict = {'global':{}}")
+        #code_list.insert(1, "fobj_framenode_dict = {}")
+        #code_list.insert(2, "fobj_name_dict = {}")
+        #code_list.insert(def_line + 1, ' '*whitespace + "print(fobj_framenode_dict)")
+        #code_list.insert(0, "print('test glob', self.fobj_framenode_dict)")
+        code_list.insert(0, "self.add_new_frame()")
+        #  loop through all remaining code.
+        i = 3 # modify to consider initalized vars
+        while i < len(code_list):
+            if code_list[i].lstrip(' ')[:4] == "def ":
+                def_line = i
+                # find the indent size after the def
+                whitespace = 0
+                while whitespace == 0:
+                    i = i + 1
+                    # check to make sure it's not just an empty line
+                    if len(code_list[i].split()) > 0:
+                        # get size of whitespace before code
+                        whitespace = len(code_list[i]) - len(code_list[i].lstrip(' '))
+                        # set this back to the previous line just in case the first non-empty line is a def statement.
+                        i = i - 1
+                # insert the code to create the FrameNode
+                # TODO: make sure none of the variables are already in scope in the code.
+                #code_list.insert(def_line + 1, ' '*whitespace + "print('test', self.fobj_framenode_dict)")
+                #code_list.insert(def_line + 1, ' '*whitespace + "print('test', self.lastcreatedframe.parent)")
+                code_list.insert(def_line + 1, ' '*whitespace + "self.add_new_frame()") 
+            i = i + 1
+        #code_list.insert(i, "print('len in exec():',len(self.fobj_framenode_dict))")
+        #code_list.insert(i, "print('end in exec():', self.fobj_framenode_dict)")
+        self.codestring = str.join("\n", code_list)
+        #print(self.codestring)
+        d =  {"self":self}
+        exec(self.codestring, d, {})
+        
+        ### EXIT LINE TRACING ###
+        # TODO: might get rid of: edits all FrameNodes to include a reference to which line it ends on (in the modified code)
+        """edits all FrameNodes to include a reference to which line it ends on in .exitline. 
+        Additionally returns a max heap of exit lines, and a dictionary mapping exit lines to Frame objects."""
+        if self.debugmessages: print("========== RUNNING exit line tracing ==========") # TODO: make self.debugmessages a decorator and apply it to all funcs?
+
+        exitlines_pq = []
+        exitlines_fobj_dict = {} # might be able to replace this with an exitlines to var list mapping. if so, change description of this func. 
+        for fobj in self.fobj_framenode_dict:
+            frame = self.fobj_framenode_dict[fobj]
+            if fobj == "global":
+                fobj = frame.fobj
+            exitline = frame.fobj.f_lineno - 1
+            exitlines_pq.append(exitline)
+            exitlines_fobj_dict[exitline] = fobj
+            frame.set_exitline(exitline)
+
+        heapq._heapify_max(exitlines_pq)
+        if self.debugmessages: print("========== COMPLETED exit line tracing ==========")
+
+        ### BINDING TRACKING ###
+
+        # keeps track of how many lines have been inserted above the 
+        # if code is given as a string
+        # TODO: REMOVE BELOW LINE(S) WHEN ALL CODE IS WORKING
+        exitlines = exitlines.copy()
+        code_list = self.codestring.split("\n")
+        
+        # get largest exitline
+        while len(exitlines) > 0:
+            # get the current exitline (also the first line we insert into)!
+            exitline = heapq._heappop_max(exitlines)
+            i = exitline
+            whitespace = len(code_list[i]) - len(code_list[i].lstrip(' '))
+
+            # set variable names for things we are using to store tracking info.
+            trk_var_names = ["returnval", "locs", "bindings", "fobj_framenode_dict", "envframes_dict", "frame_name_dict"]
+            # if any of the initial variable names are in the local variable scope, we need to change the offending name(s). TODO: check if this is true once impl is done?
+            for k in range(len(trk_var_names)):
+                while trk_var_names[k] in exitlines_fobj_dict[exitline].f_code.co_varnames:
+                    trk_var_names[k] = str(hash(trk_var_names[k] + str(exitline)))[:7]
+
+            if code_list[i].lstrip(' ')[:7] == "return ":
+                returnval = code_list[i].lstrip(' ')[7:]
+                # set name for returnval in the code
+                # change the return line to return the stored value
+                code_list[i] = ' '*whitespace + "return " + trk_var_names[0]
+                # insert a line that records the return value
+                code_list.insert(i, ' '*whitespace + trk_var_names[0] + '=' + returnval)
+                i = i + 1
+            # store local variables at this point
+            code_list.insert(i, ' '*whitespace + trk_var_names[1] + '=' "locals()")
+            # store bindings at this point
+            # TODO: 'var' might also be an issue here..
+            code_list.insert(i + 1, ' '*whitespace + trk_var_names[2] + '=' "{var:(type(" + trk_var_names[1] + "[var]), " + trk_var_names[1] + "[var]) for var in " + trk_var_names[1] + "}")
+            # TODO: var names
+            code_list.insert(i + 2, ' '*whitespace + "frame.bind(" + trk_var_names[2] + ")")
+        # get modified code with Frame initialization
+        new_code = str.join("\n", code_list)
+        # THEN RUN EXEC(newcode), 
+        exec(new_code)
+
 example_meow = """
 # TEST: meow
 def glob_meow():
@@ -153,5 +287,5 @@ def glob_meow():
 
 glob_meow()"""
 
-ft = FrameTree(example_meow)
+ft = FrameTree(example_meow, debugmessages=True)
 print("root:", ft.root)
