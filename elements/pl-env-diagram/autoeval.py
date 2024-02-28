@@ -2,6 +2,7 @@
 import inspect
 import heapq
 import frame
+# i refer to this as "framenode" in some places. this is to avoid ambiguity. we will discuss changing the name.
 Frame = frame.Frame
 
 class Binding():

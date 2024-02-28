@@ -1,5 +1,4 @@
 class Frame():
-    # I, Noemi, will refer to this as a FrameNode for the time being to remove ambiguity with FrameObjects for the time being. 
     is_global = False
 
     def __init__(self, name = None, bindings=None, parent=None, fobj=None):
@@ -12,10 +11,10 @@ class Frame():
         self.fobj = fobj
 
     def bind(self, name, value):
-        self.bindings[name] = value # Note: this will allow for duplicate entries. need to figure out a better way to do this. 
+        self.bindings[name] = value  
     
     def bind(self, name_value_dict):
-        self.bindings = name_value_dict # Note: this will allow for duplicate entries. need to figure out a better way to do this. 
+        self.bindings = name_value_dict 
     
     def set_name(self, name):
         self.name = name
