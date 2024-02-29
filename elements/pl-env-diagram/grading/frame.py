@@ -30,3 +30,11 @@ class Frame():
 
     def __repr__(self):
         return '<frame node representation>'
+    
+    def __eq__(self, other): 
+        if not isinstance(other, Frame):
+            # don't attempt to compare against unrelated types
+            return False
+
+        return self.bindings == other.bindings and self.children == other.children
+    
