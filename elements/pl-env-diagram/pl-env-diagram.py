@@ -1,3 +1,5 @@
+from frame import *
+
 def generate(element_html, data):
     pass
 
@@ -16,41 +18,6 @@ def parse(element_html, data):
 def render(element_html, data):
     with open("editor.mustache", "r") as f:
         return f.read()
-
-class Frame():
-    is_global = False
-
-    def __init__(self, bindings=None, parent=None, parent_fobj = None, children = None):
-        self.parent = parent
-        if children is None:
-            self.children = []
-        else: 
-            self.children = children
-        if bindings is None:
-            self.bindings = {}
-        else:
-            self.bindings = bindings
-        self.name = None
-        self.parent_fobj = parent_fobj
-
-    def bind(self, name, val):
-        self.bindings[name] = val; # Note that this does not check for duplicate bindings
-    
-    def freeze(self):
-        return FrozenFrame(bindings = frozenset(item for item in self.bindings.items()), children = frozenset(child.freeze() for child in self.children))
-
-    def __eq__(self, other):
-        if type(self) != type(other):
-            return False
-        return self.bindings == other.bindings and self.children == other.children
-    
-    def __repr__(self):
-        return f"Frame(bindings={self.bindings}, children={self.children})"
-    
-class FrozenFrame(Frame):
-
-    def __hash__(self) -> int:
-        return hash(self.bindings) + hash(self.children)
 
 correct_env = Frame({'x': '5', 'y': '17'})
 def grade(element_html, data):
