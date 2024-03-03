@@ -1,7 +1,7 @@
 class Frame():
     is_global = False
 
-    def __init__(self, name = None, bindings=None, parent=None, fobj=None):
+    def __init__(self, name = None, bindings=None, parent=None, children=None, fobj=None):
         self.parent = parent
         self.children = set()
         if bindings is None:
@@ -27,14 +27,21 @@ class Frame():
         for child in self.children:
             ret += child.__str__(level+1)
         return ret
+    
+    def freeze(self):
+        return FrozenFrame(bindings = frozenset(item for item in self.bindings.items()), children = frozenset(child.freeze() for child in self.children))
 
     def __repr__(self):
         return '<frame node representation>'
+
+class FrozenFrame(Frame):
+
+    def __hash__(self) -> int:
+        return hash(self.bindings) + hash(self.children)
     
     def __eq__(self, other): 
         if not isinstance(other, Frame):
             # don't attempt to compare against unrelated types
             return False
 
-        return self.bindings == other.bindings and self.children == other.children
-    
+        return self.__hash__ == other.__hash__

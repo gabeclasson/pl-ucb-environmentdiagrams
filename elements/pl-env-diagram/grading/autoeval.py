@@ -245,6 +245,6 @@ glob_meow()"""
 ft = FrameTree(example_meow, debugmessages=True)
 #print("root:", ft.root)
 #ft.get_simpletree()
-#ft2 = FrameTree(example_meow, debugmessages=True)
+ft2 = FrameTree(example_meow, debugmessages=True)
 #ft2.get_simpletree()
-#print(ft == ft2)
+print(ft.root.freeze() == ft2.root.freeze())
