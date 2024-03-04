@@ -284,14 +284,18 @@ class FrameTree():
             if myjson_frames[frame].keys() != otherjson_frames[frame].keys():
                 print("keys not equal in ", frame)
                 return False
+            # checks through each variable in the frame
             for varname in myjson_frames[frame]:
+                # if we have the pointer from the variable name already recorded, check to make sure the value in the pointer dict
+                # matches what we expect
                 if myjson_frames[frame][varname] in self_other_pointer_dict:
                     if otherjson_frames[frame][varname] != self_other_pointer_dict[myjson_frames[frame][varname]]:
-                        print(" ", frame)
+                        print("pointers not matching ", frame)
                         return False
                 else:
+                    # set pointer matching
                     self_other_pointer_dict[myjson_frames[frame][varname]] = otherjson_frames[frame][varname]
-                if myjson_frames[frame][varname] != otherjson_frames[frame][varname]:
+                if myjson_heap[myjson_frames[frame][varname]] != otherjson_heap[otherjson_frames[frame][varname]]:
                     return False
 
         return True
