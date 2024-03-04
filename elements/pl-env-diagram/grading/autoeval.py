@@ -273,10 +273,28 @@ class FrameTree():
         return frames_dict, heap_dict
 
     def equaljson(self, other):
-        myjson = self.get_json()
-        otherjson = other.get_json()
+        myjson_frames, myjson_heap = self.get_json()
+        otherjson_frames, otherjson_heap = other.get_json()
         self_other_pointer_dict = {}
-        return myjson == otherjson
+        if myjson_frames.keys() != otherjson_frames.keys():
+            return False
+        if myjson_heap.keys() != otherjson_heap.keys():
+            return False
+        for frame in myjson_frames:
+            if myjson_frames[frame].keys() != otherjson_frames[frame].keys():
+                print("keys not equal in ", frame)
+                return False
+            for varname in myjson_frames[frame]:
+                if myjson_frames[frame][varname] in self_other_pointer_dict:
+                    if otherjson_frames[frame][varname] != self_other_pointer_dict[myjson_frames[frame][varname]]:
+                        print(" ", frame)
+                        return False
+                else:
+                    self_other_pointer_dict[myjson_frames[frame][varname]] = otherjson_frames[frame][varname]
+                if myjson_frames[frame][varname] != otherjson_frames[frame][varname]:
+                    return False
+
+        return True
         
 
 example_meow = """
@@ -307,11 +325,21 @@ def f():
 f()
 """
 
+example_intsonly2 = """
+y = 6
+x = 5
+def f():
+    x = 10
+    z = 20
+    return 5
+f()
+"""
+
 ft = FrameTree(example_intsonly)
 #print("root:", ft.root)
 ft.get_simpletree()
 print(ft.root.bindings)
-ft2 = FrameTree(example_intsonly)
+ft2 = FrameTree(example_intsonly2)
 ft2.get_simpletree()
 #print(ft2.root.bindings)
 #ftfr = ft.root.freeze()
