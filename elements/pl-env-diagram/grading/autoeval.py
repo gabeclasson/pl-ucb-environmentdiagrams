@@ -236,7 +236,7 @@ class FrameTree():
         return bindings_dict
     
     # RIGHT NOW ONLY WORKS WITH INTEGER
-    def makejson(self):
+    def get_json(self):
         # keeps track of how many of the same frame name exist
         frames_dict = {}
         # MOVE TO FRAMETREE DEF
@@ -260,7 +260,7 @@ class FrameTree():
                         case _:
                             mem_to_loc_dict[id(frame.bindings[varname])] = "func-" + str(objname_dict["func"])
                             objname_dict["func"] = objname_dict["func"] + 1
-                            # change so its more than just name, also parent frame
+                            # change so its more than just name, also parent frame?
                             heap_dict[mem_to_loc_dict[id(frame.bindings[varname])]] = "function <" + str(frame.bindings[varname].__name__ + ">")
                         #case function():
                             # change to include function name: f_code.co_name
@@ -271,6 +271,12 @@ class FrameTree():
                 addtojson(child)
         addtojson(self.root)
         return frames_dict, heap_dict
+
+    def equaljson(self, other):
+        myjson = self.get_json()
+        otherjson = other.get_json()
+        self_other_pointer_dict = {}
+        return myjson == otherjson
         
 
 example_meow = """
@@ -305,7 +311,7 @@ ft = FrameTree(example_intsonly)
 #print("root:", ft.root)
 ft.get_simpletree()
 print(ft.root.bindings)
-ft2 = FrameTree(example_meow)
+ft2 = FrameTree(example_intsonly)
 ft2.get_simpletree()
 #print(ft2.root.bindings)
 #ftfr = ft.root.freeze()
@@ -313,5 +319,6 @@ ft2.get_simpletree()
 #print(ftfr.__hash__())
 #print(ftfr2.__hash__())
 #print(ft.root.freeze() == ft2.root.freeze())
-json = ft.makejson()
+json = ft.get_json()
 print(json)
+print(ft.equaljson(ft2))
