@@ -14,6 +14,22 @@
             <td id="stack_td">
               <div id="globals_area">
                 <div id="stackHeader">Frames</div>
+                {{#frame}}
+                  <div class="stackFrame" id="frame-{{index}}">
+                    <button class="btn removeButton" type="button"></button>
+                    <label class="frameHeader">{{index}}: </label><input class="frameHeader pl-html-input" id="frame-{{index}}-name" name="frame-{{index}}-name" data-instavalue="submittedValues.frame-{{index}}-name">
+                    <label> [Parent = <input class="frameParentHeader pl-html-input" id="frame-{{index}}-parent" name="frame-{{index}}-parent" data-instavalue="submittedValues.frame-{{index}}-parent">]</label>
+                    <table class="stackFrameVarTable">
+                    {{#variables}}
+                      
+                    {{/variables}}
+                    <tr class="variableTr returnValueTr">
+                    <td class=""></td>
+                    <td class="stackFrameVar"><span>Return Value</span></td>
+                    <td class="stackFrameValue"><input class="stackFrameValueInput pl-html-input" id="frame-{{index}}-return-val" name="frame-{{index}}-return-val" data-instavalue="submittedValues.frame-{{index}}-return-val" value="{{return}}"></td>
+                    </tr></table><button class="btn" type="button">add variable</button></div>
+                  {{return}}
+                {{/frame}}
             </div>
             <button type="button" class="btn" id="addFrameButton">Add Frame</button>
             </td>

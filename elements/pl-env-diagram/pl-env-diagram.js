@@ -8,11 +8,11 @@ function add_variable_listener(e) {
   frame = button.closest(".stackFrame")
   variables = frame.querySelector(".stackFrameVarTable")
 	//var newvar = document.createElement("div");
-  if (frame.id == "f0") {
-    variables.appendChild(make_variable(frame.id + "-var" + varCount[frame.id]))
+  if (frame.id == "frame-0") {
+    variables.appendChild(make_variable(frame.id + "-var-" + varCount[frame.id]))
   } else {
     returnVal = frame.querySelector(".returnValueTr");
-    variables.insertBefore(make_variable(frame.id + "-var" + varCount[frame.id]), returnVal)
+    variables.insertBefore(make_variable(frame.id + "-var-" + varCount[frame.id]), returnVal)
   }
   varCount[frame.id]++
 }
@@ -81,7 +81,7 @@ function add_frame() {
 	var frame = document.createElement("div");
   var frame_name_label = document.createElement("label");
   var frame_parent_label = document.createElement("label");
-  var frame_name = make_variable_length_input("frameHeader", "f" + frameCount + "-name")
+  var frame_name = make_variable_length_input("frameHeader", "frame-" + frameCount + "-name")
   var variables = document.createElement("table");
   var variable_button = document.createElement("button");
   var test = document.createElement("div");
@@ -105,10 +105,10 @@ function add_frame() {
   } else {
       frame_name_label.innerHTML = "f" + frameCount + ": ";
       frame_name_label.inner
-      variables.appendChild(make_variable("f" + frameCount + "-return", true))
+      variables.appendChild(make_variable("frame-" + frameCount + "-return", true))
   }
 
-  frame.id = "f" + frameCount
+  frame.id = "frame-" + frameCount
   
   //frame.appendChild(test);
   if (frameCount > 0) {
@@ -117,12 +117,12 @@ function add_frame() {
   frame.appendChild(frame_name_label);
   frame.appendChild(frame_name);
   if (frameCount > 0) {
-    frame.appendChild(make_parent_marker("label", "f" + frameCount));
+    frame.appendChild(make_parent_marker("label", "frame-" + frameCount));
   }
   frame.appendChild(variables);
   frame.appendChild(variable_button);
 
-  varCount["f" + frameCount] = 0;
+  varCount["frame-" + frameCount] = 0;
   frameCount++;
   document.getElementById("globals_area").appendChild(frame);
   return frame
@@ -148,9 +148,9 @@ function add_function_object() {
   let funcObj = document.createElement("div")
   funcObj.className = "funcObj"
   funcObj.innerText = "func "
-  let funcNameInput = make_variable_length_input("funcNameInput", "func" + funcCount + "-name")
+  let funcNameInput = make_variable_length_input("funcNameInput", "func-" + funcCount + "-name")
   funcObj.appendChild(funcNameInput)
-  funcObj.appendChild(make_parent_marker("span"), "func" + funcCount)
+  funcObj.appendChild(make_parent_marker("span"), "func-" + funcCount)
   add_heap_object(funcObj)
   funcCount++;
 }
