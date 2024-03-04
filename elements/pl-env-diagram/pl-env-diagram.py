@@ -1,4 +1,5 @@
-import chevron, re
+import chevron
+import re
 import lxml.html
 from frame import *
 import prairielearn as pl
@@ -6,22 +7,22 @@ import prairielearn as pl
 def generate(element_html, data):
     pass
 
-env_diagram_text_pattern = re.compile(r"""[Ff]rame[\t\f\cK ]+(?:
-                    (?P<index_1>[Gg](?:lobal)?)|(?:(?P<index_2>[Ff]\d+)[\t\f\cK ]*
-                    (?P<name>\w+)[\t\f\cK ]*
-                    \[[\t\f\cK ]*[Pp](?:arent)?[\t\f\cK ]*=[\t\f\cK ]*(?P<parent>[Gg](?:lobal)?|f\d+)[\t\f\cK ]*\]))[\t\f\cK ]*:
-                        (?P<variables>(?:$\n[\t\f\cK ]*(?:\w+)[\t\f\cK ]+.*\S+.*$)*
-                        (?:$\n[\t\f\cK ]*\#[Rr](?:eturn)?[\t\f\cK ]+(?:.*)$)?)""", re.X | re.M)
+env_diagram_text_pattern = re.compile(r"""
+	(?P<index>[Gg](?:lobal)?|[Ff]\d+)[\t\f ]*(?::[\t\f ]]*
+	                    (?P<name>\w+)[\t\f ]*
+	                    \[[\t\f ]*[Pp](?:arent)?[\t\f ]*=[\t\f ]*(?P<parent>[Gg](?:lobal)?|f\d+)[\t\f ]*\])?[\t\f ]*
+	                        (?P<variables>(?:$\n[\t\f ]*(?:\w+)[\t\f ]+.*\S+.*$)*
+	                        (?:$\n[\t\f ]*\#[Rr](?:eturn)?[\t\f ]+(?:.*)$)?)
+	""", re.VERBOSE | re.MULTILINE)
 
 def parse_env_diagram_from_text(text):
-    print(text)
     m = env_diagram_text_pattern.findall(text)
     if not m:
-        print("Issue with formatting in correct environment diagram: " + text)
+        print("Error in instructor-provided correct environment diagram.")
     frame_lst = []
-    for index1, index2, name, parent, vars in m:
+    for index, name, parent, vars in m:
         frame = {}
-        index = (index1 + index2).strip()
+        index = index.strip()
         if index[0].lower() == "g" or index == "f0":
             frame['index'] = str(0)
         else: 
@@ -35,15 +36,15 @@ def parse_env_diagram_from_text(text):
             try: 
                 index = line.index(" ")
             except:
-                return
+                continue
             var = line[:index].strip()
-            val = line[index].strip()
+            val = line[index:].strip()
             if var[0] == '#':
                 frame['return'] = {'val': val}
             else: 
                 bindings.append({
                     'index': j,
-                    'var': var,
+                    'name': var,
                     'val': val
                 })
         frame_lst.append(frame)
@@ -54,7 +55,6 @@ def prepare(element_html, data):
     for sub_element in element.iter():
         if sub_element.tag == "correct-env-diagram":
             env_diagram_text = sub_element.text
-            print(env_diagram_text)
             correct_answers = parse_env_diagram_from_text(env_diagram_text)
             data['correct_answers'] = correct_answers
     return data

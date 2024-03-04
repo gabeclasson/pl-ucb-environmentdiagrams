@@ -4,6 +4,18 @@ def is_number_str(str):
             return False
     return True
 
+def sanitize_frame_index(index):
+    if not index:
+        return None
+    index = index.lower().strip()
+    if index[:6] == "frame-":
+        index = index[6:]
+    if index[:2] == 'f-':
+        index = index[2:]
+    if index[0] == 'g':
+        index = '0'
+    return index
+
 class Frame():
     is_global = False
 
@@ -69,16 +81,18 @@ class Frame():
             return Frame()
         internal_representations = {frame_data['index']: Frame() for frame_data in raw_data['frame']}
         for frame_data in raw_data["frame"]:
-            frame = internal_representations[frame_data['index']]
+            frame = internal_representations[sanitize_frame_index(frame_data['index'])]
+            if 'var' not in frame_data:
+                continue
             for var_data in frame_data["var"]:
                 frame.bind(var_data['name'], var_data['val'])
             if 'name' in frame_data:
                 frame.name = frame_data["name"]
-            if 'parent' in frame_data:
-                frame.parent = internal_representations[frame_data['parent']]
+            if 'parent' in frame_data and frame_data['parent']:
+                frame.parent = internal_representations[sanitize_frame_index(frame_data['parent'])]
                 frame.parent.children.append(frame)
             if 'return' in frame_data:
-                frame.return_value = frame['return']
+                frame.return_value = frame_data['return']
         
         return internal_representations['0']
 

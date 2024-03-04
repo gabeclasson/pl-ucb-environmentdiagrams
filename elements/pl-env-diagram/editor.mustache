@@ -18,8 +18,8 @@
                   <div class="stackFrame" id="frame-{{index}}">
                     {{#return}}
                     {{#show_controls}}<button class="btn removeButton" type="button"></button>{{/show_controls}}
-                    <label class="frameHeader">f{{index}}: </label><input class="frameHeader pl-html-input" id="frame-{{index}}-name" name="frame-{{index}}-name" data-instavalue="submittedValues.frame-{{index}}-name">
-                    <label> [Parent = <input class="frameParentHeader pl-html-input" id="frame-{{index}}-parent" name="frame-{{index}}-parent" data-instavalue="submittedValues.frame-{{index}}-parent">]</label>
+                    <label class="frameHeader">f{{index}}: </label><input class="frameHeader pl-html-input" id="frame-{{index}}-name" name="frame-{{index}}-name" data-instavalue="submittedValues.frame-{{index}}-name" value="{{name}}">
+                    <label> [Parent = <input class="frameParentHeader pl-html-input" id="frame-{{index}}-parent" name="frame-{{index}}-parent" data-instavalue="submittedValues.frame-{{index}}-parent" value="{{parent}}">]</label>
                     {{/return}}
                     {{^return}}
                     <label class="frameHeader">Global frame</label>
