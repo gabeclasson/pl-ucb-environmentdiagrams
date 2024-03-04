@@ -36,6 +36,7 @@ class FrameTree():
         self.fobj_framenode_dict = {}
         self.env_mutables = {}
         self.debugmessages = debugmessages
+        self.framename_dict = {}
         self.get_evaldiag()
     
     def add_newframe(self, name = None): # func should always refer to the caller
@@ -51,13 +52,17 @@ class FrameTree():
             self.envframes_dict[name] = {"name": None, "parent": None, "parent_fobj": None, "curr_fobj": fobj}
 
         else: 
-            name = fobj.f_code.co_name
-            f_name = "f" + name #temp TODO: add number
             parent_frame = fobj.f_back
             parent = self.fobj_framenode_dict[parent_frame] if parent_frame in self.fobj_framenode_dict else self.root
+            name = fobj.f_code.co_name
+            if name in self.framename_dict:
+                self.framename_dict[name] = self.framename_dict[name] + 1
+                name = name + str(self.framename_dict[name])
+            else:
+                self.framename_dict[name] = 0
             
             # OLD: dictionary rep of frame associations. Use for debugging only. 
-            self.envframes_dict[f_name] = {"name": name, "parent": parent, "parent_fobj": parent_frame, "curr_fobj": fobj}
+            self.envframes_dict[name] = {"name": name, "parent": parent, "parent_fobj": parent_frame, "curr_fobj": fobj}
             # init FrameNode
             frame = Frame(name = name, parent = parent, fobj=fobj)
             # add self to the pairing dict
@@ -166,7 +171,7 @@ class FrameTree():
         #code_list.insert(exitline + 1, trk_var_names[2] + '=' "globvar")        
         # TODO: var names
         code_list.insert(exitline + 2, "frame" + '=' "self.fobj_framenode_dict[inspect.currentframe()]")
-        code_list.insert(exitline + 3, "frame.bind(" + "globvar" + ")")
+        code_list.insert(exitline + 3, "frame.bind(" + "globvar" + "," + "exclude =  ['frame']" + ")") # + "," + " frame"
         
 
         #temp (move to main thing?)
@@ -202,6 +207,7 @@ class FrameTree():
 
         # get modified code with Frame initialization
         newcode = str.join("\n", code_list)
+        print(newcode)
         # THEN RUN EXEC(newcode), 
         exec(newcode, d, {})
         del self.root.bindings["globvar"]
@@ -215,19 +221,57 @@ class FrameTree():
     def simplify_node(self, framenode, bindings_dict):
         framenode.fobj = None
         framenode.name = None
-        new_bindings = {}
-        for bindingname in framenode.bindings:
-            b = framenode.bindings[bindingname]
-            if not id(b) in bindings_dict:
-                bindings_dict[id(b)] = Binding(b)
-            new_bindings[bindingname] = bindings_dict[id(b)]
-            new_bindings[bindingname].set_binding(framenode, bindingname)
-        framenode.bindings = new_bindings
+        #new_bindings = {}
+        #for bindingname in framenode.bindings:
+            #b = framenode.bindings[bindingname]
+            #if not id(b) in bindings_dict:
+                #bindings_dict[id(b)] = Binding(b)
+            #new_bindings[bindingname] = bindings_dict[id(b)]
+            #new_bindings[bindingname].set_binding(framenode, bindingname)
+        #framenode.bindings = new_bindings
         # TODO: make sure this tree recrusion is valid?
         for child in framenode.children:
             bindings_dict = self.simplify_node(child, bindings_dict)
 
         return bindings_dict
+    
+    # RIGHT NOW ONLY WORKS WITH INTEGER
+    def makejson(self):
+        # keeps track of how many of the same frame name exist
+        frames_dict = {}
+        # MOVE TO FRAMETREE DEF
+        objname_dict = {"int":0, "func":0}
+        heap_dict = {}
+        mem_to_loc_dict = {}
+        def addtojson(frame): # frames_dict, heap_dict, objname_dict
+            newframe = {}
+            frames_dict[frame.json_name] = newframe
+            for varname in frame.bindings:
+                if id(frame.bindings[varname]) in mem_to_loc_dict:
+                    newframe[varname] = mem_to_loc_dict[id(frame.bindings[varname])]
+                else:
+                    # MOVE TO FRAMETREE DEF
+                    match frame.bindings[varname]:
+                        case int():
+                            mem_to_loc_dict[id(frame.bindings[varname])] = "int-" + str(objname_dict["int"])
+                            objname_dict["int"] = objname_dict["int"] + 1
+                            heap_dict[mem_to_loc_dict[id(frame.bindings[varname])]] = frame.bindings[varname]
+                        # NOT WORKING FOR FUNC CASE?
+                        case _:
+                            mem_to_loc_dict[id(frame.bindings[varname])] = "func-" + str(objname_dict["func"])
+                            objname_dict["func"] = objname_dict["func"] + 1
+                            # change so its more than just name, also parent frame
+                            heap_dict[mem_to_loc_dict[id(frame.bindings[varname])]] = "function <" + str(frame.bindings[varname].__name__ + ">")
+                        #case function():
+                            # change to include function name: f_code.co_name
+                        #    mem_to_loc_dict[id(frame.bindings[varname])] = "func-" + str(objname_dict["func"])
+                        #    objname_dict["func"] = objname_dict["func"] + 1
+                    newframe[varname] = mem_to_loc_dict[id(frame.bindings[varname])]
+            for child in frame.children:
+                addtojson(child)
+        addtojson(self.root)
+        return frames_dict, heap_dict
+        
 
 example_meow = """
 # TEST: meow
@@ -242,9 +286,32 @@ def glob_meow():
 
 glob_meow()"""
 
-ft = FrameTree(example_meow, debugmessages=True)
+example_simple = """
+x = 5
+y = 6
+"""
+
+example_intsonly = """
+x = 5
+y = 6
+def f():
+    x = 10
+    z = 20
+    return 5
+f()
+"""
+
+ft = FrameTree(example_intsonly)
 #print("root:", ft.root)
-#ft.get_simpletree()
-ft2 = FrameTree(example_meow, debugmessages=True)
-#ft2.get_simpletree()
-print(ft.root.freeze() == ft2.root.freeze())
+ft.get_simpletree()
+print(ft.root.bindings)
+ft2 = FrameTree(example_meow)
+ft2.get_simpletree()
+#print(ft2.root.bindings)
+#ftfr = ft.root.freeze()
+#ftfr2 = ft2.root.freeze()
+#print(ftfr.__hash__())
+#print(ftfr2.__hash__())
+#print(ft.root.freeze() == ft2.root.freeze())
+json = ft.makejson()
+print(json)
