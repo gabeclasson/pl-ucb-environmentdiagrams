@@ -1,19 +1,33 @@
-let nextFuncIndex;
-let nextVarIndex;
+function getLastIndex(slug) {
+  let index;
+  let prevFrames = executionVisualizer.querySelectorAll('[id^="'+slug+'"]')
+  let lastFrame = prevFrames[prevFrames.length - 1]
+  if (!lastFrame) {
+    index = 0 // This should never happen.
+  } else {
+    let str = lastFrame.id.substring(slug.length)
+    let indexOfDash = str.indexOf("-");
+    if (indexOfDash >= 0) {
+      str = str.substring(0, indexOfDash)
+    }
+    index = parseInt(str) + 1
+  }
+  return index
+}
 
 function add_variable_listener(e) {
   console.log(e)
   button = e.target
   frame = button.closest(".stackFrame")
   variables = frame.querySelector(".stackFrameVarTable")
+  let index = getLastIndex(frame.id + "-var-")
 	//var newvar = document.createElement("div");
   if (frame.id == "frame-0") {
-    variables.appendChild(make_variable(frame.id + "-var-" + nextVarIndex[frame.id]))
+    variables.appendChild(make_variable(frame.id + "-var-" + index))
   } else {
     returnVal = frame.querySelector(".returnValueTr");
-    variables.insertBefore(make_variable(frame.id + "-var-" + nextVarIndex[frame.id]), returnVal)
+    variables.insertBefore(make_variable(frame.id + "-var-" + index), returnVal)
   }
-  nextVarIndex[frame.id]++
 }
 
 function make_variable(plKey, returnValue=false) {
@@ -78,14 +92,7 @@ function make_variable_length_input(className, plKey) {
 }
 
 function add_frame() {
-  let index;
-  let prevFrames = executionVisualizer.querySelectorAll('.stackFrame')
-  let lastFrame = prevFrames[prevFrames.length - 1]
-  if (!lastFrame) {
-    index = 0 // This should never happen.
-  } else {
-    index = parseInt(lastFrame.id.substring(lastFrame.id.lastIndexOf('-') + 1)) + 1
-  }
+  let index = getLastIndex("frame-")
 	var frame = document.createElement("div");
   var frame_name_label = document.createElement("label");
   var frame_name = make_variable_length_input("frameHeader", "frame-" + index + "-name")
@@ -143,14 +150,14 @@ function add_heap_object(content) {
 }
 
 function add_function_object() {
+  let index = getLastIndex("func-")
   let funcObj = document.createElement("div")
   funcObj.className = "funcObj"
   funcObj.innerText = "func "
-  let funcNameInput = make_variable_length_input("funcNameInput", "func-" + nextFuncIndex + "-name")
+  let funcNameInput = make_variable_length_input("funcNameInput", "func-" + index + "-name")
   funcObj.appendChild(funcNameInput)
-  funcObj.appendChild(make_parent_marker("span"), "func-" + nextFuncIndex)
+  funcObj.appendChild(make_parent_marker("span"), "func-" + index)
   add_heap_object(funcObj)
-  nextFuncIndex++;
 }
 
 let executionVisualizer;

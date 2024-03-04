@@ -1,4 +1,4 @@
-import chevron
+import pystache
 from frame import *
 
 def generate(element_html, data):
@@ -14,18 +14,21 @@ def parse(element_html, data):
     #     key = input.attr('pl-html-key')
     #     value = input.val()
     #     data["submitted_answers"][key] = value
-    print(data['submitted_answers'])
     data['submitted_answers'] = Frame.unflatten_raw_data(data["submitted_answers"])
     return data
 
 def render(element_html, data):
     with open("editor.mustache", "r") as f:
         if data['panel'] == 'submission':
-            return chevron.render(f.read(), data['submitted_answers'] + {'show_controls': False})
+            out=pystache.render(f.read(), data['submitted_answers'].update({'show_controls': False}))
+            print(out)
+            return out
         elif data['panel'] == 'answer':
-            return chevron.render(f.read(), data['correct_answers'] + {'show_controls': False})
+            out = pystache.render(f.read(), data['correct_answers'].update({'show_controls': False}))
+            print(out)
+            return out
         else: 
-            return chevron.render(f.read(), {'frame': [{'name': None, 'index': 0, 'var': [], 'parent': None}], 'show_controls': True})
+            return pystache.render(f.read(), {'frame': [{'name': None, 'index': 0, 'var': [], 'parent': None}], 'show_controls': True})
 
 correct_env = Frame(bindings={'x': '5', 'y': '17'})
 def grade(element_html, data):

@@ -22,6 +22,11 @@ class Frame():
 
     @classmethod
     def unflatten_raw_data(cls, raw_data):
+        """
+        >>> raw_data = {'frame-0-var-0-name': 'x', 'frame-0-var-0-val': '5', 'frame-0-var-NaN-name': 'y', 'frame-0-var-NaN-val': '17', 'frame-1-name': 'g', 'frame-1-parent': 'Global', 'frame-1-var-0-name': 'z', 'frame-1-var-0-val': '"hi"', 'frame-1-return-val': '3'}
+        >>> Frame.unflatten_raw_data(raw_data)
+        {'frame': [{'index': '0', 'var': [{'index': '0', 'name': 'x', 'val': '5'}, {'index': '2', 'name': 'y', 'val': '17'}]}, {'index': '1', 'name': 'g', 'parent': 'Global', 'return': {'val': '3'}, 'var': [{'index': '0', 'name': 'z', 'val': '"hi"'}]}]}
+        """
         parsed_response = {}
         
         for key, value in sorted(raw_data.items(), key=lambda x: x[0]):
@@ -60,12 +65,15 @@ class Frame():
 
     @classmethod
     def from_raw_data(cls, raw_data):
+        if not(raw_data):
+            return Frame()
         internal_representations = {frame_data['index']: Frame() for frame_data in raw_data['frame']}
         for frame_data in raw_data["frame"]:
             frame = internal_representations[frame_data['index']]
             for var_data in frame_data["var"]:
                 frame.bind(var_data['name'], var_data['val'])
-            frame.name = frame_data["name"]
+            if 'name' in frame_data:
+                frame.name = frame_data["name"]
             if 'parent' in frame_data:
                 frame.parent = internal_representations[frame_data['parent']]
                 frame.parent.children.append(frame)
@@ -89,7 +97,7 @@ class Frame():
 class FrozenFrame(Frame):
 
     def __hash__(self) -> int:
-        return hash(self.bindings) + hash(self.children)
+        return hash(self.bindings) + hash(self.children) + hash(self.name)
     
     def __eq__(self, other):
         if type(self) != type(other):
