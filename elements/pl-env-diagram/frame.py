@@ -23,48 +23,47 @@ class Frame():
     @classmethod
     def unflatten_raw_data(cls, raw_data):
         parsed_response = {}
+        
         for key, value in sorted(raw_data.items(), key=lambda x: x[0]):
             key_components = key.split("-")
+            prev = None
+            prev_key = None
             vanguard = parsed_response
             for component in key_components:
-                if callable(vanguard):
+                if vanguard is None:
                     if is_number_str(component):
-                        vanguard = vanguard([])
+                        vanguard = []
                     else: 
-                        vanguard = vanguard({})
-                if type(vanguard) == dict: 
-                    if component in vanguard:
-                        vanguard = vanguard[component]
-                    else: 
-                        def f(vanguard, component):
-                            def link(x):
-                                vanguard[component] = x
-                                return x
-                            return link
-                        vanguard = f(vanguard, component)
-                elif type(vanguard) == list:
-                    if vanguard and vanguard[-1]['index'] == component:
-                        vanguard = vanguard[-1]
-                    else: 
-                        def f(vanguard, component):
-                            def link(x):
-                                x['index'] = component
-                                vanguard.append(x)
-                                return x
-                            return link
-                        vanguard = f(vanguard, component)
-            vanguard = vanguard(raw_data[key])
+                        vanguard = {}
+                    if type(prev) == dict:
+                        prev[prev_key] = vanguard
+                    elif type(prev) == list:
+                        vanguard['index'] = prev_key
+                        prev.append(vanguard)
+                
+                prev = vanguard
+                prev_key = component
+                
+                if type(vanguard) == dict and component in vanguard: 
+                    vanguard = vanguard[component]
+                elif type(vanguard) == list and vanguard and vanguard[-1]['index'] == component:
+                    vanguard = vanguard[-1]
+                else: 
+                    vanguard = None
+            
+            if type(prev) == dict:
+                prev[prev_key] = value
+            elif type(prev) == list:
+                prev.append(value)
+
         return parsed_response
 
     @classmethod
     def from_raw_data(cls, raw_data):
-        parsed_response = cls.unflatten_raw_data(raw_data)
-        internal_representations = {frame_index: Frame() for frame_index in parsed_response['frame']}
-        for frame_index in parsed_response["frame"]:
-            frame_data = parsed_response["frame"][frame_index]
-            frame = internal_representations[frame_index]
-            for var_index in frame_data["var"]:
-                var_data = frame_data["var"][var_index]
+        internal_representations = {frame_data['index']: Frame() for frame_data in raw_data['frame']}
+        for frame_data in raw_data["frame"]:
+            frame = internal_representations[frame_data['index']]
+            for var_data in frame_data["var"]:
                 frame.bind(var_data['name'], var_data['val'])
             frame.name = frame_data["name"]
             if 'parent' in frame_data:
@@ -73,7 +72,7 @@ class Frame():
             if 'return' in frame_data:
                 frame.return_value = frame['return']
         
-        return internal_representations['f0']
+        return internal_representations['0']
 
     def bind(self, name, val):
         self.bindings[name] = val; # Note that this does not check for duplicate bindings
@@ -82,16 +81,17 @@ class Frame():
         return FrozenFrame(bindings = frozenset(item for item in self.bindings.items()), children = frozenset(child.freeze() for child in self.children))
 
     def __eq__(self, other):
-        if type(self) != type(other):
-            return False
-        return self.name == other.name and self.bindings == other.bindings and self.children == other.children
-    
+        raise NotImplementedError
+
     def __repr__(self):
-        return f"Frame(bindings={self.bindings}, children={self.children})"
+        return f"Frame(bindings={self.bindings}, name={self.name}, children={self.children})"
     
 class FrozenFrame(Frame):
 
     def __hash__(self) -> int:
         return hash(self.bindings) + hash(self.children)
     
-print(Frame.unflatten_raw_data({'frame-0-name': 'hi', 'frame-0-billy': 'jo'}))
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return self.name == other.name and self.bindings == other.bindings and self.children == other.children

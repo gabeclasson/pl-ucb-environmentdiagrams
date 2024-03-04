@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-    <div class="ExecutionVisualizer">
+    <div class="ExecutionVisualizer {{#show_controls}}ExecutionVisualizerActive{{/show_controls}}">
     <div class="vizLayoutTd" id="vizLayoutTdSecond"><div id="progOutputs">         <div id="printOutputDocs">Print output (drag lower right corner to resize)</div>
         <div class="ui-wrapper" style="overflow: hidden; position: relative; width: 346.28px; height: 41.28px; top: auto; left: auto; margin: 0px; padding-right: 6.12px; padding-bottom: 16px;"><textarea id="pyStdout" cols="40" rows="5" wrap="off" readonly="" class="ui-resizable" style="width: 340.28px; height: 35.28px; margin: 0px; resize: none; position: static; zoom: 1; display: block;"></textarea><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div></div>       </div>
      <div id="selectiveHideStatus"></div>
@@ -16,28 +16,37 @@
                 <div id="stackHeader">Frames</div>
                 {{#frame}}
                   <div class="stackFrame" id="frame-{{index}}">
+                    {{#return}}
                     <button class="btn removeButton" type="button"></button>
                     <label class="frameHeader">{{index}}: </label><input class="frameHeader pl-html-input" id="frame-{{index}}-name" name="frame-{{index}}-name" data-instavalue="submittedValues.frame-{{index}}-name">
                     <label> [Parent = <input class="frameParentHeader pl-html-input" id="frame-{{index}}-parent" name="frame-{{index}}-parent" data-instavalue="submittedValues.frame-{{index}}-parent">]</label>
+                    {{/return}}
+                    {{^return}}
+                    <label class="frameHeader">Global frame</label>
+                    {{/return}}
                     <table class="stackFrameVarTable">
-                    {{#variables}}
-                      
-                    {{/variables}}
+                    {{#var}}
+                      <tr class="variableTr" id="frame-{{../index}}-var-{{index}}">
+                        <td class=""><button class="btn removeButton" type="button"></button></td><td class="stackFrameVar"><input class="stackFrameVarInput pl-html-input" id="frame-{{../index}}-var-{{index}}-name" name="frame-{{../index}}-var-{{index}}-name" data-instavalue="submittedValues.frame-{{../index}}-var-{{index}}-name" value="{{name}}"></td>
+                        <td class="stackFrameValue"><input class="stackFrameValueInput pl-html-input" id="frame-{{../index}}-var-{{index}}-val" name="frame-{{../index}}-var-{{index}}-val" data-instavalue="submittedValues.frame-{{../index}}-var-{{index}}-val" value="{{val}}"></td>
+                      </tr>
+                    {{/var}}
+                    {{#return}}
                     <tr class="variableTr returnValueTr">
                     <td class=""></td>
                     <td class="stackFrameVar"><span>Return Value</span></td>
-                    <td class="stackFrameValue"><input class="stackFrameValueInput pl-html-input" id="frame-{{index}}-return-val" name="frame-{{index}}-return-val" data-instavalue="submittedValues.frame-{{index}}-return-val" value="{{return}}"></td>
-                    </tr></table><button class="btn" type="button">add variable</button></div>
-                  {{return}}
+                    <td class="stackFrameValue"><input class="stackFrameValueInput pl-html-input" id="frame-{{index}}-return-val" name="frame-{{index}}-return-val" data-instavalue="submittedValues.frame-{{index}}-return-val" value="{{val}}"></td>
+                    {{/return}}
+                    </tr></table><button class="btn addVarButton" type="button">Add Variable</button></div>
                 {{/frame}}
             </div>
-            <button type="button" class="btn" id="addFrameButton">Add Frame</button>
+            {{#show_controls}}<button type="button" class="btn" id="addFrameButton">Add Frame</button>{{/show_controls}}
             </td>
             <td id="heap_td">
               <div id="heap">
                 <div id="heapHeader">Objects</div>
             </div>
-            <button type="button" class="btn" id="addFuncButton">Add function</button>
+            {{#show_controls}}<button type="button" class="btn" id="addFuncButton">Add function</button>{{/show_controls}}
             </td>
         </tr>
         </tbody></table>

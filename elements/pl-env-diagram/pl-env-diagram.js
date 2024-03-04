@@ -1,6 +1,5 @@
-let frameCount = 0;
-let funcCount = 0;
-let varCount = {}
+let nextFuncIndex;
+let nextVarIndex;
 
 function add_variable_listener(e) {
   console.log(e)
@@ -9,17 +8,18 @@ function add_variable_listener(e) {
   variables = frame.querySelector(".stackFrameVarTable")
 	//var newvar = document.createElement("div");
   if (frame.id == "frame-0") {
-    variables.appendChild(make_variable(frame.id + "-var-" + varCount[frame.id]))
+    variables.appendChild(make_variable(frame.id + "-var-" + nextVarIndex[frame.id]))
   } else {
     returnVal = frame.querySelector(".returnValueTr");
-    variables.insertBefore(make_variable(frame.id + "-var-" + varCount[frame.id]), returnVal)
+    variables.insertBefore(make_variable(frame.id + "-var-" + nextVarIndex[frame.id]), returnVal)
   }
-  varCount[frame.id]++
+  nextVarIndex[frame.id]++
 }
 
 function make_variable(plKey, returnValue=false) {
   const tr = document.createElement("tr");
   tr.classList.add("variableTr")
+  tr.id = plKey
   var varname; 
   if (returnValue) {
     tr.classList.add("returnValueTr")
@@ -78,10 +78,17 @@ function make_variable_length_input(className, plKey) {
 }
 
 function add_frame() {
+  let index;
+  let prevFrames = executionVisualizer.querySelectorAll('.stackFrame')
+  let lastFrame = prevFrames[prevFrames.length - 1]
+  if (!lastFrame) {
+    index = 0 // This should never happen.
+  } else {
+    index = parseInt(lastFrame.id.substring(lastFrame.id.lastIndexOf('-') + 1)) + 1
+  }
 	var frame = document.createElement("div");
   var frame_name_label = document.createElement("label");
-  var frame_parent_label = document.createElement("label");
-  var frame_name = make_variable_length_input("frameHeader", "frame-" + frameCount + "-name")
+  var frame_name = make_variable_length_input("frameHeader", "frame-" + index + "-name")
   var variables = document.createElement("table");
   var variable_button = document.createElement("button");
   var test = document.createElement("div");
@@ -100,31 +107,22 @@ function add_frame() {
   variable_button.innerHTML = "add variable";
   variable_button.onclick = add_variable_listener
 
-  if (frameCount == 0) {
-      frame_name_label.innerHTML = "Global frame";
-  } else {
-      frame_name_label.innerHTML = "f" + frameCount + ": ";
-      frame_name_label.inner
-      variables.appendChild(make_variable("frame-" + frameCount + "-return", true))
-  }
 
-  frame.id = "frame-" + frameCount
+  frame_name_label.innerHTML = "f" + index + ": ";
+  frame_name_label.inner
+  variables.appendChild(make_variable("frame-" + index + "-return", true))
+
+  frame.id = "frame-" + index
   
   //frame.appendChild(test);
-  if (frameCount > 0) {
-    frame.appendChild(removeframe);
-  }
+  frame.appendChild(removeframe);
   frame.appendChild(frame_name_label);
   frame.appendChild(frame_name);
-  if (frameCount > 0) {
-    frame.appendChild(make_parent_marker("label", "frame-" + frameCount));
-  }
+  frame.appendChild(make_parent_marker("label", "frame-" + index));
   frame.appendChild(variables);
   frame.appendChild(variable_button);
 
-  varCount["frame-" + frameCount] = 0;
-  frameCount++;
-  document.getElementById("globals_area").appendChild(frame);
+  executionVisualizer.querySelector("#globals_area").appendChild(frame);
   return frame
   //document.body.appendChild(frame);
 }
@@ -141,23 +139,27 @@ function add_heap_object(content) {
   heapObject.className = "heapObject";
   topLevelHeapObject.appendChild(heapObject)
   heapObject.appendChild(content)
-  document.getElementById("heap").appendChild(heapRow);
+  executionVisualizer.querySelector("#heap").appendChild(heapRow);
 }
 
 function add_function_object() {
   let funcObj = document.createElement("div")
   funcObj.className = "funcObj"
   funcObj.innerText = "func "
-  let funcNameInput = make_variable_length_input("funcNameInput", "func-" + funcCount + "-name")
+  let funcNameInput = make_variable_length_input("funcNameInput", "func-" + nextFuncIndex + "-name")
   funcObj.appendChild(funcNameInput)
-  funcObj.appendChild(make_parent_marker("span"), "func-" + funcCount)
+  funcObj.appendChild(make_parent_marker("span"), "func-" + nextFuncIndex)
   add_heap_object(funcObj)
-  funcCount++;
+  nextFuncIndex++;
 }
 
-let globalFrame;
+let executionVisualizer;
+
 window.addEventListener('load', function() {
-  globalFrame = add_frame()
-  document.querySelector("#addFrameButton").addEventListener("click", add_frame)
-  document.querySelector("#addFuncButton").addEventListener("click", add_function_object)
+  executionVisualizer = document.querySelector('.ExecutionVisualizerActive')
+  if (executionVisualizer) {
+    executionVisualizer.querySelectorAll('.addVarButton').forEach(x => x.addEventListener("click", add_variable_listener))
+    executionVisualizer.querySelector("#addFrameButton").addEventListener("click", add_frame)
+    executionVisualizer.querySelector("#addFuncButton").addEventListener("click", add_function_object)
+  }
 });
