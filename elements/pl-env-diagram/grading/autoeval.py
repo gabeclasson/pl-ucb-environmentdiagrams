@@ -5,17 +5,6 @@ import frame
 # i refer to this as "framenode" in some places. this is to avoid ambiguity. we will discuss changing the name.
 Frame = frame.Frame
 
-class Binding():
-    def __init__(self, value):
-        self.value = value
-        self.referencees = set()
-    
-    def set_binding(self, framenode, bindingname):
-        """ adds the binding to our list of references. Then assign ourself to the binding. """
-        # not sure bindingname is necessary but better safe than sorry, and I can see some weird bugs happening if we leave it out. 
-        self.referencees.add((framenode, bindingname))
-        framenode.binding = self
-
 class FrameTree():
     originalcodestring = None
     codestring = None
@@ -36,7 +25,7 @@ class FrameTree():
         self.fobj_framenode_dict = {}
         self.env_mutables = {}
         self.debugmessages = debugmessages
-        self.framename_dict = {}
+        #self.framename_dict = {}
         self.get_evaldiag()
     
     def add_newframe(self, name = None): # func should always refer to the caller
@@ -55,11 +44,11 @@ class FrameTree():
             parent_frame = fobj.f_back
             parent = self.fobj_framenode_dict[parent_frame] if parent_frame in self.fobj_framenode_dict else self.root
             name = fobj.f_code.co_name
-            if name in self.framename_dict:
-                self.framename_dict[name] = self.framename_dict[name] + 1
-                name = name + str(self.framename_dict[name])
-            else:
-                self.framename_dict[name] = 0
+            #if name in self.framename_dict:
+            #    self.framename_dict[name] = self.framename_dict[name] + 1
+            #    name = name + str(self.framename_dict[name])
+            #else:
+            #    self.framename_dict[name] = 0
             
             # OLD: dictionary rep of frame associations. Use for debugging only. 
             self.envframes_dict[name] = {"name": name, "parent": parent, "parent_fobj": parent_frame, "curr_fobj": fobj}
@@ -88,12 +77,6 @@ class FrameTree():
 
         # TODO: add mutables
         # first init all of the vars
-
-        #code_list.insert(0, "envframes_dict = {'global':{}}")
-        #code_list.insert(1, "fobj_framenode_dict = {}")
-        #code_list.insert(2, "fobj_name_dict = {}")
-        #code_list.insert(def_line + 1, ' '*whitespace + "print(fobj_framenode_dict)")
-        #code_list.insert(0, "print('test glob', self.fobj_framenode_dict)")
         code_list.insert(0, "frame = self.add_newframe()")
         #  loop through all remaining code.
         i = 3 # modify to consider initalized vars
@@ -112,14 +95,9 @@ class FrameTree():
                         i = i - 1
                 # insert the code to create the FrameNode
                 # TODO: make sure none of the variables are already in scope in the code.
-                #code_list.insert(def_line + 1, ' '*whitespace + "print('test', self.fobj_framenode_dict)")
-                #code_list.insert(def_line + 1, ' '*whitespace + "print('test', self.lastcreatedframe.parent)")
                 code_list.insert(def_line + 1, ' '*whitespace + "self.add_newframe()") 
             i = i + 1
-        #code_list.insert(i, "print('len in exec():',len(self.fobj_framenode_dict))")
-        #code_list.insert(i, "print('end in exec():', self.fobj_framenode_dict)")
         self.codestring = str.join("\n", code_list)
-        #print(self.codestring)
         d =  {"self":self, "inspect":inspect}
         exec(self.codestring, d, {})
         
@@ -164,11 +142,7 @@ class FrameTree():
         # handle the global frame
         exitline = heapq._heappop_max(exitlines_pq)
         code_list.insert(exitline + 1, "globvar" + '=' "locals()")
-        # TODO: 'var' might also be an issue here..
-        #code_list.insert(exitline + 2, trk_var_names[2] + '=' "{var:(type(" + "globvar[var]), " + "globvar[var]) for var in " + "globvar" + "}")
-        #code_list.insert(exitline + 1, trk_var_names[2] + '=' "{var:(type(" + "var" + "), " + "var" + ") for var in " + "globvar.values()" + "}")   
-        #code_list.insert(exitline + 1, trk_var_names[2] + '=' "{var:(" + "var" + ") for var in " + "globvar" + "}")    
-        #code_list.insert(exitline + 1, trk_var_names[2] + '=' "globvar")        
+        # TODO: 'var' might also be an issue here..     
         # TODO: var names
         code_list.insert(exitline + 2, "frame" + '=' "self.fobj_framenode_dict[inspect.currentframe()]")
         code_list.insert(exitline + 3, "frame.bind(" + "globvar" + "," + "exclude =  ['frame']" + ")") # + "," + " frame"
@@ -193,23 +167,18 @@ class FrameTree():
                 code_list.insert(i, ' '*whitespace + trk_var_names[0] + '=' + returnval)
             # store local variables at this point
             code_list.insert(i + 1, ' '*whitespace + trk_var_names[1] + '=' "locals()")
-            #code_list.insert(i + 1, ' '*whitespace + "print('locals'," + trk_var_names[1] + ")")
             # store bindings at this point
             # TODO: 'var' might also be an issue here..
-            
-            #code_list.insert(i + 1, ' '*whitespace + trk_var_names[2] + '=' "{var:(type(" + trk_var_names[1] + "[var]), " + trk_var_names[1] + "[var]) for var in " + trk_var_names[1] + "}")
             code_list.insert(i + 2, ' '*whitespace + trk_var_names[2] + '=' + trk_var_names[1])
             code_list.insert(i + 3, ' '*whitespace + "frame" + '=' "self.fobj_framenode_dict[inspect.currentframe()]")
             # TODO: var names
             code_list.insert(i + 4, ' '*whitespace + "frame.bind(" + trk_var_names[2] + ")")
 
-        #code_list.insert(len(code_list), "print('bindings', ft.lastcreatedframe.bindings)")
-
         # get modified code with Frame initialization
         newcode = str.join("\n", code_list)
-        print(newcode)
-        # THEN RUN EXEC(newcode), 
+        # then execute the code
         exec(newcode, d, {})
+        # TODO: Needed?
         del self.root.bindings["globvar"]
 
     def get_simpletree(self):
@@ -217,88 +186,108 @@ class FrameTree():
         bindings_dict = self.simplify_node(self.root, {})
         self.bindings_set.update(bindings_dict.values())
         return self.root
-
-    def simplify_node(self, framenode, bindings_dict):
-        framenode.fobj = None
-        framenode.name = None
-        #new_bindings = {}
-        #for bindingname in framenode.bindings:
-            #b = framenode.bindings[bindingname]
-            #if not id(b) in bindings_dict:
-                #bindings_dict[id(b)] = Binding(b)
-            #new_bindings[bindingname] = bindings_dict[id(b)]
-            #new_bindings[bindingname].set_binding(framenode, bindingname)
-        #framenode.bindings = new_bindings
-        # TODO: make sure this tree recrusion is valid?
-        for child in framenode.children:
-            bindings_dict = self.simplify_node(child, bindings_dict)
-
-        return bindings_dict
     
-    # RIGHT NOW ONLY WORKS WITH INTEGER
+    # RIGHT NOW ONLY WORKS WITH INTEGER + FUNC
     def get_json(self):
         # keeps track of how many of the same frame name exist
         frames_dict = {}
-        # MOVE TO FRAMETREE DEF
+        # TODO: MOVE TO FRAMETREE DEF
         objname_dict = {"int":0, "func":0}
         heap_dict = {}
         mem_to_loc_dict = {}
         def addtojson(frame): # frames_dict, heap_dict, objname_dict
             newframe = {}
-            frames_dict[frame.json_name] = newframe
+            if frame.json_name in frames_dict:
+                frames_dict[frame.json_name] = frames_dict[frame.json_name] + [newframe]
+            else: 
+                frames_dict[frame.json_name] = [newframe]
             for varname in frame.bindings:
                 if id(frame.bindings[varname]) in mem_to_loc_dict:
                     newframe[varname] = mem_to_loc_dict[id(frame.bindings[varname])]
                 else:
-                    # MOVE TO FRAMETREE DEF
+                    # TODO: MOVE TO FRAMETREE DEF
                     match frame.bindings[varname]:
                         case int():
                             mem_to_loc_dict[id(frame.bindings[varname])] = "int-" + str(objname_dict["int"])
                             objname_dict["int"] = objname_dict["int"] + 1
                             heap_dict[mem_to_loc_dict[id(frame.bindings[varname])]] = frame.bindings[varname]
-                        # NOT WORKING FOR FUNC CASE?
+                        # TODO: NOT WORKING FOR FUNC CASE?
                         case _:
                             mem_to_loc_dict[id(frame.bindings[varname])] = "func-" + str(objname_dict["func"])
                             objname_dict["func"] = objname_dict["func"] + 1
                             # change so its more than just name, also parent frame?
                             heap_dict[mem_to_loc_dict[id(frame.bindings[varname])]] = "function <" + str(frame.bindings[varname].__name__ + ">")
-                        #case function():
-                            # change to include function name: f_code.co_name
-                        #    mem_to_loc_dict[id(frame.bindings[varname])] = "func-" + str(objname_dict["func"])
-                        #    objname_dict["func"] = objname_dict["func"] + 1
                     newframe[varname] = mem_to_loc_dict[id(frame.bindings[varname])]
             for child in frame.children:
                 addtojson(child)
         addtojson(self.root)
         return frames_dict, heap_dict
 
-    def equaljson(self, other):
+    def equaljson(self, other = None, otherjson_frames = None, otherjson_heap = None, partial = None):
+        sumgrade = 0
+        extraframes = 0 
+        total = 0
+        if not other is None:
+            otherjson_frames, otherjson_heap = other.get_json()
         myjson_frames, myjson_heap = self.get_json()
-        otherjson_frames, otherjson_heap = other.get_json()
         self_other_pointer_dict = {}
         if myjson_frames.keys() != otherjson_frames.keys():
-            return False
+            if partial is None:
+                return 0
         if myjson_heap.keys() != otherjson_heap.keys():
-            return False
-        for frame in myjson_frames:
-            if myjson_frames[frame].keys() != otherjson_frames[frame].keys():
-                print("keys not equal in ", frame)
-                return False
-            # checks through each variable in the frame
-            for varname in myjson_frames[frame]:
-                # if we have the pointer from the variable name already recorded, check to make sure the value in the pointer dict
-                # matches what we expect
-                if myjson_frames[frame][varname] in self_other_pointer_dict:
-                    if otherjson_frames[frame][varname] != self_other_pointer_dict[myjson_frames[frame][varname]]:
-                        print("pointers not matching ", frame)
-                        return False
-                else:
-                    # set pointer matching
-                    self_other_pointer_dict[myjson_frames[frame][varname]] = otherjson_frames[frame][varname]
-                if myjson_heap[myjson_frames[frame][varname]] != otherjson_heap[otherjson_frames[frame][varname]]:
-                    return False
-
-        return True
+            if partial is None:
+                return 0
+        # get common frames between both groups
+        # TODO: frame name is not really a concern - can be different between things?
+        framekeys = set(myjson_frames).intersection(set(otherjson_frames))
+        for frame in framekeys:
+            if len(myjson_frames[frame]) != len(otherjson_frames[frame]):
+                if partial is None:
+                    print("amount of sub-frames not equal in ", frame)
+                    return 0
+            # sets the indices of all frames in the other json to be yet to be checked
+            framestomatch = [True]*len(otherjson_frames[frame])
+            for i in range(len(myjson_frames[frame])):
+                found_match = False
+                total += 1
+                for j in range(len(otherjson_frames[frame])):
+                    if not framestomatch[j]:
+                        continue
+                    is_match = True
+                    # checks through each variable in the frame
+                    variablekeys = set(myjson_frames[frame][i]).intersection(set(otherjson_frames[frame][j]))
+                    for varname in variablekeys:
+                        # if we have the pointer from the variable name already recorded, check to make sure the value in the pointer dict
+                        # matches what we expect
+                        if myjson_frames[frame][i][varname] in self_other_pointer_dict:
+                            if otherjson_frames[frame][j][varname] != self_other_pointer_dict[myjson_frames[frame][i][varname]]:
+                                print("not a match, variable pointers are mismatched")
+                                is_match = False
+                                break
+                        else:
+                            # set pointer matching
+                            self_other_pointer_dict[myjson_frames[frame][i][varname]] = otherjson_frames[frame][j][varname]
+                        if myjson_heap[myjson_frames[frame][i][varname]] != otherjson_heap[otherjson_frames[frame][j][varname]]:
+                            print("not a match, variable values are not matched")
+                            is_match = False
+                            break 
+                    if is_match:
+                        found_match = True
+                        framestomatch[j] = False
+                        if partial == "byframe":
+                            # adds grade by one frame
+                            sumgrade += 1
+                        break
+                if not found_match:
+                    if partial is None:
+                        print("match not found for frame: ", frame)
+                        return 0
+            if partial == "byframe":
+                # punishes student for extra frames
+                sumgrade = sumgrade - sum(framestomatch)/len(framestomatch)
+        if partial is None:
+            return 1
+        return sumgrade/total - max(len(otherjson_frames) - len(myjson_frames), 0)/len(otherjson_frames)
         
 
 example_meow = """
@@ -339,12 +328,9 @@ def f():
 f()
 """
 
-ft = FrameTree(example_intsonly)
+ft2 = FrameTree(example_simple)
 #print("root:", ft.root)
-ft.get_simpletree()
-print(ft.root.bindings)
-ft2 = FrameTree(example_intsonly2)
-ft2.get_simpletree()
+ft = FrameTree(example_intsonly2)
 #print(ft2.root.bindings)
 #ftfr = ft.root.freeze()
 #ftfr2 = ft2.root.freeze()
@@ -353,4 +339,5 @@ ft2.get_simpletree()
 #print(ft.root.freeze() == ft2.root.freeze())
 json = ft.get_json()
 print(json)
-print(ft.equaljson(ft2))
+# not working with reverse currently
+print(ft.equaljson(ft2, partial = "byframe"))
