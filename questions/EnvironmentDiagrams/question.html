@@ -1,13 +1,23 @@
 <pl-question-panel>
     <p> 
-        Write the environment diagram after finishing execution of line 2 for the following code:
+        Draw the environment diagram after finishing execution of line 2 for the following code:
     </p>
-    <pl-code language="python">
-    x = 5
-    y = 3 * x + 2
-    </pl-code>
+<pl-code language="python">
+x = 5
+y = 3 * x + 2
+</pl-code>
   </pl-question-panel>
 
 <pl-env-diagram>
+  <correct-env-diagram>
+  Global
+    x 3
+    y 17
+
+  f1: g [parent=Global] 
+    z 3
+    #return 98
+
+  </correct-env-diagram>
 </pl-env-diagram>
 

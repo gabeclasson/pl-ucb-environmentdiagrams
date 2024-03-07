@@ -1,8 +1,63 @@
+import chevron
+import re
+import lxml.html
+from frame import *
+import prairielearn as pl
+
 def generate(element_html, data):
     pass
 
+env_diagram_text_pattern = re.compile(r"""
+	(?P<index>[Gg](?:lobal)?|[Ff]\d+)[\t\f ]*(?::[\t\f ]]*
+	                    (?P<name>\w+)[\t\f ]*
+	                    \[[\t\f ]*[Pp](?:arent)?[\t\f ]*=[\t\f ]*(?P<parent>[Gg](?:lobal)?|f\d+)[\t\f ]*\])?[\t\f ]*
+	                        (?P<variables>(?:$\n[\t\f ]*(?:\w+)[\t\f ]+.*\S+.*$)*
+	                        (?:$\n[\t\f ]*\#[Rr](?:eturn)?[\t\f ]+(?:.*)$)?)
+	""", re.VERBOSE | re.MULTILINE)
+
+def parse_env_diagram_from_text(text):
+    m = env_diagram_text_pattern.findall(text)
+    if not m:
+        print("Error in instructor-provided correct environment diagram.")
+    frame_lst = []
+    for index, name, parent, vars in m:
+        frame = {}
+        index = index.strip()
+        if index[0].lower() == "g" or index == "f0":
+            frame['index'] = str(0)
+        else: 
+            frame['index'] = index[1:]
+        frame['name'] = name
+        frame['parent'] = parent
+        lines = vars.split("\n")
+        frame['var'] = bindings = []
+        for j, line in enumerate(lines):
+            line = line.strip()
+            try: 
+                index = line.index(" ")
+            except:
+                continue
+            var = line[:index].strip()
+            val = line[index:].strip()
+            if var[0] == '#':
+                frame['return'] = {'val': val}
+            else: 
+                bindings.append({
+                    'index': j,
+                    'name': var,
+                    'val': val
+                })
+        frame_lst.append(frame)
+    return {'frame': frame_lst}
+
 def prepare(element_html, data):
-    pass
+    element = lxml.html.fragment_fromstring(element_html)
+    for sub_element in element.iter():
+        if sub_element.tag == "correct-env-diagram":
+            env_diagram_text = sub_element.text
+            correct_answers = parse_env_diagram_from_text(env_diagram_text)
+            data['correct_answers'] = correct_answers
+    return data
 
 def parse(element_html, data):
     # doc = pq(element_html)
@@ -11,81 +66,31 @@ def parse(element_html, data):
     #     key = input.attr('pl-html-key')
     #     value = input.val()
     #     data["submitted_answers"][key] = value
-    pass
+    data['submitted_answers'] = Frame.unflatten_raw_data(data["submitted_answers"])
+    return data
 
+default_rendering_data = {'frame': [{'name': None, 'index': 0, 'var': [], 'parent': None}], 'show_controls': True}
 def render(element_html, data):
     with open("editor.mustache", "r") as f:
-        return f.read()
-
-class Frame():
-    is_global = False
-
-    def __init__(self, bindings=None, parent=None, parent_fobj = None, children = None):
-        self.parent = parent
-        if children is None:
-            self.children = []
-        else: 
-            self.children = children
-        if bindings is None:
-            self.bindings = {}
-        else:
-            self.bindings = bindings
-        self.name = None
-        self.parent_fobj = parent_fobj
-
-    def bind(self, name, val):
-        self.bindings[name] = val; # Note that this does not check for duplicate bindings
-    
-    def freeze(self):
-        return FrozenFrame(bindings = frozenset(item for item in self.bindings.items()), children = frozenset(child.freeze() for child in self.children))
-
-    def __eq__(self, other):
-        if type(self) != type(other):
-            return False
-        return self.bindings == other.bindings and self.children == other.children
-    
-    def __repr__(self):
-        return f"Frame(bindings={self.bindings}, children={self.children})"
-    
-class FrozenFrame(Frame):
-
-    def __hash__(self) -> int:
-        return hash(self.bindings) + hash(self.children)
-
-correct_env = Frame({'x': '5', 'y': '17'})
+        template = f.read()
+        if data['panel'] == 'answer':
+            rendering_data = data['correct_answers']
+            show_controls = False
+        elif data['panel'] == 'question': 
+            rendering_data = data['submitted_answers']
+            show_controls = True
+        else: # Submission
+            rendering_data = data['submitted_answers']
+            show_controls = False
+        if not rendering_data:
+            rendering_data = default_rendering_data
+        rendering_data.update({'show_controls': show_controls})
+        return chevron.render(template, rendering_data)  
+            
 def grade(element_html, data):
-    parsed_response = {}
-    for key, value in data['submitted_answers'].items():
-        key_components = key.split("-")
-        vanguard = parsed_response
-        for component in key_components[:-1]:
-            if component in vanguard:
-                vanguard = vanguard[component]
-            else: 
-                vanguard[component] = {} # created unnecessary dicts at end
-                vanguard = vanguard[component]
-        vanguard[key_components[-1]] = value
-
-    internal_representations = {}
-    for key in parsed_response:
-        if key[0] == "f" and key[1] in '1234567890':
-            internal_representations[key] = Frame()
-    
-    for key in parsed_response:
-        if key[0] == "f" and key[1] in '1234567890':
-            frame_data = parsed_response[key]
-            frame = internal_representations[key]
-            for val_key in frame_data:
-                if val_key == "return":
-                    frame.bind("#return", frame_data[val_key])
-                elif val_key == "parent": 
-                    frame.parent = internal_representations[frame_data[val_key]]
-                    frame.parent.children.append(frame)
-                elif val_key[:3] == "var": 
-                    frame.bind(frame_data[val_key]['name'], frame_data[val_key]['val'])
-    internal_representations['f0'].freeze()
-    correct_env.freeze()
-    score = int(internal_representations['f0'] == correct_env)
+    frame = Frame.from_raw_data(data['submitted_answers'])
+    correct_frame = Frame.from_raw_data(data['correct_answers'])
+    score = int(frame.freeze() == correct_frame.freeze())
     data['partial_scores']['problem'] = {'score':score,
                                     'feedback':'',
                                     'weight':1}
