@@ -30,6 +30,15 @@ function add_variable_listener(e) {
   }
 }
 
+function toggleCheckbox(event) {
+  const toggleContainer = event.target.parentNode;
+  toggleContainer.classList.toggle("active", event.target.checked);
+
+  const stackframeValueInput = toggleContainer.closest(".variableTr").querySelector(".stackFrameValueInput");
+  stackframeValueInput.disabled = event.target.checked;
+  stackframeValueInput.value = "";
+}
+
 function make_variable(plKey, returnValue=false) {
   const tr = document.createElement("tr");
   tr.classList.add("variableTr", "removable")
@@ -46,6 +55,7 @@ function make_variable(plKey, returnValue=false) {
 
   var td = tr.insertCell();
   td.classList.add()
+  tr.appendChild(make_toggle_value_object(plKey));
   if (!returnValue) {
     td.appendChild(make_remove_button(tr));
   }
@@ -56,6 +66,30 @@ function make_variable(plKey, returnValue=false) {
   td.classList.add("stackFrameValue")
 	td.appendChild(stackframeval);
   return tr;
+}
+
+function make_toggle_value_object(plKey) {
+  const toggleContainer = document.createElement("label");
+  
+  const toggleSwitch = document.createElement("input");
+  toggleSwitch.type = "checkbox";
+  toggleContainer.appendChild(toggleSwitch);
+  toggleSwitch.id = plKey + "-toggle";
+  const leftLabel = document.createElement("label");
+  leftLabel.innerText = "Value";
+
+  const rightLabel = document.createElement("label");
+  rightLabel.innerText = "Object";
+
+  toggleSwitch.addEventListener("change", toggleCheckbox);
+
+  const toggleContainerCell = document.createElement("td");
+  toggleContainerCell.appendChild(toggleContainer);
+  toggleContainerCell.appendChild(leftLabel);
+  toggleContainerCell.appendChild(toggleSwitch);
+  toggleContainerCell.appendChild(rightLabel);
+
+  return toggleContainerCell;
 }
 
 function make_remove_button(target) {
