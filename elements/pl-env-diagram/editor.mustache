@@ -15,7 +15,7 @@
               <div id="globals_area">
                 <div id="stackHeader">Frames</div>
                 {{#frame}}
-                  <div class="stackFrame" id="frame-{{index}}">
+                  <div class="stackFrame removable" id="frame-{{index}}">
                     {{#return}}
                     {{#show_controls}}<button class="btn removeButton" type="button"></button>{{/show_controls}}
                     <label class="frameHeader">f{{index}}: </label><input class="frameHeader pl-html-input" id="frame-{{index}}-name" name="frame-{{index}}-name" data-instavalue="submittedValues.frame-{{index}}-name" value="{{name}}">
@@ -26,7 +26,7 @@
                     {{/return}}
                     <table class="stackFrameVarTable">
                     {{#var}}
-                      <tr class="variableTr" id="frame-{{../index}}-var-{{index}}">
+                      <tr class="variableTr removable" id="frame-{{../index}}-var-{{index}}">
                         <td class="">{{#show_controls}}<button class="btn removeButton" type="button"></button>{{/show_controls}}</td><td class="stackFrameVar"><input class="stackFrameVarInput pl-html-input" id="frame-{{../index}}-var-{{index}}-name" name="frame-{{../index}}-var-{{index}}-name" data-instavalue="submittedValues.frame-{{../index}}-var-{{index}}-name" value="{{name}}"></td>
                         <td class="stackFrameValue"><input class="stackFrameValueInput pl-html-input" id="frame-{{../index}}-var-{{index}}-val" name="frame-{{../index}}-var-{{index}}-val" data-instavalue="submittedValues.frame-{{../index}}-var-{{index}}-val" value="{{val}}"></td>
                       </tr>
@@ -46,7 +46,10 @@
               <div id="heap">
                 <div id="heapHeader">Objects</div>
             </div>
-            {{#show_controls}}<button type="button" class="btn" id="addFuncButton">Add function</button>{{/show_controls}}
+            {{#show_controls}}
+              <button type="button" class="btn" id="addFuncButton">Add function</button>
+              <button type="button" class="btn" id="addListButton">Add list</button>
+            {{/show_controls}}
             </td>
         </tr>
         </tbody></table>

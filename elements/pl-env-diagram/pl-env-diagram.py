@@ -60,12 +60,6 @@ def prepare(element_html, data):
     return data
 
 def parse(element_html, data):
-    # doc = pq(element_html)
-    # inputs = doc(".pl-html-input")
-    # for input in inputs:
-    #     key = input.attr('pl-html-key')
-    #     value = input.val()
-    #     data["submitted_answers"][key] = value
     data['submitted_answers'] = Frame.unflatten_raw_data(data["submitted_answers"])
     return data
 
