@@ -35,8 +35,77 @@ function toggleCheckbox(event) {
   toggleContainer.classList.toggle("active", event.target.checked);
 
   const stackframeValueInput = toggleContainer.closest(".variableTr").querySelector(".stackFrameValueInput");
+  const stackframeValueContainer = toggleContainer.closest(".variableTr").querySelector(".stackFrameValue");
+
+  // clear existing dropdown for that checkbox
+  const existingDropdown = stackframeValueContainer.querySelector(".dropdown-list");
+  if (existingDropdown) {
+    stackframeValueContainer.removeChild(existingDropdown);
+  }
+
   stackframeValueInput.disabled = event.target.checked;
   stackframeValueInput.value = "";
+
+  // check whether we are going from value -> object or object -> value
+  if (event.target.checked) {
+    const dropdown = document.createElement("select");
+    dropdown.classList.add("dropdown-list");
+
+    // want the top option to the empty (so it's not pre-selected)
+    const emptyOption = document.createElement("option");
+    emptyOption.text = "";
+    dropdown.add(emptyOption);
+
+    // pull in function names
+    const funcNameInputs = document.querySelectorAll(".funcNameInput");
+    funcNameInputs.forEach(input => {
+      const option = document.createElement("option");
+      option.text = input.value;
+      dropdown.add(option);
+    });
+
+    // have the stackFrameValueInput reflect what change we've selected
+    dropdown.addEventListener("change", function() {
+      stackframeValueInput.value = this.value;
+    });
+    stackframeValueContainer.appendChild(dropdown);
+  }
+}
+
+// dropdowns to render to associate a var with an object
+function updateDropdowns() {
+  // query for the dropdowns and func names
+  const funcNameInputs = document.querySelectorAll(".funcNameInput");
+  const dropdowns = document.querySelectorAll(".dropdown-list");
+
+  // save selected elements
+  const selectedValues = [];
+  dropdowns.forEach(dropdown => {
+    selectedValues.push(dropdown.value);
+  });
+
+  // clear the dropdown to re-render properly
+  dropdowns.forEach(dropdown => {
+    const currVal = dropdown.value;
+    dropdown.innerHTML = "";
+    const empty = document.createElement("option");
+    empty.text = "";
+    dropdown.add(empty);
+
+    // TODO: re-select -> ensure that this persists
+    if (selectedValues.includes(currVal)) {
+      dropdown.value = currVal;
+    }
+  });
+
+  // restore the dropdown with current function names
+  funcNameInputs.forEach(input => {
+    dropdowns.forEach(dropdown => {
+      const option = document.createElement("option");
+      option.text = input.value;
+      dropdown.add(option);
+    });
+  });
 }
 
 function make_variable(plKey, returnValue=false) {
@@ -98,6 +167,7 @@ function make_remove_button(target) {
   removeframe.type = "button";
   removeframe.onclick = function() {
     target.parentElement.removeChild(target);
+    updateDropdowns();
   }
   return removeframe
 }
@@ -184,14 +254,17 @@ function add_heap_object(content) {
 }
 
 function add_function_object() {
-  let index = getLastIndex("func-")
+  let index = getLastIndex("heap-func-")
   let funcObj = document.createElement("div")
-  funcObj.className = "funcObj"
+  funcObj.id = "heap-func-" + index
+  funcObj.classList.add("funcObj")
   funcObj.innerText = "func "
-  let funcNameInput = make_variable_length_input("funcNameInput", "func-" + index + "-name")
+  let funcNameInput = make_variable_length_input("funcNameInput", "heap-func-" + index + "-name")
   funcObj.appendChild(funcNameInput)
-  funcObj.appendChild(make_parent_marker("span"), "func-" + index)
-  add_heap_object(funcObj)
+  funcObj.appendChild(make_parent_marker("span"), "heap-func-" + index)
+
+  funcNameInput.addEventListener("change", updateDropdowns);
+  add_heap_object(funcObj, "function")
 }
 
 let executionVisualizer;
