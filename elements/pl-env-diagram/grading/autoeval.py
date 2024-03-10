@@ -60,7 +60,7 @@ class FrameTree():
             parent.add_child(self.fobj_framenode_dict[fobj])
             # OLD: dictionary rep between fobj and frame
             #self.fobj_name_dict[fobj] = name
-            #print("test2: ", name, parent.name)
+            #print("test2: ", name, parent.__name__)
         self.lastcreatedframe = frame
         return frame
     
@@ -117,6 +117,9 @@ class FrameTree():
             exitlines_pq.append(exitline)
             exitlines_fobj_dict[exitline] = fobj
 
+        # remove duplicate exit lines
+        exitlines_pq = list(set(exitlines_pq))
+        # heapify the list
         heapq._heapify_max(exitlines_pq)
         if self.debugmessages: print("========== COMPLETED exit line tracing ==========")
 
@@ -180,22 +183,18 @@ class FrameTree():
         exec(newcode, d, {})
         # TODO: Needed?
         del self.root.bindings["globvar"]
-
-    def get_simpletree(self):
-        self.bindings_set = set()
-        bindings_dict = self.simplify_node(self.root, {})
-        self.bindings_set.update(bindings_dict.values())
-        return self.root
     
     # RIGHT NOW ONLY WORKS WITH INTEGER + FUNC
     def get_json(self):
         # keeps track of how many of the same frame name exist
         frames_dict = {}
         # TODO: MOVE TO FRAMETREE DEF
-        objname_dict = {"int":0, "func":0}
+        objname_dict = {"int":0, "dict":0}
+        objcounter = 0
+        # stores values of objects.
         heap_dict = {}
         mem_to_loc_dict = {}
-        def addtojson(frame): # frames_dict, heap_dict, objname_dict
+        def addtojson(frame, objcounter): # frames_dict, heap_dict, objname_dict
             newframe = {}
             if frame.json_name in frames_dict:
                 frames_dict[frame.json_name] = frames_dict[frame.json_name] + [newframe]
@@ -208,66 +207,78 @@ class FrameTree():
                     # TODO: MOVE TO FRAMETREE DEF
                     match frame.bindings[varname]:
                         case int():
-                            mem_to_loc_dict[id(frame.bindings[varname])] = "int-" + str(objname_dict["int"])
-                            objname_dict["int"] = objname_dict["int"] + 1
-                            heap_dict[mem_to_loc_dict[id(frame.bindings[varname])]] = frame.bindings[varname]
-                        # TODO: NOT WORKING FOR FUNC CASE?
+                            mem_to_loc_dict[id(frame.bindings[varname])] = objcounter#"int-" + str(objname_dict["int"])
+                            #objname_dict["int"] = objname_dict["int"] + 1
+                            heap_dict[mem_to_loc_dict[id(frame.bindings[varname])]] = frame.bindings[varname] #[frame.bindings[varname],0]
                         case _:
-                            mem_to_loc_dict[id(frame.bindings[varname])] = "func-" + str(objname_dict["func"])
-                            objname_dict["func"] = objname_dict["func"] + 1
-                            # change so its more than just name, also parent frame?
-                            heap_dict[mem_to_loc_dict[id(frame.bindings[varname])]] = "function <" + str(frame.bindings[varname].__name__ + ">")
+                            classname = frame.bindings[varname].__class__.__name__
+                            #if classname not in objname_dict:
+                                #objname_dict[classname] = 0
+    
+                            #objname_dict[classname] = objname_dict[classname] + 1
+                            if hasattr(frame.bindings[varname], "__name__"):
+                                repr = classname + " <" + str(frame.bindings[varname].__name__) + ">"
+                            else:
+                                repr = classname + " <>"
+                            mem_to_loc_dict[id(frame.bindings[varname])] = objcounter
+                            #heap_dict[mem_to_loc_dict[id(frame.bindings[varname])]] = [repr, list(mem_to_loc_dict.values()).count(repr)]
+                            heap_dict[objcounter] = repr
                     newframe[varname] = mem_to_loc_dict[id(frame.bindings[varname])]
+                objcounter = objcounter + 1
             for child in frame.children:
-                addtojson(child)
-        addtojson(self.root)
+                objcounter = addtojson(child, objcounter)
+            return objcounter
+        addtojson(self.root, 0)
         return frames_dict, heap_dict
 
-    def equaljson(self, other = None, otherjson_frames = None, otherjson_heap = None, partial = None):
+    def equaljson(self, other = None, B_json_frames = None, B_json_heap = None, partial = None):
+        """
+        partial can be set to None or byframe.
+        """
         sumgrade = 0
         extraframes = 0 
-        total = 0
+        totalframes = 0
         if not other is None:
-            otherjson_frames, otherjson_heap = other.get_json()
-        myjson_frames, myjson_heap = self.get_json()
-        self_other_pointer_dict = {}
-        if myjson_frames.keys() != otherjson_frames.keys():
+            B_json_frames, B_json_heap = other.get_json()
+        A_json_frames, A_json_heap = self.get_json()
+        A_to_B_pointer_dict = {}
+        if A_json_frames.keys() != B_json_frames.keys():
             if partial is None:
                 return 0
-        if myjson_heap.keys() != otherjson_heap.keys():
+        if A_json_heap.keys() != B_json_heap.keys():
             if partial is None:
                 return 0
         # get common frames between both groups
         # TODO: frame name is not really a concern - can be different between things?
-        framekeys = set(myjson_frames).intersection(set(otherjson_frames))
+        framekeys = set(A_json_frames).intersection(set(B_json_frames))
         for frame in framekeys:
-            if len(myjson_frames[frame]) != len(otherjson_frames[frame]):
+            if len(A_json_frames[frame]) != len(B_json_frames[frame]):
                 if partial is None:
                     print("amount of sub-frames not equal in ", frame)
                     return 0
             # sets the indices of all frames in the other json to be yet to be checked
-            framestomatch = [True]*len(otherjson_frames[frame])
-            for i in range(len(myjson_frames[frame])):
+            framestomatch = [True]*len(B_json_frames[frame])
+            for i in range(len(A_json_frames[frame])):
                 found_match = False
-                total += 1
-                for j in range(len(otherjson_frames[frame])):
+                #total += 1
+                for j in range(len(B_json_frames[frame])):
                     if not framestomatch[j]:
                         continue
                     is_match = True
                     # checks through each variable in the frame
-                    variablekeys = set(myjson_frames[frame][i]).intersection(set(otherjson_frames[frame][j]))
+                    variablekeys = set(A_json_frames[frame][i]).intersection(set(B_json_frames[frame][j]))
                     for varname in variablekeys:
                         # if we have the pointer from the variable name already recorded, check to make sure the value in the pointer dict
                         # matches what we expect
-                        if myjson_frames[frame][i][varname] in self_other_pointer_dict:
-                            if otherjson_frames[frame][j][varname] != self_other_pointer_dict[myjson_frames[frame][i][varname]]:
+                        if A_json_frames[frame][i][varname] in A_to_B_pointer_dict:
+                            if B_json_frames[frame][j][varname] != A_to_B_pointer_dict[A_json_frames[frame][i][varname]]:
                                 print("not a match, variable pointers are mismatched")
                                 is_match = False
                                 break
                         else:
                             # set pointer matching
-                            self_other_pointer_dict[myjson_frames[frame][i][varname]] = otherjson_frames[frame][j][varname]
-                        if myjson_heap[myjson_frames[frame][i][varname]] != otherjson_heap[otherjson_frames[frame][j][varname]]:
+                            A_to_B_pointer_dict[A_json_frames[frame][i][varname]] = B_json_frames[frame][j][varname]
+                        if A_json_heap[A_json_frames[frame][i][varname]] != B_json_heap[B_json_frames[frame][j][varname]]:
                             print("not a match, variable values are not matched")
                             is_match = False
                             break 
@@ -287,7 +298,92 @@ class FrameTree():
                 sumgrade = sumgrade - sum(framestomatch)/len(framestomatch)
         if partial is None:
             return 1
-        return sumgrade/total - max(len(otherjson_frames) - len(myjson_frames), 0)/len(otherjson_frames)
+        return sumgrade/total - max(len(B_json_frames) - len(A_json_frames), 0)/len(B_json_frames)
+    
+    def grade_byframe(self, other = None, B_json_frames = None, B_json_heap = None):
+        """
+        grades in a way that partial credit is assigned per correct frame
+        """
+        total_extraframes = 0
+        total_framecount = 0
+        total_correctframes = 0
+        if not other is None:
+            B_json_frames, B_json_heap = other.get_json()
+        A_json_frames, A_json_heap = self.get_json()
+        print("Aframes", A_json_frames)
+        print("Bframes", B_json_frames)
+        # Associates the pointer in A to the pointer in B.
+        A_to_B_pointer_dict = {}
+        # sets the indices of all frames in the other json to be yet to be checked
+        for framekey in A_json_frames:
+            # the amount of matches found for frames matching framekey
+            correctframes = 0
+            if framekey not in B_json_frames:
+                framestomatch = []
+            else:
+                framestomatch = [True]*len(B_json_frames[framekey])
+                # get each frame with the same framename in A and find a match in B
+                for a in range(len(A_json_frames[framekey])):
+                    # get each frame with the same framename in B
+                    for b in range(len(B_json_frames[framekey])):
+                        # if b has already found a match in A_json_frames, do not attempt to match it. 
+                        if not framestomatch[b]:
+                            continue
+                        # we assume that j is a match for i until proven otherwise
+                        is_match = True
+                        # gets all the variable keys that occur in A
+                        a_variablekeys = A_json_frames[framekey][a].keys()
+                        # first checks that we have matching keys between a and b
+                        if B_json_frames[framekey][b].keys() != a_variablekeys:
+                            #print("not a match, mismatching variables")
+                            is_match = False
+                            continue
+                        # checks through each variable in the frame
+                        for a_varname in a_variablekeys:
+                            # checks to make sure the variable exists in B
+                            if not a_varname in B_json_frames[framekey][a]:
+                                #print("not a match, other does not have variable ", a_varname)
+                                is_match = False
+                                break
+                            # if we have the pointer from the variable name already recorded, check to make sure the value in the pointer dict
+                            # matches what we expect
+                            elif A_json_frames[framekey][a][a_varname] in A_to_B_pointer_dict:
+                                if B_json_frames[framekey][b][a_varname] != A_to_B_pointer_dict[A_json_frames[framekey][a][a_varname]]:
+                                    #print("not a match, variable pointers are mismatched")
+                                    is_match = False
+                                    break
+                            else:
+                                # check that the values stored in each variable are the same
+                                if A_json_heap[A_json_frames[framekey][a][a_varname]] != B_json_heap[B_json_frames[framekey][b][a_varname]]:
+                                    #print("not a match, variable values are not matched")
+                                    is_match = False
+                                    break
+                                # if they are the same, we can keep track of the equivalence in pointers for future comparisons.
+                                A_to_B_pointer_dict[A_json_frames[framekey][a][a_varname]] = B_json_frames[framekey][b][a_varname]
+                        # if everything in b matches everything in a, we have found the matching frames.
+                        if is_match:    
+                            # to prevent "b" from being matched to future frames in "A"
+                            framestomatch[b] = False
+                            # adds to the amount of frames the student has gotten correct.
+                            correctframes += 1
+                            break
+                    
+            # counts all frames left in B that have not been matched.
+            extraframes = max(0, sum(framestomatch) - (len(A_json_frames[framekey]) - correctframes))
+            total_extraframes += extraframes
+            # adds to the total correct frames
+            total_correctframes += correctframes
+            # adds to the total count of frames in the correct version
+            total_framecount += len(A_json_frames[framekey])
+
+        # counts other frames that occur in B but not in A
+        for framekey in list(set(B_json_frames) - set(A_json_frames)):
+            total_extraframes += len(B_json_frames[framekey])
+
+        print("total extra", total_extraframes)
+        print("total correct", total_correctframes)
+        print("total framecount", total_framecount)
+        return max(0, total_correctframes/total_framecount - total_extraframes/(total_framecount + total_extraframes))
         
 
 example_meow = """
@@ -305,6 +401,8 @@ glob_meow()"""
 
 example_simple = """
 x = 5
+def f():
+    return 5
 y = 6
 """
 
@@ -328,16 +426,9 @@ def f():
 f()
 """
 
-ft2 = FrameTree(example_simple)
-#print("root:", ft.root)
-ft = FrameTree(example_intsonly2)
-#print(ft2.root.bindings)
-#ftfr = ft.root.freeze()
-#ftfr2 = ft2.root.freeze()
-#print(ftfr.__hash__())
-#print(ftfr2.__hash__())
-#print(ft.root.freeze() == ft2.root.freeze())
-json = ft.get_json()
-print(json)
-# not working with reverse currently
-print(ft.equaljson(ft2, partial = "byframe"))
+
+ft = FrameTree(example_simple)
+ft2 = FrameTree(example_intsonly2)
+#jsonframes, jsonheap = ft2.get_json()
+#print(jsonframes)
+print(ft2.grade_byframe(ft))
