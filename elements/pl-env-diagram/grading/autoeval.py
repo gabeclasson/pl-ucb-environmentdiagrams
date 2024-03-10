@@ -231,74 +231,78 @@ class FrameTree():
         addtojson(self.root, 0)
         return frames_dict, heap_dict
 
-    def equaljson(self, other = None, B_json_frames = None, B_json_heap = None, partial = None):
+    def grade_allornothing(self, other = None, B_json_frames = None, B_json_heap = None):
         """
-        partial can be set to None or byframe.
+        grades all or nothing
         """
-        sumgrade = 0
-        extraframes = 0 
-        totalframes = 0
         if not other is None:
             B_json_frames, B_json_heap = other.get_json()
         A_json_frames, A_json_heap = self.get_json()
-        A_to_B_pointer_dict = {}
+        print("Aframes", A_json_frames)
+        print("Bframes", B_json_frames)
+        # check that the same framekeys exist in both A and B
         if A_json_frames.keys() != B_json_frames.keys():
-            if partial is None:
-                return 0
-        if A_json_heap.keys() != B_json_heap.keys():
-            if partial is None:
-                return 0
-        # get common frames between both groups
-        # TODO: frame name is not really a concern - can be different between things?
-        framekeys = set(A_json_frames).intersection(set(B_json_frames))
-        for frame in framekeys:
-            if len(A_json_frames[frame]) != len(B_json_frames[frame]):
-                if partial is None:
-                    print("amount of sub-frames not equal in ", frame)
-                    return 0
-            # sets the indices of all frames in the other json to be yet to be checked
-            framestomatch = [True]*len(B_json_frames[frame])
-            for i in range(len(A_json_frames[frame])):
-                found_match = False
-                #total += 1
-                for j in range(len(B_json_frames[frame])):
-                    if not framestomatch[j]:
+            print("keys in A and B not matching.")
+            return 0
+        # Associates the pointer in A to the pointer in B.
+        A_to_B_pointer_dict = {}
+        # sets the indices of all frames in the other json to be yet to be checked
+        for framekey in A_json_frames:
+            framestomatch = [True]*len(B_json_frames[framekey])
+            # get each frame with the same framename in A and find a match in B
+            for a in range(len(A_json_frames[framekey])):
+                has_match = False
+                # get each frame with the same framename in B
+                for b in range(len(B_json_frames[framekey])):
+                    # if b has already found a match in A_json_frames, do not attempt to match it. 
+                    if not framestomatch[b]:
                         continue
+                    # we assume that j is a match for i until proven otherwise
                     is_match = True
+                    # gets all the variable keys that occur in A
+                    a_variablekeys = A_json_frames[framekey][a].keys()
+                    # first checks that we have matching keys between a and b
+                    if B_json_frames[framekey][b].keys() != a_variablekeys:
+                        #print("not a match, mismatching variables")
+                        is_match = False
+                        continue
                     # checks through each variable in the frame
-                    variablekeys = set(A_json_frames[frame][i]).intersection(set(B_json_frames[frame][j]))
-                    for varname in variablekeys:
+                    for a_varname in a_variablekeys:
+                        # checks to make sure the variable exists in B
+                        if not a_varname in B_json_frames[framekey][a]:
+                            #print("not a match, other does not have variable ", a_varname)
+                            is_match = False
+                            break
                         # if we have the pointer from the variable name already recorded, check to make sure the value in the pointer dict
                         # matches what we expect
-                        if A_json_frames[frame][i][varname] in A_to_B_pointer_dict:
-                            if B_json_frames[frame][j][varname] != A_to_B_pointer_dict[A_json_frames[frame][i][varname]]:
-                                print("not a match, variable pointers are mismatched")
+                        elif A_json_frames[framekey][a][a_varname] in A_to_B_pointer_dict:
+                            if B_json_frames[framekey][b][a_varname] != A_to_B_pointer_dict[A_json_frames[framekey][a][a_varname]]:
+                                #print("not a match, variable pointers are mismatched")
                                 is_match = False
                                 break
                         else:
-                            # set pointer matching
-                            A_to_B_pointer_dict[A_json_frames[frame][i][varname]] = B_json_frames[frame][j][varname]
-                        if A_json_heap[A_json_frames[frame][i][varname]] != B_json_heap[B_json_frames[frame][j][varname]]:
-                            print("not a match, variable values are not matched")
-                            is_match = False
-                            break 
-                    if is_match:
-                        found_match = True
-                        framestomatch[j] = False
-                        if partial == "byframe":
-                            # adds grade by one frame
-                            sumgrade += 1
+                            # check that the values stored in each variable are the same
+                            if A_json_heap[A_json_frames[framekey][a][a_varname]] != B_json_heap[B_json_frames[framekey][b][a_varname]]:
+                                #print("not a match, variable values are not matched")
+                                is_match = False
+                                break
+                            # if they are the same, we can keep track of the equivalence in pointers for future comparisons.
+                            A_to_B_pointer_dict[A_json_frames[framekey][a][a_varname]] = B_json_frames[framekey][b][a_varname]
+                    # if everything in b matches everything in a, we have found the matching frames.
+                    if is_match:    
+                        # to prevent "b" from being matched to future frames in "A"
+                        framestomatch[b] = False
+                        has_match = True
                         break
-                if not found_match:
-                    if partial is None:
-                        print("match not found for frame: ", frame)
-                        return 0
-            if partial == "byframe":
-                # punishes student for extra frames
-                sumgrade = sumgrade - sum(framestomatch)/len(framestomatch)
-        if partial is None:
-            return 1
-        return sumgrade/total - max(len(B_json_frames) - len(A_json_frames), 0)/len(B_json_frames)
+                # if frame A doesn't have a matching frame, leave
+                if not has_match:
+                    print("unable to find matching frame in B for A for frame", framekey)
+                    return 0
+            # if there are leftover frames in B, return 0
+            if sum(framestomatch) > 0:
+                return 0
+        return 1
+       
     
     def grade_byframe(self, other = None, B_json_frames = None, B_json_heap = None):
         """
@@ -427,8 +431,9 @@ f()
 """
 
 
-ft = FrameTree(example_simple)
-ft2 = FrameTree(example_intsonly2)
+intsonly_ft = FrameTree(example_intsonly)
+intsonly2_ft = FrameTree(example_intsonly2)
 #jsonframes, jsonheap = ft2.get_json()
 #print(jsonframes)
-print(ft2.grade_byframe(ft))
+print("grade by frame:", intsonly_ft.grade_byframe(intsonly2_ft))
+print("grade all-or-nothing", intsonly_ft.grade_allornothing(intsonly2_ft))
