@@ -110,7 +110,7 @@ function updateDropdowns() {
 
 function make_variable(plKey, returnValue=false) {
   const tr = document.createElement("tr");
-  tr.classList.add("variableTr")
+  tr.classList.add("variableTr", "removable")
   tr.id = plKey
   var varname; 
   if (returnValue) {
@@ -165,11 +165,14 @@ function make_remove_button(target) {
   var removeframe = document.createElement("button");
   removeframe.classList.add("btn", "removeButton")
   removeframe.type = "button";
-  removeframe.onclick = function() {
-    target.parentElement.removeChild(target);
-    updateDropdowns();
-  }
+  removeframe.addEventListener("click", removeListener)
   return removeframe
+}
+
+function removeListener(e) {
+  let button = e.target
+  let target = button.closest(".removable")
+  target.parentElement.removeChild(target);
 }
 
 function make_parent_marker(elemType, plKey) {
@@ -217,7 +220,7 @@ function add_frame() {
   var variable_button = document.createElement("button");
   var test = document.createElement("div");
   
-  frame.className = "stackFrame";
+  frame.classList.add("stackFrame", "removable");
   frame_name_label.className = "frameHeader";
   
   test.className = "stackFrameValue";
@@ -251,10 +254,9 @@ function add_frame() {
   //document.body.appendChild(frame);
 }
 
-let heapObjectCount = 0;
-function add_heap_object(id, content) {
+function add_heap_object(id, content, typeName) {
   let heapRow = document.createElement("table")
-  heapRow.className = "heapRow"
+  heapRow.classList.add("heapRow", "removable")
   let topLevelHeapObject = document.createElement("td")
   topLevelHeapObject.className = "topLevelHeapObject"
   topLevelHeapObject.id = id;
@@ -263,6 +265,12 @@ function add_heap_object(id, content) {
   let heapObject = document.createElement("div")
   heapObject.className = "heapObject";
   topLevelHeapObject.appendChild(heapObject)
+  if (typeName) {
+    let typeMarker = document.createElement("div")
+    typeMarker.className = "typeLabel"
+    typeMarker.innerText = typeName
+    heapObject.append(typeMarker)
+  }
   heapObject.appendChild(content)
   executionVisualizer.querySelector("#heap").appendChild(heapRow);
 }
@@ -367,6 +375,52 @@ function make_arrow_svg() {
   return [svg, newPath]
 }
 
+function add_list_object() {
+  let index = getLastIndex("heap-list-")
+  let listObj = document.createElement("table")
+  listObj.className = "listTbl"
+  let listHeaderRow = document.createElement("tr")
+  let listContentsRow = document.createElement("tr")
+  listObj.appendChild(listHeaderRow)
+  listObj.appendChild(listContentsRow)
+  let appendButton = make_add_button(function () {
+    
+  })
+  listObj.id = "heap-list-" + index
+  add_heap_object(listObj, "list")
+}
+
+function decrement_list_header(listHeaderObj) {
+  if (!listHeaderObj.lastChild) {
+    return;
+  }
+  listHeaderObj.removeChild(listHeaderObj.lastChild)
+}
+
+function increment_list_header(listHeaderObj) {
+  let lastHeader = listHeaderObj.lastChild
+  if (!lastHeader) {
+    listHeaderObj.appendChild(make_list_header_object(0))
+  }
+  let lastNum = parseInt(lastHeader.innerText)
+  listHeaderObj.appendChild(make_list_header_object(lastNum + 1))
+}
+
+function make_list_header_object(number) {
+  let obj = document.createElement("td")
+  obj.className = "listHeader"
+  obj.innerText = "" + number
+  return obj
+}
+
+function make_add_button(onclick) {
+  var addButton = document.createElement("button");
+  addButton.classList.add("btn", "addButton")
+  addButton.type = "button";
+  addButton.onclick = onclick
+  return removeframe
+}
+
 let executionVisualizer;
 
 window.addEventListener('load', function() {
@@ -374,7 +428,9 @@ window.addEventListener('load', function() {
   executionVisualizer = document.querySelector('.ExecutionVisualizerActive')
   if (executionVisualizer) {
     executionVisualizer.querySelectorAll('.addVarButton').forEach(x => x.addEventListener("click", add_variable_listener))
+    executionVisualizer.querySelectorAll('.removeButton').forEach(x => x.addEventListener("click", removeListener))
     executionVisualizer.querySelector("#addFrameButton").addEventListener("click", add_frame)
     executionVisualizer.querySelector("#addFuncButton").addEventListener("click", add_function_object)
+    executionVisualizer.querySelector("#addListButton").addEventListener("click", add_list_object)
   }
 });

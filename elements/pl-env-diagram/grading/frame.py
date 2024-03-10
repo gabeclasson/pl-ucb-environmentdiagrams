@@ -6,8 +6,8 @@ class Frame():
         self.children = set()
         if bindings is None:
             self.bindings = {}
-        self.name = name
-        self.json_name = name + "#" + parent.name if name != "global" else name
+        self.__name__ = name
+        self.json_name = name + "#" + parent.__name__ if name != "global" else name
         # self's frame object
         self.fobj = fobj
 
@@ -21,13 +21,13 @@ class Frame():
         self.bindings = name_value_dict 
     
     def set_name(self, name):
-        self.name = name
+        self.__name__ = name
     
     def add_child(self, child):
         self.children.add(child)
     
     def __str__(self, level=0):
-        ret = "\t"*level+repr(self.name)+"\n"
+        ret = "\t"*level+repr(self.__name__)+"\n"
         for child in self.children:
             ret += child.__str__(level+1)
         return ret
