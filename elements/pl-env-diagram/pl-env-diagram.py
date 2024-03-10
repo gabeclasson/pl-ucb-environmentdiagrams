@@ -60,7 +60,13 @@ def prepare(element_html, data):
     return data
 
 def parse(element_html, data):
-    data['submitted_answers'] = Frame.unflatten_raw_data(data["submitted_answers"])
+    pointers = []
+    for key, value in data['submitted_answers'].items():
+        if value and value[0] == "#":
+            pointers.append({'origin': key, 'destination': value[1:]})
+    structured_answers = Frame.unflatten_raw_data(data["submitted_answers"])
+    structured_answers['pointer'] = pointers
+    data['submitted_answers'] = structured_answers
     return data
 
 default_rendering_data = {'frame': [{'name': None, 'index': 0, 'var': [], 'parent': None}], 'show_controls': True}
@@ -75,12 +81,13 @@ def render(element_html, data):
             show_controls = True
         else: # Submission
             rendering_data = data['submitted_answers']
+            print(rendering_data)
             show_controls = False
         if not rendering_data:
             rendering_data = default_rendering_data
         rendering_data.update({'show_controls': show_controls})
-        return chevron.render(template, rendering_data)  
-            
+        return chevron.render(template, rendering_data)
+
 def grade(element_html, data):
     frame = Frame.from_raw_data(data['submitted_answers'])
     correct_frame = Frame.from_raw_data(data['correct_answers'])

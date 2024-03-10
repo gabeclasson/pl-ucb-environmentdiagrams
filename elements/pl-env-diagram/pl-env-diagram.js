@@ -74,7 +74,7 @@ function removeListener(e) {
   // if (target.classList.contains("topLevelHeapObject")) {
   //   updatePointersTo(target.id, true)
   // } else if (target.classList.contains("stackFrame")) {
-  //   for (let input of Array.from(document.getElementsByClassName("stackFrameValueInput"))) {
+  //   for (let input of Array.from(executionVisualizer.getElementsByClassName("stackFrameValueInput"))) {
   //     updatePointerFrom(input.id, true)
   //   } 
   // } else if (target.classList.contains("variableTr")) {
@@ -86,13 +86,14 @@ function removeListener(e) {
 }
 
 function updateAllPointers() {
-  for (let pointer of Array.from(document.getElementsByClassName("pointerArrow"))) {
+  for (let pointer of Array.from(executionVisualizer.getElementsByClassName("pointerArrow"))) {
+    console.log(pointer)
     updatePointer(pointer)
   }
 }
 
 function updatePointersTo(destinationId, remove) {
-  for (let pointer of Array.from(document.getElementsByClassName("pointer-to-" + destinationId))) {
+  for (let pointer of Array.from(executionVisualizer.getElementsByClassName("pointer-to-" + destinationId))) {
     console.log(pointer)
     if (remove) {
       removePointer(pointer)
@@ -103,7 +104,7 @@ function updatePointersTo(destinationId, remove) {
 }
 
 function updatePointerFrom(originId, remove) {
-  let pointer = document.getElementById("pointer-from-" + originId);
+  let pointer = executionVisualizer.getElementById("pointer-from-" + originId);
   if (pointer == null) {
     return
   }
@@ -228,7 +229,7 @@ function add_function_object() {
   funcObj.innerText = "func "
   let funcNameInput = make_variable_length_input("funcNameInput", "heap-func-" + index + "-name")
   funcObj.appendChild(funcNameInput)
-  funcObj.appendChild(make_parent_marker("span"), "heap-func-" + index)
+  funcObj.appendChild(make_parent_marker("span", "heap-func-" + index))
 
   add_heap_object("heap-func-" + index, funcObj, "function")
 }
@@ -254,7 +255,7 @@ function handlePointerClick(button) {
     let coords = relative_coordinates_obj_to_pointer(valueContainer, mouseEvent)
     update_arrow_svg(coords, svg_objs)
   }
-  document.addEventListener("mousemove", mouseListener)
+  executionVisualizer.addEventListener("mousemove", mouseListener)
   vizLayoutTd.appendChild(svg)
 
   function clickListener(clickEvent) {
@@ -266,7 +267,6 @@ function handlePointerClick(button) {
       return 
     } 
     svg.classList.add( "pointer-to-" + targetObj.id)
-    valueInput.disabled = true
     valueInput.style.visibility = "hidden"
     valueInput.value = "#" + targetObj.id
     valueInput.style.width = ""
@@ -274,7 +274,7 @@ function handlePointerClick(button) {
     button.classList.remove("pointerButton")
     update_arrow_svg(relative_coordinates_obj_to_obj(valueContainer, targetObj), svg_objs)
   }
-  document.addEventListener("click", clickListener, {
+  executionVisualizer.addEventListener("click", clickListener, {
     capture: true,
     once: true
   })
@@ -283,7 +283,7 @@ function handlePointerClick(button) {
 function handleValueClick(button) {
   let valueContainer = button.closest(".valueContainer")
   let valueInput = valueContainer.children[0]
-  let pointerObj = document.getElementById("pointer-from-" + valueInput.id)
+  let pointerObj = executionVisualizer.getElementById("pointer-from-" + valueInput.id)
   removePointer(pointerObj)
 }
 
@@ -335,14 +335,14 @@ function updatePointer(svg) {
   }
   let path = svg.children[0]
   let originId = svg.id.substring("pointer-from-".length)
-  let originElement = document.getElementById(originId)
+  let originElement = executionVisualizer.getElementById(originId)
   let destinationId;
   for (let className of svg.classList) {
     if (className.indexOf("pointer-to-") >= 0) {
       destinationId = className.substring("pointer-to-".length)
     }
   }
-  let destinationElement = document.getElementById(destinationId)
+  let destinationElement = executionVisualizer.getElementById(destinationId)
   if (originElement == null || destinationElement == null) {
     removePointer(svg)
     return;
@@ -353,9 +353,8 @@ function updatePointer(svg) {
 function removePointer(svg) {
   svg.parentElement.removeChild(svg)
   let originId = svg.id.substring("pointer-from-".length)
-  let valueInput = document.getElementById(originId)
+  let valueInput = executionVisualizer.getElementById(originId)
   if (valueInput != null) {
-    valueInput.disabled = false
     valueInput.style.visibility = "visible"
     valueInput.value = ""
     valueInput.sib
@@ -426,11 +425,14 @@ let executionVisualizer;
 window.addEventListener('load', function() {
   vizLayoutTd = document.getElementById("vizLayoutTdSecond")
   executionVisualizer = document.querySelector('.ExecutionVisualizerActive')
+  executionVisualizer.getElementById = (id) => (executionVisualizer.querySelector("#" + id))
+  executionVisualizer.getElementsByClassName = (className) => (executionVisualizer.querySelectorAll("." + className))
   if (executionVisualizer) {
     executionVisualizer.querySelectorAll('.addVarButton').forEach(x => x.addEventListener("click", add_variable_listener))
     executionVisualizer.querySelectorAll('.removeButton').forEach(x => x.addEventListener("click", removeListener))
     executionVisualizer.querySelector("#addFrameButton").addEventListener("click", add_frame)
     executionVisualizer.querySelector("#addFuncButton").addEventListener("click", add_function_object)
     executionVisualizer.querySelector("#addListButton").addEventListener("click", add_list_object)
+    updateAllPointers()
   }
 });

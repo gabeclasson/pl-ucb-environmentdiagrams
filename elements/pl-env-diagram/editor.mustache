@@ -26,7 +26,12 @@
                     {{#var}}
                       <tr class="variableTr removable" id="frame-{{../index}}-var-{{index}}">
                         <td class="">{{#show_controls}}<button class="btn removeButton" type="button"></button>{{/show_controls}}</td><td class="stackFrameVar"><input class="stackFrameVarInput pl-html-input" id="frame-{{../index}}-var-{{index}}-name" name="frame-{{../index}}-var-{{index}}-name" data-instavalue="submittedValues.frame-{{../index}}-var-{{index}}-name" value="{{name}}"></td>
-                        <td class="stackFrameValue"><input class="stackFrameValueInput pl-html-input" id="frame-{{../index}}-var-{{index}}-val" name="frame-{{../index}}-var-{{index}}-val" data-instavalue="submittedValues.frame-{{../index}}-var-{{index}}-val" value="{{val}}"></td>
+                        <td class="stackFrameValue">
+                          <div class="valueContainer">
+                            <input class="stackFrameValueInput pl-html-input" id="frame-{{../index}}-var-{{index}}-val" name="frame-{{../index}}-var-{{index}}-val" data-instavalue="submittedValues.frame-{{../index}}-var-{{index}}-val" value="{{val}}">
+                            <button class="btn pointerValueButton" type="button"></button>
+                          </div>
+                        </td>
                       </tr>
                     {{/var}}
                     {{#return}}
@@ -43,6 +48,20 @@
             <td id="heap_td">
               <div id="heap">
                 <div id="heapHeader">Objects</div>
+                {{#heap}}
+                  {{#func}}
+                    <div class="topLevelHeapObject removable" id="heap-func-{{index}}">
+                      <div class="heapObject">
+                        <div class="typeLabel">function</div>
+                        <div class="funcObj">
+                          func 
+                          <input class="funcNameInput pl-html-input" id="heap-func-{{index}}-name" name="heap-func-{{index}}-name" data-instavalue="submittedValues.heap-func-{{index}}-name" value="{{name}}">
+                          <span> [Parent = <input class="frameParentHeader pl-html-input" id="heap-func-{{index}}-parent" name="heap-func-{{index}}-parent" data-instavalue="submittedValues.heap-func-{{index}}-parent" value="{{parent}}">]</span>
+                        </div>
+                      </div>
+                      {{#show_controls}}<button class="btn removeButton" type="button"></button></div>{{/show_controls}}
+                  {{/func}}
+                {{/heap}}
             </div>
             {{#show_controls}}
               <button type="button" class="btn" id="addFuncButton">Add function</button>
@@ -51,8 +70,12 @@
             </td>
         </tr>
         </tbody></table>
-      </div></div></div>
-<!--<div class="stackFrame"></div>-->
+      </div></div>
+      {{#pointer}}
+        <svg class="pointerArrow pointer-to-{{destination}}" xmlns="http://www.w3.org/2000/svg" id="pointer-from-{{origin}}" 
+        width="0" height="0" viewBox="0 0 0 0" style="height: 0; width: 0; top: 0; left: 0"><path d="M 0, 0 L 0 0"></path></svg>
+      {{/pointer}}
+      </div>
 <p>This tool is based on Python Tutor: <a href="https://pythontutor.com/">pythontutor.com</a></p>
 </body>
 </html> 
