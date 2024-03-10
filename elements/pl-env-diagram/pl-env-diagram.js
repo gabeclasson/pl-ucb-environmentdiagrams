@@ -71,24 +71,25 @@ function removeListener(e) {
   let button = e.target
   let target = button.closest(".removable")
 
-  if (target.classList.contains("topLevelHeapObject")) {
-    updatePointersTo(target.id, true)
-  } else if (target.classList.contains("stackFrame")) {
-    for (let input of Array.from(document.getElementsByClassName("stackFrameValueInput"))) {
-      updatePointerFrom(input.id, true)
-    } 
-  } else if (target.classList.contains("variableTr")) {
-    updatePointerFrom(target.getElementsByClassName("stackFrameValueInput")[0].id, true)
-  }
+  // if (target.classList.contains("topLevelHeapObject")) {
+  //   updatePointersTo(target.id, true)
+  // } else if (target.classList.contains("stackFrame")) {
+  //   for (let input of Array.from(document.getElementsByClassName("stackFrameValueInput"))) {
+  //     updatePointerFrom(input.id, true)
+  //   } 
+  // } else if (target.classList.contains("variableTr")) {
+  //   updatePointerFrom(target.getElementsByClassName("stackFrameValueInput")[0].id, true)
+  // }
 
   target.parentElement.removeChild(target);
+  updateAllPointers()
+}
 
-  for (let pointer of document.getElementsByClassName("pointerArrow")) {
+function updateAllPointers() {
+  for (let pointer of Array.from(document.getElementsByClassName("pointerArrow"))) {
     updatePointer(pointer)
   }
 }
-
-function updateAllPointers
 
 function updatePointersTo(destinationId, remove) {
   for (let pointer of Array.from(document.getElementsByClassName("pointer-to-" + destinationId))) {
@@ -152,7 +153,11 @@ function make_variable_length_input(className, plKey) {
 }
 
 function updateInputLengthToContent(input) {
+  let oldWidth = window.getComputedStyle(input).width
   input.style.minWidth = (input.value.length + 1) + "ch"
+  if (window.getComputedStyle(input).width != oldWidth) {
+    updateAllPointers()
+  } 
 }
 
 function add_frame() {
@@ -340,6 +345,7 @@ function updatePointer(svg) {
   let destinationElement = document.getElementById(destinationId)
   if (originElement == null || destinationElement == null) {
     removePointer(svg)
+    return;
   }
   update_arrow_svg(relative_coordinates_obj_to_obj(originElement, destinationElement), [svg, path])
 }
