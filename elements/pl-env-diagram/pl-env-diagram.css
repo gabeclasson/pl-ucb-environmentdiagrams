@@ -58,7 +58,7 @@
   }
   
   div.ExecutionVisualizer .removeButton {
-    display: inline;
+    display: inline-block;
     background: none;
       border: none;
       padding: 0;
@@ -620,13 +620,11 @@
     padding-bottom: 0px;
   }
   
-  div.ExecutionVisualizer .stackFrameVarTable tr {
-  
-  }
-  
   div.ExecutionVisualizer .stackFrameVarTable {
     text-align: right;
     padding-top: 3px;
+
+    white-space:nowrap;
   
     /* right-align the table */
     margin-left: auto;
@@ -642,23 +640,20 @@
     padding-left: 30px;
   }
   
-  div.ExecutionVisualizer td.toplevelHeapObject {
+  div.ExecutionVisualizer div.topLevelHeapObject {
     /* needed for d3 to do transitions */
     padding-left: 8px;
     padding-right: 8px;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     /*
     border: 2px dotted white;
     border-color: white;
     */
   }
   
-  div.ExecutionVisualizer table.heapRow {
-    margin-bottom: 10px;
-  }
-  
   div.ExecutionVisualizer div.heapObject {
+    display: inline-block;
     padding-left: 2px; /* leave a TINY amount of room for connector endpoints */
   }
   
@@ -913,6 +908,7 @@
   div.ExecutionVisualizer .pointerArrow {
     display: block;
     position: absolute;
+    pointer-events:none;
   }
 
   div.ExecutionVisualizer .pointerArrow path {
@@ -921,13 +917,24 @@
     fill: none;
   }
 
+  div.ExecutionVisualizer .valueContainer {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%
+  }
+
   div.ExecutionVisualizer .valueContainer > input {
     margin-top: 3px;
     margin-left: 3px;
     margin-bottom: 3px;
+    height: 100%;
+    flex-grow: 1;
   }
 
-  div.ExecutionVisualizer .pointerButton {
+  div.ExecutionVisualizer .pointerValueButton {
     display: inline;
     background: none;
       border: none;
@@ -939,7 +946,15 @@
     background-position: center center;
   }
 
-  div.ExecutionVisualizer .pointerButton:hover {
+  div.ExecutionVisualizer .pointerButton:after {
+    content: "P";
+  }
+
+  div.ExecutionVisualizer .valueButton:after {
+    content: "V";
+  }
+
+  div.ExecutionVisualizer .pointerValueButton:hover {
     cursor: pointer;
   }
   

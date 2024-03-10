@@ -27,85 +27,8 @@ function add_variable_listener(e) {
   } else {
     returnVal = frame.querySelector(".returnValueTr");
     variables.insertBefore(make_variable(frame.id + "-var-" + index), returnVal)
+    updatePointerFrom(frame.id + "-return-val", false)
   }
-}
-
-function toggleCheckbox(event) {
-  const toggleContainer = event.target.parentNode;
-  toggleContainer.classList.toggle("active", event.target.checked);
-
-  const stackframeValueInput = toggleContainer.closest(".variableTr").querySelector(".stackFrameValueInput");
-  const stackframeValueContainer = toggleContainer.closest(".variableTr").querySelector(".stackFrameValue");
-
-  // clear existing dropdown for that checkbox
-  const existingDropdown = stackframeValueContainer.querySelector(".dropdown-list");
-  if (existingDropdown) {
-    stackframeValueContainer.removeChild(existingDropdown);
-  }
-
-  stackframeValueInput.disabled = event.target.checked;
-  stackframeValueInput.value = "";
-
-  // check whether we are going from value -> object or object -> value
-  if (event.target.checked) {
-    const dropdown = document.createElement("select");
-    dropdown.classList.add("dropdown-list");
-
-    // want the top option to the empty (so it's not pre-selected)
-    const emptyOption = document.createElement("option");
-    emptyOption.text = "";
-    dropdown.add(emptyOption);
-
-    // pull in function names
-    const funcNameInputs = document.querySelectorAll(".funcNameInput");
-    funcNameInputs.forEach(input => {
-      const option = document.createElement("option");
-      option.text = input.value;
-      dropdown.add(option);
-    });
-
-    // have the stackFrameValueInput reflect what change we've selected
-    dropdown.addEventListener("change", function() {
-      stackframeValueInput.value = this.value;
-    });
-    stackframeValueContainer.appendChild(dropdown);
-  }
-}
-
-// dropdowns to render to associate a var with an object
-function updateDropdowns() {
-  // query for the dropdowns and func names
-  const funcNameInputs = document.querySelectorAll(".funcNameInput");
-  const dropdowns = document.querySelectorAll(".dropdown-list");
-
-  // save selected elements
-  const selectedValues = [];
-  dropdowns.forEach(dropdown => {
-    selectedValues.push(dropdown.value);
-  });
-
-  // clear the dropdown to re-render properly
-  dropdowns.forEach(dropdown => {
-    const currVal = dropdown.value;
-    dropdown.innerHTML = "";
-    const empty = document.createElement("option");
-    empty.text = "";
-    dropdown.add(empty);
-
-    // TODO: re-select -> ensure that this persists
-    if (selectedValues.includes(currVal)) {
-      dropdown.value = currVal;
-    }
-  });
-
-  // restore the dropdown with current function names
-  funcNameInputs.forEach(input => {
-    dropdowns.forEach(dropdown => {
-      const option = document.createElement("option");
-      option.text = input.value;
-      dropdown.add(option);
-    });
-  });
 }
 
 function make_variable(plKey, returnValue=false) {
@@ -124,7 +47,6 @@ function make_variable(plKey, returnValue=false) {
 
   var td = tr.insertCell();
   td.classList.add()
-  tr.appendChild(make_toggle_value_object(plKey));
   if (!returnValue) {
     td.appendChild(make_remove_button(tr));
   }
@@ -135,30 +57,6 @@ function make_variable(plKey, returnValue=false) {
   td.classList.add("stackFrameValue")
 	td.appendChild(stackframeval);
   return tr;
-}
-
-function make_toggle_value_object(plKey) {
-  const toggleContainer = document.createElement("label");
-  
-  const toggleSwitch = document.createElement("input");
-  toggleSwitch.type = "checkbox";
-  toggleContainer.appendChild(toggleSwitch);
-  toggleSwitch.id = plKey + "-toggle";
-  const leftLabel = document.createElement("label");
-  leftLabel.innerText = "Value";
-
-  const rightLabel = document.createElement("label");
-  rightLabel.innerText = "Object";
-
-  toggleSwitch.addEventListener("change", toggleCheckbox);
-
-  const toggleContainerCell = document.createElement("td");
-  toggleContainerCell.appendChild(toggleContainer);
-  toggleContainerCell.appendChild(leftLabel);
-  toggleContainerCell.appendChild(toggleSwitch);
-  toggleContainerCell.appendChild(rightLabel);
-
-  return toggleContainerCell;
 }
 
 function make_remove_button(target) {
@@ -172,7 +70,47 @@ function make_remove_button(target) {
 function removeListener(e) {
   let button = e.target
   let target = button.closest(".removable")
+
+  if (target.classList.contains("topLevelHeapObject")) {
+    updatePointersTo(target.id, true)
+  } else if (target.classList.contains("stackFrame")) {
+    for (let input of Array.from(document.getElementsByClassName("stackFrameValueInput"))) {
+      updatePointerFrom(input.id, true)
+    } 
+  } else if (target.classList.contains("variableTr")) {
+    updatePointerFrom(target.getElementsByClassName("stackFrameValueInput")[0].id, true)
+  }
+
   target.parentElement.removeChild(target);
+
+  for (let pointer of document.getElementsByClassName("pointerArrow")) {
+    updatePointer(pointer)
+  }
+}
+
+function updateAllPointers
+
+function updatePointersTo(destinationId, remove) {
+  for (let pointer of Array.from(document.getElementsByClassName("pointer-to-" + destinationId))) {
+    console.log(pointer)
+    if (remove) {
+      removePointer(pointer)
+    } else {
+      updatePointer(pointer)
+    }
+  }
+}
+
+function updatePointerFrom(originId, remove) {
+  let pointer = document.getElementById("pointer-from-" + originId);
+  if (pointer == null) {
+    return
+  }
+  if (remove) {
+    removePointer(pointer)
+  } else {
+    updatePointer(pointer)
+  }
 }
 
 function make_parent_marker(elemType, plKey) {
@@ -190,10 +128,9 @@ function make_value_box(className, plKey) {
   container.className = "valueContainer"
   container.appendChild(make_variable_length_input(className, plKey))
   let pointerButton = document.createElement("button");
-  pointerButton.className = "btn pointerButton"
+  pointerButton.className = "btn pointerButton pointerValueButton"
   pointerButton.type = "button"
-  pointerButton.innerHTML = "&rarr;"
-  pointerButton.addEventListener("click", add_pointer_listener)
+  pointerButton.addEventListener("click", pointerValueToggleListener)
   container.appendChild(pointerButton)
   return container
 }
@@ -205,10 +142,17 @@ function make_variable_length_input(className, plKey) {
   input.name = plKey
   input.value = ""
   input.setAttribute("data-instavalue", "submittedValues." + plKey)
+  input.addEventListener("keyup", function () {
+    updateInputLengthToContent(input)
+  });
   input.addEventListener("keydown", function () {
-    input.style.width = (input.value.length + 1) + "ch"
+    updateInputLengthToContent(input)
   });
   return input
+}
+
+function updateInputLengthToContent(input) {
+  input.style.minWidth = (input.value.length + 1) + "ch"
 }
 
 function add_frame() {
@@ -255,16 +199,13 @@ function add_frame() {
 }
 
 function add_heap_object(id, content, typeName) {
-  let heapRow = document.createElement("table")
-  heapRow.classList.add("heapRow", "removable")
-  let topLevelHeapObject = document.createElement("td")
-  topLevelHeapObject.className = "topLevelHeapObject"
+  let topLevelHeapObject = document.createElement("div")
+  topLevelHeapObject.classList.add("topLevelHeapObject", "removable")
   topLevelHeapObject.id = id;
-  heapRow.appendChild(topLevelHeapObject)
-  heapRow.appendChild(make_remove_button(heapRow))
   let heapObject = document.createElement("div")
   heapObject.className = "heapObject";
   topLevelHeapObject.appendChild(heapObject)
+  topLevelHeapObject.appendChild(make_remove_button(topLevelHeapObject))
   if (typeName) {
     let typeMarker = document.createElement("div")
     typeMarker.className = "typeLabel"
@@ -272,7 +213,7 @@ function add_heap_object(id, content, typeName) {
     heapObject.append(typeMarker)
   }
   heapObject.appendChild(content)
-  executionVisualizer.querySelector("#heap").appendChild(heapRow);
+  executionVisualizer.querySelector("#heap").appendChild(topLevelHeapObject);
 }
 
 function add_function_object() {
@@ -284,16 +225,24 @@ function add_function_object() {
   funcObj.appendChild(funcNameInput)
   funcObj.appendChild(make_parent_marker("span"), "heap-func-" + index)
 
-  funcNameInput.addEventListener("change", updateDropdowns);
   add_heap_object("heap-func-" + index, funcObj, "function")
 }
 
 let vizLayoutTd;
 
-function add_pointer_listener(e) {
+function pointerValueToggleListener(e) {
   let button = e.target
+  if (button.classList.contains("pointerButton")) {
+    handlePointerClick(button);
+  } else {
+    handleValueClick(button);
+  }
+}
+
+function handlePointerClick(button) {
   let valueContainer = button.closest(".valueContainer")
-  let svg_objs = make_arrow_svg()
+  let valueInput = valueContainer.children[0]
+  let svg_objs = make_arrow_svg("pointer-from-" + valueInput.id)
   let svg = svg_objs[0]
 
   function mouseListener(mouseEvent) {
@@ -304,7 +253,6 @@ function add_pointer_listener(e) {
   vizLayoutTd.appendChild(svg)
 
   function clickListener(clickEvent) {
-    console.log(clickEvent.target)
     clickEvent.stopPropagation()
     document.removeEventListener("mousemove", mouseListener)
     let targetObj = clickEvent.target.closest(".topLevelHeapObject")
@@ -312,15 +260,26 @@ function add_pointer_listener(e) {
       vizLayoutTd.removeChild(svg)
       return 
     } 
-    update_arrow_svg(relative_coordinates_obj_to_obj(valueContainer, targetObj), svg_objs)
-    let valueInput = valueContainer.children[0]
+    svg.classList.add( "pointer-to-" + targetObj.id)
     valueInput.disabled = true
+    valueInput.style.visibility = "hidden"
     valueInput.value = "#" + targetObj.id
+    valueInput.style.width = ""
+    button.classList.add("valueButton")
+    button.classList.remove("pointerButton")
+    update_arrow_svg(relative_coordinates_obj_to_obj(valueContainer, targetObj), svg_objs)
   }
   document.addEventListener("click", clickListener, {
     capture: true,
     once: true
   })
+}
+
+function handleValueClick(button) {
+  let valueContainer = button.closest(".valueContainer")
+  let valueInput = valueContainer.children[0]
+  let pointerObj = document.getElementById("pointer-from-" + valueInput.id)
+  removePointer(pointerObj)
 }
 
 function relative_coordinates_obj_to_pointer(obj1, mouseEvent) {
@@ -362,14 +321,49 @@ function update_arrow_svg(coords, svg_objs) {
   svg.setAttribute("width", width)
   svg.setAttribute("height", height)
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`)
-  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-  svg.setAttribute('class', "pointerArrow")
   path.setAttribute("d", `M ${x1 - originX}, ${y1 - originY} L ${x2 - originX} ${y2 - originY}`)
 }
 
-function make_arrow_svg() {
+function updatePointer(svg) {
+  if (svg == null) {
+    return
+  }
+  let path = svg.children[0]
+  let originId = svg.id.substring("pointer-from-".length)
+  let originElement = document.getElementById(originId)
+  let destinationId;
+  for (let className of svg.classList) {
+    if (className.indexOf("pointer-to-") >= 0) {
+      destinationId = className.substring("pointer-to-".length)
+    }
+  }
+  let destinationElement = document.getElementById(destinationId)
+  if (originElement == null || destinationElement == null) {
+    removePointer(svg)
+  }
+  update_arrow_svg(relative_coordinates_obj_to_obj(originElement, destinationElement), [svg, path])
+}
+
+function removePointer(svg) {
+  svg.parentElement.removeChild(svg)
+  let originId = svg.id.substring("pointer-from-".length)
+  let valueInput = document.getElementById(originId)
+  if (valueInput != null) {
+    valueInput.disabled = false
+    valueInput.style.visibility = "visible"
+    valueInput.value = ""
+    valueInput.sib
+    let button = valueInput.nextElementSibling
+    button.classList.add("pointerButton")
+    button.classList.remove("valueButton")
+  }
+}
+
+function make_arrow_svg(id) {
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-  svg.setAttribute("tabindex", -1)
+  svg.setAttribute('class', "pointerArrow")
+  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+  svg.setAttribute('id', id)
   let newPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
   svg.appendChild(newPath)
   return [svg, newPath]
