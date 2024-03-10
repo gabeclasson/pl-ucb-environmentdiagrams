@@ -120,7 +120,7 @@ function make_variable(plKey, returnValue=false) {
   } else {
     varname = make_variable_length_input("stackFrameVarInput", plKey + "-name")
   }
-  var stackframeval = make_variable_length_input("stackFrameValueInput", plKey + "-val")
+  var stackframeval = make_value_box("stackFrameValueInput", plKey + "-val")
 
   var td = tr.insertCell();
   td.classList.add()
@@ -182,6 +182,19 @@ function make_parent_marker(elemType, plKey) {
   return marker
 }
 
+function make_value_box(className, plKey) {
+  let container = document.createElement("div")
+  container.className = "valueContainer"
+  container.appendChild(make_variable_length_input(className, plKey))
+  let pointerButton = document.createElement("button");
+  pointerButton.className = "btn pointerButton"
+  pointerButton.type = "button"
+  pointerButton.innerHTML = "&rarr;"
+  pointerButton.addEventListener("click", add_pointer_listener)
+  container.appendChild(pointerButton)
+  return container
+}
+
 function make_variable_length_input(className, plKey) {
   let input = document.createElement("input")
   input.classList.add(className, "pl-html-input")
@@ -239,11 +252,12 @@ function add_frame() {
 }
 
 let heapObjectCount = 0;
-function add_heap_object(content) {
+function add_heap_object(id, content) {
   let heapRow = document.createElement("table")
   heapRow.className = "heapRow"
   let topLevelHeapObject = document.createElement("td")
   topLevelHeapObject.className = "topLevelHeapObject"
+  topLevelHeapObject.id = id;
   heapRow.appendChild(topLevelHeapObject)
   heapRow.appendChild(make_remove_button(heapRow))
   let heapObject = document.createElement("div")
@@ -256,7 +270,6 @@ function add_heap_object(content) {
 function add_function_object() {
   let index = getLastIndex("heap-func-")
   let funcObj = document.createElement("div")
-  funcObj.id = "heap-func-" + index
   funcObj.classList.add("funcObj")
   funcObj.innerText = "func "
   let funcNameInput = make_variable_length_input("funcNameInput", "heap-func-" + index + "-name")
@@ -264,12 +277,100 @@ function add_function_object() {
   funcObj.appendChild(make_parent_marker("span"), "heap-func-" + index)
 
   funcNameInput.addEventListener("change", updateDropdowns);
-  add_heap_object(funcObj, "function")
+  add_heap_object("heap-func-" + index, funcObj, "function")
+}
+
+let vizLayoutTd;
+
+function add_pointer_listener(e) {
+  let button = e.target
+  let valueContainer = button.closest(".valueContainer")
+  let svg_objs = make_arrow_svg()
+  let svg = svg_objs[0]
+
+  function mouseListener(mouseEvent) {
+    let coords = relative_coordinates_obj_to_pointer(valueContainer, mouseEvent)
+    update_arrow_svg(coords, svg_objs)
+  }
+  document.addEventListener("mousemove", mouseListener)
+  vizLayoutTd.appendChild(svg)
+
+  function clickListener(clickEvent) {
+    console.log(clickEvent.target)
+    clickEvent.stopPropagation()
+    document.removeEventListener("mousemove", mouseListener)
+    let targetObj = clickEvent.target.closest(".topLevelHeapObject")
+    if (targetObj == null) {
+      vizLayoutTd.removeChild(svg)
+      return 
+    } 
+    update_arrow_svg(relative_coordinates_obj_to_obj(valueContainer, targetObj), svg_objs)
+    let valueInput = valueContainer.children[0]
+    valueInput.disabled = true
+    valueInput.value = "#" + targetObj.id
+  }
+  document.addEventListener("click", clickListener, {
+    capture: true,
+    once: true
+  })
+}
+
+function relative_coordinates_obj_to_pointer(obj1, mouseEvent) {
+  let origin = vizLayoutTd.getBoundingClientRect()
+  let pos1 = obj1.getBoundingClientRect()
+  let x1 = pos1.x - origin.x + pos1.width/2
+  let y1 = pos1.y - origin.y + pos1.height/2
+  let x2 = mouseEvent.clientX - origin.x
+  let y2 = mouseEvent.clientY - origin.y
+  return [x1, y1, x2, y2]
+}
+
+function relative_coordinates_obj_to_obj(obj1, obj2) {
+  let origin = vizLayoutTd.getBoundingClientRect()
+  let pos1 = obj1.getBoundingClientRect()
+  let pos2 = obj2.getBoundingClientRect()
+  let x1 = pos1.x - origin.x + pos1.width/2
+  let y1 = pos1.y - origin.y + pos1.height/2
+  let x2 = pos2.x - origin.x
+  let y2 = pos2.y - origin.y + pos2.height/2
+  return [x1, y1, x2, y2]
+}
+
+function update_arrow_svg(coords, svg_objs) {
+  let x1 = coords[0]
+  let y1 = coords[1]
+  let x2 = coords[2]
+  let y2 = coords[3]
+  let svg = svg_objs[0]
+  let path = svg_objs[1]
+  width = Math.abs(x2 - x1)
+  height = Math.abs(y2 - y1)
+  let originX = Math.min(x1, x2)
+  let originY = Math.min(y1, y2)
+  svg.style.height = height + "px"
+  svg.style.width = width + 'px'
+  svg.style.top = originY
+  svg.style.left = originX
+  svg.setAttribute("width", width)
+  svg.setAttribute("height", height)
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`)
+  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+  svg.setAttribute('class', "pointerArrow")
+  path.setAttribute("d", `M ${x1 - originX}, ${y1 - originY} L ${x2 - originX} ${y2 - originY}`)
+}
+
+function make_arrow_svg() {
+  let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+  svg.setAttribute("tabindex", -1)
+  let newPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  svg.appendChild(newPath)
+  return [svg, newPath]
 }
 
 let executionVisualizer;
 
 window.addEventListener('load', function() {
+  vizLayoutTd = document.getElementById("vizLayoutTdSecond")
   executionVisualizer = document.querySelector('.ExecutionVisualizerActive')
   if (executionVisualizer) {
     executionVisualizer.querySelectorAll('.addVarButton').forEach(x => x.addEventListener("click", add_variable_listener))

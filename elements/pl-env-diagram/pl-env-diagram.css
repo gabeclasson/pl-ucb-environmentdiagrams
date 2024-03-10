@@ -596,12 +596,10 @@
     text-align: left;
     border-bottom: 1px solid #aaaaaa;
     border-left: 1px solid #aaaaaa;
-  
-    vertical-align: middle;
-  
-    padding-top: 3px;
-    padding-left: 3px;
-    padding-bottom: 3px;
+    
+    padding-top: 0px;
+    padding-left: 0px;
+    padding-bottom: 0px;
   }
   
   div.ExecutionVisualizer .stackFrameVarTable tr {
@@ -889,3 +887,41 @@
   }
   
   /* END Java frontend by David Pritchard and Will Gwozdz */
+  div.ExecutionVisualizer .vizLayoutTd {
+    display: block;
+    position: relative;
+  }
+
+  div.ExecutionVisualizer .pointerArrow {
+    display: block;
+    position: absolute;
+  }
+
+  div.ExecutionVisualizer .pointerArrow path {
+    stroke: black;
+    stroke-width: 1px;
+    fill: none;
+  }
+
+  div.ExecutionVisualizer .valueContainer > input {
+    margin-top: 3px;
+    margin-left: 3px;
+    margin-bottom: 3px;
+  }
+
+  div.ExecutionVisualizer .pointerButton {
+    display: inline;
+    background: none;
+      border: none;
+      padding: 0;
+    /* icon is from bootstap icons, licensed under MIT license */
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-position: center center;
+  }
+
+  div.ExecutionVisualizer .pointerButton:hover {
+    cursor: pointer;
+  }
+  
