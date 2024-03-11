@@ -271,6 +271,7 @@ class Visualizer {
     let pointer = this.makePointer("pointer-" + valueInput.id)
     let svg = pointer.children[0]
     let viz = this
+    this.update_arrow_svg(this.relative_coordinates_obj_to_obj(valueInput, button), pointer)
   
     function mouseListener(mouseEvent) {
       let coords = viz.relative_coordinates_obj_to_pointer(valueInput, mouseEvent)
