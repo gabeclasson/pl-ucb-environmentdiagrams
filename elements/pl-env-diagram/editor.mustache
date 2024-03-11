@@ -38,7 +38,12 @@
                     <tr class="variableTr returnValueTr">
                     <td class=""></td>
                     <td class="stackFrameVar"><span>Return Value</span></td>
-                    <td class="stackFrameValue"><input class="stackFrameValueInput varLengthInput pl-html-input" id="frame-{{frameIndex}}-return-val" name="frame-{{frameIndex}}-return-val" value="{{val}}" {{^show_controls}}disabled{{/show_controls}}></td>
+                    <td class="stackFrameValue">
+                      <div class="valueContainer">
+                        <input class="stackFrameValueInput varLengthInput pl-html-input" id="frame-{{frameIndex}}-return-val" name="frame-{{frameIndex}}-return-val" value="{{val}}" {{^show_controls}}disabled{{/show_controls}}>
+                        <button class="btn pointerValueButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button>
+                      </div>
+                    </td>
                     {{/return}}
                     </tr></table><button class="btn addVarButton" type="button" {{^show_controls}}disabled{{/show_controls}}>Add Variable</button></div>
                 {{/frame}}
@@ -72,8 +77,7 @@
       {{#pointer}}
         <div class="pointerArrow pointerTo-{{destination}}" id="pointer-{{origin}}">
           <svg xmlns="http://www.w3.org/2000/svg" 
-          width="{{width}}" height="{{height}}" viewBox="0 0 {{width}} {{height}}" style="top: {{top}}; left: {{left}}"><path d="{{path}}"></path></svg>
-          <input class="pointerInput pl-html-input" id="pointer-{{origin}}-display" name="pointer-{{origin}}-display" value="{{full_string}}" {{^show_controls}}disabled{{/show_controls}}>
+          width="0" height="0" viewBox="0 0 0 0" style="top: 0; left: 0"><path d=""></path></svg>
         </div>
       {{/pointer}}
       </div>

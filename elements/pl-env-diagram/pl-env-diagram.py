@@ -61,32 +61,26 @@ def prepare(element_html, data):
     return data
 
 def parse(element_html, data):
-    structured_answers = Frame.unflatten_raw_data(data["submitted_answers"], ['pointer'])
+    if not data["submitted_answers"]:
+        data['submitted_answers'] = default_submission
+    structured_answers = Frame.unflatten_raw_data(data["submitted_answers"])
     pointer_list = []
-    if 'pointer' in structured_answers:
-        for key in structured_answers['pointer']:
-            display = json.loads(structured_answers['pointer'][key])
-            display['full_string'] = structured_answers['pointer'][key]
-            pointer_list.append(display)
-        structured_answers['pointer'] = pointer_list
-    
-    stack = [structured_answers]
-    while stack:
-        vanguard = stack.pop(0)
-        if type(vanguard) == list:
-            for item in vanguard:
-                stack.append(item)
-        elif type(vanguard) == 'dict':
-            for key, item in vanguard.items():
-                if key == 'val' and type(item) == str and item and item[0] == '#':
-                    vanguard['pointer'] = True
-                else: 
-                    stack.append(item)
-
+    def investigate(key, obj, history):
+        if type(obj) == list:
+            for item in obj:
+                investigate(item[key + "Index"], item, history + [item[key + "Index"]])
+        elif type(obj) == dict:
+            for child_key, child in obj.items():
+                investigate(child_key, child, history + [child_key])
+        else: 
+            if key == 'val' and type(obj) == str and obj and obj[0] == '#':
+                pointer_list.append({'origin': "-".join(history), 'destination': obj[1:]})
+    investigate(None, structured_answers, [])
+    structured_answers['pointer'] = pointer_list
     data['submitted_answers'] = structured_answers
     return data
 
-default_rendering_data = {'frame': [{'name': None, 'frameIndex': 0, 'var': [], 'parent': None}], 'show_controls': True}
+default_submission = {'frame': [{'name': None, 'frameIndex': 0, 'var': [], 'parent': None}]}
 def render(element_html, data):
     with open("editor.mustache", "r") as f:
         template = f.read()
@@ -100,7 +94,7 @@ def render(element_html, data):
             rendering_data = data['submitted_answers']
             show_controls = False
         if not rendering_data:
-            rendering_data = default_rendering_data
+            rendering_data = default_submission
         rendering_data.update({'show_controls': show_controls})
         return chevron.render(template, rendering_data)
 

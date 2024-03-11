@@ -92,10 +92,10 @@ class Visualizer {
     this.updateAllPointers()
   }
   
-  updateAllPointers() {
+  updateAllPointers(thorough) {
     for (let pointer of Array.from(this.executionVisualizer.querySelectorAll(".pointerArrow"))) {
       console.log(pointer)
-      this.updatePointer(pointer)
+      this.updatePointer(pointer, thorough)
     }
   }
   
@@ -148,13 +148,14 @@ class Visualizer {
     let input = this.makeInput(className, plKey)
     let viz = this
     input.classList.add("varLengthInput")
-    input.addEventListener("keyup", function () {
-      viz.updateInputLengthToContent(input)
-    });
-    input.addEventListener("keydown", function () {
-      viz.updateInputLengthToContent(input)
-    });
+    input.addEventListener("keyup", (e) => this.varLengthInputListener(e));
+    input.addEventListener("keydown", (e) => this.varLengthInputListener(e));
     return input
+  }
+
+  varLengthInputListener(e) {
+    let input = e.target
+    this.updateInputLengthToContent(input)
   }
   
   makeInput(className, plKey) {
@@ -287,12 +288,8 @@ class Visualizer {
         return 
       } 
       pointer.classList.add( "pointerTo-" + targetObj.id)
-      valueInput.style.visibility = "hidden"
-      valueInput.value = "#" + targetObj.id
-      valueInput.style.width = ""
-      button.classList.add("valueButton")
-      button.classList.remove("pointerButton")
-      viz.updatePointer(pointer)
+      
+      viz.updatePointer(pointer, true)
     }
     this.executionVisualizer.addEventListener("click", clickListener, {
       capture: true,
@@ -347,7 +344,7 @@ class Visualizer {
     path.setAttribute("d", `M ${x1 - outerContainerX}, ${y1 - outerContainerY} L ${x2 - outerContainerX} ${y2 - outerContainerY}`)
   }
   
-  updatePointer(pointer) {
+  updatePointer(pointer, thorough) {
     if (pointer == null) {
       return
     }
@@ -364,20 +361,16 @@ class Visualizer {
       this.removePointer(pointer)
       return;
     }
-    
+
+    if (thorough) {
+      originElement.style.visibility = "hidden"
+      originElement.value = "#" + destinationElement.id
+      originElement.style.width = ""
+      let button = originElement.nextElementSibling
+      button.classList.add("valueButton")
+      button.classList.remove("pointerButton")
+    }
     this.update_arrow_svg(this.relative_coordinates_obj_to_obj(originElement, destinationElement), pointer)
-    let input = pointer.children[1]
-    let svg = pointer.children[0]
-    let path = svg.children[0]
-    input.value = JSON.stringify({
-      'origin': originId,
-      'destination': destinationId,
-      'top': svg.style.top,
-      'left': svg.style.left,
-      'width': svg.width.baseVal.valueAsString,
-      'height': svg.height.baseVal.valueAsString,
-      'path': path.getAttribute("d")
-    })
   }
   
   removePointer(pointer) {
@@ -403,8 +396,6 @@ class Visualizer {
     let newPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
     svg.appendChild(newPath)
     container.appendChild(svg)
-    let input = this.makeInput("pointerInput", id + "-display")
-    container.appendChild(input)
     return container
   }
   
@@ -456,17 +447,31 @@ class Visualizer {
 
   initializeStuff() {
     this.executionVisualizer.querySelectorAll('.addVarButton').forEach(x => x.addEventListener("click", (e) => this.add_variable_listener(e)))
-    this.executionVisualizer.querySelectorAll('.removeButton').forEach(x => x.addEventListener("click", (e) => this.removeListener))
+    this.executionVisualizer.querySelectorAll('.removeButton').forEach(x => x.addEventListener("click", (e) => this.removeListener(e)))
+    this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keydown", (e) => this.varLengthInputListener(e)))
+    this.executionVisualizer.querySelectorAll('.pointerValueButton ').forEach(x => x.addEventListener("click", (e) => this.pointerValueToggleListener(e)))
+    this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keyup", (e) => this.varLengthInputListener(e)))
     this.executionVisualizer.querySelector("#addFrameButton").addEventListener("click", (e) => this.add_frame(e))
     this.executionVisualizer.querySelector("#addFuncButton").addEventListener("click", (e) => this.add_function_object(e))
     this.executionVisualizer.querySelector("#addListButton").addEventListener("click", (e) => this.add_list_object(e))
-    this.updateAllPointers()
+    this.updateAllInputLengthsToContent()
+    this.updateAllPointers(true)
+  }
+
+  inactiveInitializeStuff() {
+    this.updateAllInputLengthsToContent()
+    this.updateAllPointers(true)
   }
 }
 
 let activeExecutionVisualizer;
 window.addEventListener('load', function() {
   activeExecutionVisualizer = document.querySelector('.ExecutionVisualizerActive')
-  viz = new Visualizer(activeExecutionVisualizer)
+  let viz = new Visualizer(activeExecutionVisualizer)
   viz.initializeStuff()
+
+  for (let visualizerDOM of document.querySelectorAll('.ExecutionVisualizerInactive')) {
+    let inactiveViz = new Visualizer(visualizerDOM)
+    inactiveViz.inactiveInitializeStuff()
+  }
 });

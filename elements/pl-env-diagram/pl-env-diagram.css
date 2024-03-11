@@ -961,13 +961,12 @@
   div.ExecutionVisualizer .pointerInput {
     display: none;
   }
-  
 
   .ExecutionVisualizerInactive input {
-    pointer-events:none;
+    pointer-events:none !important;
   }
   
   .ExecutionVisualizerInactive button {
-    visibility: hidden; 
-    pointer-events:none;
+    display: none !important; 
+    pointer-events:none !important;
   }
