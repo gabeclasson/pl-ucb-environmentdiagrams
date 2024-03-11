@@ -16,8 +16,8 @@
                   <div class="stackFrame removable" id="frame-{{frameIndex}}">
                     {{#return}}
                     <button class="btn removeButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button>
-                    <label class="frameHeader">f{{frameIndex}}: </label><input class="frameHeader pl-html-input" id="frame-{{frameIndex}}-name" name="frame-{{frameIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}}>
-                    <label> [Parent = <input class="frameParentHeader pl-html-input" id="frame-{{frameIndex}}-parent" name="frame-{{frameIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}}>]</label>
+                    <label class="frameHeader">f{{frameIndex}}: </label><input class="frameHeader varLengthInput pl-html-input" id="frame-{{frameIndex}}-name" name="frame-{{frameIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}}>
+                    <label> [Parent = <input class="frameParentHeader varLengthInput pl-html-input" id="frame-{{frameIndex}}-parent" name="frame-{{frameIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}}>]</label>
                     {{/return}}
                     {{^return}}
                     <label class="frameHeader">Global frame</label>
@@ -25,10 +25,10 @@
                     <table class="stackFrameVarTable">
                     {{#var}}
                       <tr class="variableTr removable" id="frame-{{frameIndex}}-var-{{varIndex}}">
-                        <td class=""><button class="btn removeButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button></td><td class="stackFrameVar"><input class="stackFrameVarInput pl-html-input" id="frame-{{frameIndex}}-var-{{varIndex}}-name" name="frame-{{frameIndex}}-var-{{varIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}}></td>
+                        <td class=""><button class="btn removeButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button></td><td class="stackFrameVar"><input class="stackFrameVarInput varLengthInput pl-html-input" id="frame-{{frameIndex}}-var-{{varIndex}}-name" name="frame-{{frameIndex}}-var-{{varIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}}></td>
                         <td class="stackFrameValue">
                           <div class="valueContainer">
-                            <input class="stackFrameValueInput pl-html-input" id="frame-{{frameIndex}}-var-{{varIndex}}-val" name="frame-{{frameIndex}}-var-{{varIndex}}-val" value="{{val}}" {{^show_controls}}disabled{{/show_controls}}>
+                            <input class="stackFrameValueInput varLengthInput pl-html-input" id="frame-{{frameIndex}}-var-{{varIndex}}-val" name="frame-{{frameIndex}}-var-{{varIndex}}-val" value="{{val}}" {{^show_controls}}disabled{{/show_controls}}>
                             <button class="btn pointerValueButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button>
                           </div>
                         </td>
@@ -38,7 +38,7 @@
                     <tr class="variableTr returnValueTr">
                     <td class=""></td>
                     <td class="stackFrameVar"><span>Return Value</span></td>
-                    <td class="stackFrameValue"><input class="stackFrameValueInput pl-html-input" id="frame-{{frameIndex}}-return-val" name="frame-{{frameIndex}}-return-val" value="{{val}}" {{^show_controls}}disabled{{/show_controls}}></td>
+                    <td class="stackFrameValue"><input class="stackFrameValueInput varLengthInput pl-html-input" id="frame-{{frameIndex}}-return-val" name="frame-{{frameIndex}}-return-val" value="{{val}}" {{^show_controls}}disabled{{/show_controls}}></td>
                     {{/return}}
                     </tr></table><button class="btn addVarButton" type="button" {{^show_controls}}disabled{{/show_controls}}>Add Variable</button></div>
                 {{/frame}}
@@ -55,8 +55,8 @@
                         <div class="typeLabel">function</div>
                         <div class="funcObj">
                           func 
-                          <input class="funcNameInput pl-html-input" id="heap-func-{{funcIndex}}-name" name="heap-func-{{funcIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}}>
-                          <span> [Parent = <input class="frameParentHeader pl-html-input" id="heap-func-{{funcIndex}}-parent" name="heap-func-{{funcIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}}>]</span>
+                          <input class="funcNameInput varLengthInput pl-html-input" id="heap-func-{{funcIndex}}-name" name="heap-func-{{funcIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}}>
+                          <span> [Parent = <input class="frameParentHeader varLengthInput pl-html-input" id="heap-func-{{funcIndex}}-parent" name="heap-func-{{funcIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}}>]</span>
                         </div>
                       </div>
                       <button class="btn removeButton" type="button"></button></div>
