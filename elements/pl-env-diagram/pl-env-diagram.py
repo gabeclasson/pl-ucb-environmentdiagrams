@@ -3,6 +3,7 @@ import re
 import lxml.html
 from frame import *
 import prairielearn as pl
+import json
 
 def generate(element_html, data):
     pass
@@ -24,9 +25,9 @@ def parse_env_diagram_from_text(text):
         frame = {}
         index = index.strip()
         if index[0].lower() == "g" or index == "f0":
-            frame['index'] = str(0)
+            frame['frameIndex'] = str(0)
         else: 
-            frame['index'] = index[1:]
+            frame['frameIndex'] = index[1:]
         frame['name'] = name
         frame['parent'] = parent
         lines = vars.split("\n")
@@ -43,7 +44,7 @@ def parse_env_diagram_from_text(text):
                 frame['return'] = {'val': val}
             else: 
                 bindings.append({
-                    'index': j,
+                    'varIndex': j,
                     'name': var,
                     'val': val
                 })
@@ -60,16 +61,14 @@ def prepare(element_html, data):
     return data
 
 def parse(element_html, data):
-    pointers = []
-    for key, value in data['submitted_answers'].items():
-        if value and value[0] == "#":
-            pointers.append({'origin': key, 'destination': value[1:]})
     structured_answers = Frame.unflatten_raw_data(data["submitted_answers"])
-    structured_answers['pointer'] = pointers
+    if 'pointer' in structured_answers:
+        for key in structured_answers['pointer']:
+            structured_answers['pointer'][key].update(json.loads(structured_answers['pointer'][key]['display']))
     data['submitted_answers'] = structured_answers
     return data
 
-default_rendering_data = {'frame': [{'name': None, 'index': 0, 'var': [], 'parent': None}], 'show_controls': True}
+default_rendering_data = {'frame': [{'name': None, 'frameIndex': 0, 'var': [], 'parent': None}], 'show_controls': True}
 def render(element_html, data):
     with open("editor.mustache", "r") as f:
         template = f.read()
@@ -81,7 +80,6 @@ def render(element_html, data):
             show_controls = True
         else: # Submission
             rendering_data = data['submitted_answers']
-            print(rendering_data)
             show_controls = False
         if not rendering_data:
             rendering_data = default_rendering_data

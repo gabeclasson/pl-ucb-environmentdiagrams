@@ -13,22 +13,22 @@
               <div id="globals_area">
                 <div id="stackHeader">Frames</div>
                 {{#frame}}
-                  <div class="stackFrame removable" id="frame-{{index}}">
+                  <div class="stackFrame removable" id="frame-{{frameIndex}}">
                     {{#return}}
                     {{#show_controls}}<button class="btn removeButton" type="button"></button>{{/show_controls}}
-                    <label class="frameHeader">f{{index}}: </label><input class="frameHeader pl-html-input" id="frame-{{index}}-name" name="frame-{{index}}-name" data-instavalue="submittedValues.frame-{{index}}-name" value="{{name}}">
-                    <label> [Parent = <input class="frameParentHeader pl-html-input" id="frame-{{index}}-parent" name="frame-{{index}}-parent" data-instavalue="submittedValues.frame-{{index}}-parent" value="{{parent}}">]</label>
+                    <label class="frameHeader">f{{frameIndex}}: </label><input class="frameHeader pl-html-input" id="frame-{{frameIndex}}-name" name="frame-{{frameIndex}}-name" value="{{name}}">
+                    <label> [Parent = <input class="frameParentHeader pl-html-input" id="frame-{{frameIndex}}-parent" name="frame-{{frameIndex}}-parent" value="{{parent}}">]</label>
                     {{/return}}
                     {{^return}}
                     <label class="frameHeader">Global frame</label>
                     {{/return}}
                     <table class="stackFrameVarTable">
                     {{#var}}
-                      <tr class="variableTr removable" id="frame-{{../index}}-var-{{index}}">
-                        <td class="">{{#show_controls}}<button class="btn removeButton" type="button"></button>{{/show_controls}}</td><td class="stackFrameVar"><input class="stackFrameVarInput pl-html-input" id="frame-{{../index}}-var-{{index}}-name" name="frame-{{../index}}-var-{{index}}-name" data-instavalue="submittedValues.frame-{{../index}}-var-{{index}}-name" value="{{name}}"></td>
+                      <tr class="variableTr removable" id="frame-{{frameIndex}}-var-{{varIndex}}">
+                        <td class="">{{#show_controls}}<button class="btn removeButton" type="button"></button>{{/show_controls}}</td><td class="stackFrameVar"><input class="stackFrameVarInput pl-html-input" id="frame-{{frameIndex}}-var-{{varIndex}}-name" name="frame-{{frameIndex}}-var-{{varIndex}}-name" value="{{name}}"></td>
                         <td class="stackFrameValue">
                           <div class="valueContainer">
-                            <input class="stackFrameValueInput pl-html-input" id="frame-{{../index}}-var-{{index}}-val" name="frame-{{../index}}-var-{{index}}-val" data-instavalue="submittedValues.frame-{{../index}}-var-{{index}}-val" value="{{val}}">
+                            <input class="stackFrameValueInput pl-html-input" id="frame-{{frameIndex}}-var-{{varIndex}}-val" name="frame-{{frameIndex}}-var-{{varIndex}}-val" value="{{val}}">
                             <button class="btn pointerValueButton" type="button"></button>
                           </div>
                         </td>
@@ -38,7 +38,7 @@
                     <tr class="variableTr returnValueTr">
                     <td class=""></td>
                     <td class="stackFrameVar"><span>Return Value</span></td>
-                    <td class="stackFrameValue"><input class="stackFrameValueInput pl-html-input" id="frame-{{index}}-return-val" name="frame-{{index}}-return-val" data-instavalue="submittedValues.frame-{{index}}-return-val" value="{{val}}"></td>
+                    <td class="stackFrameValue"><input class="stackFrameValueInput pl-html-input" id="frame-{{frameIndex}}-return-val" name="frame-{{frameIndex}}-return-val" value="{{val}}"></td>
                     {{/return}}
                     </tr></table>{{#show_controls}}<button class="btn addVarButton" type="button">Add Variable</button>{{/show_controls}}</div>
                 {{/frame}}
@@ -50,13 +50,13 @@
                 <div id="heapHeader">Objects</div>
                 {{#heap}}
                   {{#func}}
-                    <div class="topLevelHeapObject removable" id="heap-func-{{index}}">
+                    <div class="topLevelHeapObject removable" id="heap-func-{{funcIndex}}">
                       <div class="heapObject">
                         <div class="typeLabel">function</div>
                         <div class="funcObj">
                           func 
-                          <input class="funcNameInput pl-html-input" id="heap-func-{{index}}-name" name="heap-func-{{index}}-name" data-instavalue="submittedValues.heap-func-{{index}}-name" value="{{name}}">
-                          <span> [Parent = <input class="frameParentHeader pl-html-input" id="heap-func-{{index}}-parent" name="heap-func-{{index}}-parent" data-instavalue="submittedValues.heap-func-{{index}}-parent" value="{{parent}}">]</span>
+                          <input class="funcNameInput pl-html-input" id="heap-func-{{funcIndex}}-name" name="heap-func-{{funcIndex}}-name" value="{{name}}">
+                          <span> [Parent = <input class="frameParentHeader pl-html-input" id="heap-func-{{funcIndex}}-parent" name="heap-func-{{funcIndex}}-parent" value="{{parent}}">]</span>
                         </div>
                       </div>
                       {{#show_controls}}<button class="btn removeButton" type="button"></button></div>{{/show_controls}}
@@ -72,8 +72,11 @@
         </tbody></table>
       </div></div>
       {{#pointer}}
-        <svg class="pointerArrow pointer-to-{{destination}}" xmlns="http://www.w3.org/2000/svg" id="pointer-from-{{origin}}" 
-        width="0" height="0" viewBox="0 0 0 0" style="height: 0; width: 0; top: 0; left: 0"><path d="M 0, 0 L 0 0"></path></svg>
+        <div class="pointerArrow pointerTo-{{destination}}" id="pointer-{{origin}}">
+          <svg xmlns="http://www.w3.org/2000/svg" 
+          width="{{width}}" height="{{height}}" viewBox="0 0 {{width}} {{height}}" style="top: {{top}}; left: {{left}}"><path d="{{path}}"></path></svg>
+          <input class="pointerInput pl-html-input" id="pointer-{{origin}}-display" name="pointer-{{origin}}-display" value="{{display}}">
+        </div>
       {{/pointer}}
       </div>
 <p>This tool is based on Python Tutor: <a href="https://pythontutor.com/">pythontutor.com</a></p>

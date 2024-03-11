@@ -45,6 +45,7 @@ class Frame():
             key_components = key.split("-")
             prev = None
             prev_key = None
+            grand_prev_key = None
             vanguard = parsed_response
             for component in key_components:
                 if vanguard is None:
@@ -55,15 +56,16 @@ class Frame():
                     if type(prev) == dict:
                         prev[prev_key] = vanguard
                     elif type(prev) == list:
-                        vanguard['index'] = prev_key
+                        vanguard[grand_prev_key + 'Index'] = prev_key
                         prev.append(vanguard)
                 
                 prev = vanguard
+                grand_prev_key = prev_key
                 prev_key = component
                 
                 if type(vanguard) == dict and component in vanguard: 
                     vanguard = vanguard[component]
-                elif type(vanguard) == list and vanguard and vanguard[-1]['index'] == component:
+                elif type(vanguard) == list and vanguard and vanguard[-1][grand_prev_key + 'Index'] == component:
                     vanguard = vanguard[-1]
                 else: 
                     vanguard = None

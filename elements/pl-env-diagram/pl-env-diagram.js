@@ -93,7 +93,7 @@ function updateAllPointers() {
 }
 
 function updatePointersTo(destinationId, remove) {
-  for (let pointer of Array.from(executionVisualizer.getElementsByClassName("pointer-to-" + destinationId))) {
+  for (let pointer of Array.from(executionVisualizer.getElementsByClassName("pointerTo-" + destinationId))) {
     console.log(pointer)
     if (remove) {
       removePointer(pointer)
@@ -104,7 +104,7 @@ function updatePointersTo(destinationId, remove) {
 }
 
 function updatePointerFrom(originId, remove) {
-  let pointer = executionVisualizer.getElementById("pointer-from-" + originId);
+  let pointer = executionVisualizer.getElementById("pointer-" + originId);
   if (pointer == null) {
     return
   }
@@ -138,18 +138,22 @@ function make_value_box(className, plKey) {
 }
 
 function make_variable_length_input(className, plKey) {
-  let input = document.createElement("input")
-  input.classList.add(className, "pl-html-input")
-  input.id = plKey
-  input.name = plKey
-  input.value = ""
-  input.setAttribute("data-instavalue", "submittedValues." + plKey)
+  let input = makeInput(className, plKey)
   input.addEventListener("keyup", function () {
     updateInputLengthToContent(input)
   });
   input.addEventListener("keydown", function () {
     updateInputLengthToContent(input)
   });
+  return input
+}
+
+function makeInput(className, plKey) {
+  let input = document.createElement("input")
+  input.classList.add(className, "pl-html-input")
+  input.id = plKey
+  input.name = plKey
+  input.value = ""
   return input
 }
 
@@ -248,31 +252,31 @@ function pointerValueToggleListener(e) {
 function handlePointerClick(button) {
   let valueContainer = button.closest(".valueContainer")
   let valueInput = valueContainer.children[0]
-  let svg_objs = make_arrow_svg("pointer-from-" + valueInput.id)
-  let svg = svg_objs[0]
+  let pointer = makePointer("pointer-" + valueInput.id)
+  let svg = pointer.children[0]
 
   function mouseListener(mouseEvent) {
-    let coords = relative_coordinates_obj_to_pointer(valueContainer, mouseEvent)
-    update_arrow_svg(coords, svg_objs)
+    let coords = relative_coordinates_obj_to_pointer(valueInput, mouseEvent)
+    update_arrow_svg(coords, pointer)
   }
   executionVisualizer.addEventListener("mousemove", mouseListener)
-  vizLayoutTd.appendChild(svg)
+  vizLayoutTd.appendChild(pointer)
 
   function clickListener(clickEvent) {
     clickEvent.stopPropagation()
-    document.removeEventListener("mousemove", mouseListener)
+    executionVisualizer.removeEventListener("mousemove", mouseListener)
     let targetObj = clickEvent.target.closest(".topLevelHeapObject")
     if (targetObj == null) {
-      vizLayoutTd.removeChild(svg)
+      vizLayoutTd.removeChild(pointer)
       return 
     } 
-    svg.classList.add( "pointer-to-" + targetObj.id)
+    pointer.classList.add( "pointerTo-" + targetObj.id)
     valueInput.style.visibility = "hidden"
     valueInput.value = "#" + targetObj.id
     valueInput.style.width = ""
     button.classList.add("valueButton")
     button.classList.remove("pointerButton")
-    update_arrow_svg(relative_coordinates_obj_to_obj(valueContainer, targetObj), svg_objs)
+    updatePointer(pointer)
   }
   executionVisualizer.addEventListener("click", clickListener, {
     capture: true,
@@ -283,7 +287,7 @@ function handlePointerClick(button) {
 function handleValueClick(button) {
   let valueContainer = button.closest(".valueContainer")
   let valueInput = valueContainer.children[0]
-  let pointerObj = executionVisualizer.getElementById("pointer-from-" + valueInput.id)
+  let pointerObj = executionVisualizer.getElementById("pointer-" + valueInput.id)
   removePointer(pointerObj)
 }
 
@@ -308,51 +312,61 @@ function relative_coordinates_obj_to_obj(obj1, obj2) {
   return [x1, y1, x2, y2]
 }
 
-function update_arrow_svg(coords, svg_objs) {
+function update_arrow_svg(coords, pointer) {
   let x1 = coords[0]
   let y1 = coords[1]
   let x2 = coords[2]
   let y2 = coords[3]
-  let svg = svg_objs[0]
-  let path = svg_objs[1]
+  let svg = pointer.children[0]
+  let path = svg.children[0]
   width = Math.abs(x2 - x1)
   height = Math.abs(y2 - y1)
-  let originX = Math.min(x1, x2)
-  let originY = Math.min(y1, y2)
-  svg.style.height = height + "px"
-  svg.style.width = width + 'px'
-  svg.style.top = originY
-  svg.style.left = originX
+  let outerContainerX = Math.min(x1, x2)
+  let outerContainerY = Math.min(y1, y2)
+  svg.style.top = outerContainerY
+  svg.style.left = outerContainerX
   svg.setAttribute("width", width)
   svg.setAttribute("height", height)
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`)
-  path.setAttribute("d", `M ${x1 - originX}, ${y1 - originY} L ${x2 - originX} ${y2 - originY}`)
+  path.setAttribute("d", `M ${x1 - outerContainerX}, ${y1 - outerContainerY} L ${x2 - outerContainerX} ${y2 - outerContainerY}`)
 }
 
-function updatePointer(svg) {
-  if (svg == null) {
+function updatePointer(pointer) {
+  if (pointer == null) {
     return
   }
-  let path = svg.children[0]
-  let originId = svg.id.substring("pointer-from-".length)
+  let originId = pointer.id.substring("pointer-".length)
   let originElement = executionVisualizer.getElementById(originId)
   let destinationId;
-  for (let className of svg.classList) {
-    if (className.indexOf("pointer-to-") >= 0) {
-      destinationId = className.substring("pointer-to-".length)
+  for (let className of pointer.classList) {
+    if (className.indexOf("pointerTo-") >= 0) {
+      destinationId = className.substring("pointerTo-".length)
     }
   }
   let destinationElement = executionVisualizer.getElementById(destinationId)
   if (originElement == null || destinationElement == null) {
-    removePointer(svg)
+    removePointer(pointer)
     return;
   }
-  update_arrow_svg(relative_coordinates_obj_to_obj(originElement, destinationElement), [svg, path])
+  
+  update_arrow_svg(relative_coordinates_obj_to_obj(originElement, destinationElement), pointer)
+  let input = pointer.children[1]
+  let svg = pointer.children[0]
+  let path = svg.children[0]
+  input.value = JSON.stringify({
+    'origin': originId,
+    'destination': destinationId,
+    'top': svg.style.top,
+    'left': svg.style.left,
+    'width': svg.width.baseVal.valueAsString,
+    'height': svg.height.baseVal.valueAsString,
+    'path': path.getAttribute("d")
+  })
 }
 
-function removePointer(svg) {
-  svg.parentElement.removeChild(svg)
-  let originId = svg.id.substring("pointer-from-".length)
+function removePointer(pointer) {
+  pointer.parentElement.removeChild(pointer)
+  let originId = pointer.id.substring("pointer-".length)
   let valueInput = executionVisualizer.getElementById(originId)
   if (valueInput != null) {
     valueInput.style.visibility = "visible"
@@ -364,14 +378,18 @@ function removePointer(svg) {
   }
 }
 
-function make_arrow_svg(id) {
+function makePointer(id) {
+  let container = document.createElement("div")
+  container.className = "pointerArrow"
+  container.id = id;
   let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-  svg.setAttribute('class', "pointerArrow")
   svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-  svg.setAttribute('id', id)
   let newPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
   svg.appendChild(newPath)
-  return [svg, newPath]
+  container.appendChild(svg)
+  let input = makeInput("pointerInput", id + "-display")
+  container.appendChild(input)
+  return container
 }
 
 function add_list_object() {

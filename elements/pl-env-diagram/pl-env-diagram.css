@@ -905,7 +905,7 @@
     position: relative;
   }
 
-  div.ExecutionVisualizer .pointerArrow {
+  div.ExecutionVisualizer .pointerArrow svg {
     display: block;
     position: absolute;
     pointer-events:none;
@@ -956,5 +956,9 @@
 
   div.ExecutionVisualizer .pointerValueButton:hover {
     cursor: pointer;
+  }
+
+  div.ExecutionVisualizer .pointerInput {
+    display: none;
   }
   
