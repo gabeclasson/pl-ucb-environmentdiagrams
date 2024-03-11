@@ -61,10 +61,28 @@ def prepare(element_html, data):
     return data
 
 def parse(element_html, data):
-    structured_answers = Frame.unflatten_raw_data(data["submitted_answers"])
+    structured_answers = Frame.unflatten_raw_data(data["submitted_answers"], ['pointer'])
+    pointer_list = []
     if 'pointer' in structured_answers:
         for key in structured_answers['pointer']:
-            structured_answers['pointer'][key].update(json.loads(structured_answers['pointer'][key]['display']))
+            display = json.loads(structured_answers['pointer'][key])
+            display['full_string'] = structured_answers['pointer'][key]
+            pointer_list.append(display)
+        structured_answers['pointer'] = pointer_list
+    
+    stack = [structured_answers]
+    while stack:
+        vanguard = stack.pop(0)
+        if type(vanguard) == list:
+            for item in vanguard:
+                stack.append(item)
+        elif type(vanguard) == 'dict':
+            for key, item in vanguard.items():
+                if key == 'val' and type(item) == str and item and item[0] == '#':
+                    vanguard['pointer'] = True
+                else: 
+                    stack.append(item)
+
     data['submitted_answers'] = structured_answers
     return data
 

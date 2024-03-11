@@ -33,8 +33,9 @@ class Frame():
             self.bindings = bindings
 
     @classmethod
-    def unflatten_raw_data(cls, raw_data):
+    def unflatten_raw_data(cls, raw_data, special_keys=()):
         """
+        Special keys means you stop processing the tree at that point.
         >>> raw_data = {'frame-0-var-0-name': 'x', 'frame-0-var-0-val': '5', 'frame-0-var-NaN-name': 'y', 'frame-0-var-NaN-val': '17', 'frame-1-name': 'g', 'frame-1-parent': 'Global', 'frame-1-var-0-name': 'z', 'frame-1-var-0-val': '"hi"', 'frame-1-return-val': '3'}
         >>> Frame.unflatten_raw_data(raw_data)
         {'frame': [{'index': '0', 'var': [{'index': '0', 'name': 'x', 'val': '5'}, {'index': '2', 'name': 'y', 'val': '17'}]}, {'index': '1', 'name': 'g', 'parent': 'Global', 'return': {'val': '3'}, 'var': [{'index': '0', 'name': 'z', 'val': '"hi"'}]}]}
@@ -47,7 +48,7 @@ class Frame():
             prev_key = None
             grand_prev_key = None
             vanguard = parsed_response
-            for component in key_components:
+            for i, component in enumerate(key_components):
                 if vanguard is None:
                     if is_number_str(component):
                         vanguard = []
@@ -58,7 +59,7 @@ class Frame():
                     elif type(prev) == list:
                         vanguard[grand_prev_key + 'Index'] = prev_key
                         prev.append(vanguard)
-                
+
                 prev = vanguard
                 grand_prev_key = prev_key
                 prev_key = component
@@ -69,9 +70,12 @@ class Frame():
                     vanguard = vanguard[-1]
                 else: 
                     vanguard = None
+
+                if grand_prev_key in special_keys:
+                    break
             
             if type(prev) == dict:
-                prev[prev_key] = value
+                prev["-".join(key_components[i:])] = value
             elif type(prev) == list:
                 prev.append(value)
 

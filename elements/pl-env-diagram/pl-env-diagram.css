@@ -962,3 +962,12 @@
     display: none;
   }
   
+
+  .ExecutionVisualizerInactive input {
+    pointer-events:none;
+  }
+  
+  .ExecutionVisualizerInactive button {
+    visibility: hidden; 
+    pointer-events:none;
+  }
