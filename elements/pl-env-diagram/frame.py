@@ -85,9 +85,9 @@ class Frame():
     def from_raw_data(cls, raw_data):
         if not(raw_data):
             return Frame()
-        internal_representations = {frame_data['index']: Frame() for frame_data in raw_data['frame']}
+        internal_representations = {frame_data['frameIndex']: Frame() for frame_data in raw_data['frame']}
         for frame_data in raw_data["frame"]:
-            frame = internal_representations[sanitize_frame_index(frame_data['index'])]
+            frame = internal_representations[sanitize_frame_index(frame_data['frameIndex'])]
             if 'var' not in frame_data:
                 continue
             for var_data in frame_data["var"]:
