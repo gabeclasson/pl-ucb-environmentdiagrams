@@ -89,7 +89,12 @@ class Visualizer {
     // }
   
     target.parentElement.removeChild(target);
-    this.updateAllPointers()
+    this.updateAllPointers();
+
+    // update the parent pointer dropdowns when a frame is deleted
+    if (target.classList.contains("stackFrame")) {
+      this.updateDropdowns();
+    }
   }
   
   updateAllPointers(thorough) {
@@ -123,13 +128,20 @@ class Visualizer {
   }
   
   make_parent_marker(elemType, plKey) {
-    var frame_parent_input = this.make_variable_length_input("frameParentHeader", plKey + "-parent")
-    let marker = document.createElement(elemType)
+    const dropdown = document.createElement("select");
+    dropdown.className = "parentDropdown";
+    let marker = document.createElement(elemType);
+
+    // construct "[Parent = <dropdown>]"
     marker.innerHTML = " [Parent = ";
-    marker.type = "text";
-    marker.appendChild(frame_parent_input);
+    marker.appendChild(dropdown);
+
+    // needed to set a timeout, otherwise "Global" wouldn't always populate
+    setTimeout(() => {
+      this.updateDropdowns();
+    }, 0);
     marker.innerHTML += "]";
-    return marker
+    return marker;
   }
   
   make_value_box(className, plKey) {
@@ -182,6 +194,60 @@ class Visualizer {
       this.updateInputLengthToContent(input, true)
     }
   }
+
+  updateDropdowns() {
+    // query for the dropdowns and frame names
+    const frameNames = document.querySelectorAll(".frameHeader");
+    const dropdowns = document.querySelectorAll(".parentDropdown");
+
+    // save selected elements (to later re-populate)
+    const selectedOptions = [];
+    dropdowns.forEach(dropdown => {
+        selectedOptions.push(dropdown.value);
+    });
+
+    // clear the dropdown to re-render properly
+    dropdowns.forEach(dropdown => {
+        dropdown.innerHTML = "";
+
+        // maintain an empty option for un-selected options
+        const emptyOption = document.createElement("option");
+        emptyOption.text = "";
+        dropdown.add(emptyOption);
+    });
+
+    // pre-populate with global
+    dropdowns.forEach(dropdown => {
+        const globalOption = document.createElement("option");
+        globalOption.value = "Global";
+        globalOption.textContent = "Global";
+        dropdown.add(globalOption);
+    });
+
+    // make new dropdowns
+    frameNames.forEach(frameName => {
+        const frameIndex = frameName.id.split('-')[1];
+
+        // there were undefined frame indices popping up
+        if (frameIndex !== undefined && frameIndex !== null) {
+            const frameOption = document.createElement("option");
+            frameOption.value = "f" + frameIndex;
+            frameOption.textContent = "f" + frameIndex;
+
+            // add in new option
+            dropdowns.forEach(dropdown => {
+                const clonedOption = frameOption.cloneNode(true);
+                dropdown.add(clonedOption);
+            });
+        }
+    });
+
+    // restore selected value
+    dropdowns.forEach((dropdown, index) => {
+        dropdown.value = selectedOptions[index];
+    });
+  }
+
   
   add_frame() {
     let index = this.getLastIndex("frame-")
@@ -222,6 +288,7 @@ class Visualizer {
     frame.appendChild(variable_button);
   
     this.executionVisualizer.querySelector("#globals_area").appendChild(frame);
+    this.updateDropdowns();
     return frame
     //document.body.appendChild(frame);
   }
