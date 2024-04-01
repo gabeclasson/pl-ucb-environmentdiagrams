@@ -2,6 +2,7 @@ import pickle
 import inspect
 import heapq
 import frame
+import re
 # i refer to this as "framenode" in some places. this is to avoid ambiguity. we will discuss changing the name.
 Frame = frame.Frame
 
@@ -184,12 +185,40 @@ class FrameTree():
         # TODO: Needed?
         del self.root.bindings["globvar"]
     
+    def get_simple_json(self):
+        sol = []
+        def addtojson(frame, sol): 
+            sol.append(frame.__name__)
+            for varname in frame.bindings:
+                match frame.bindings[varname]:
+                    case int():
+                        repr = frame.bindings[varname]
+                    case _:
+                        classname = frame.bindings[varname].__class__.__name__
+                        #if classname not in objname_dict:
+                            #objname_dict[classname] = 0
+
+                        #objname_dict[classname] = objname_dict[classname] + 1
+                        if hasattr(frame.bindings[varname], "__name__"):
+                            repr = classname + " <" + str(frame.bindings[varname].__name__) + ">"
+                        else:
+                            repr = classname + " <>"
+                sol.append("   " + varname + " " + str(repr))
+            for child in frame.children:
+                sol = addtojson(child, sol)
+        addtojson(self.root, sol)
+        print("sol:", sol)
+        return "\n".join(sol)
+
+
+
+
     # RIGHT NOW ONLY WORKS WITH INTEGER + FUNC
     def get_json(self):
         # keeps track of how many of the same frame name exist
         frames_dict = {}
         # TODO: MOVE TO FRAMETREE DEF
-        objname_dict = {"int":0, "dict":0}
+        objname_dict = {"int":0, "dict":0, "func":0}
         objcounter = 0
         # stores values of objects.
         heap_dict = {}
@@ -201,6 +230,7 @@ class FrameTree():
             else: 
                 frames_dict[frame.json_name] = [newframe]
             for varname in frame.bindings:
+
                 if id(frame.bindings[varname]) in mem_to_loc_dict:
                     newframe[varname] = mem_to_loc_dict[id(frame.bindings[varname])]
                 else:
@@ -209,14 +239,17 @@ class FrameTree():
                         case int():
                             mem_to_loc_dict[id(frame.bindings[varname])] = objcounter#"int-" + str(objname_dict["int"])
                             #objname_dict["int"] = objname_dict["int"] + 1
-                            heap_dict[mem_to_loc_dict[id(frame.bindings[varname])]] = frame.bindings[varname] #[frame.bindings[varname],0]
+                            heap_dict[mem_to_loc_dict[id(frame.bindings[varname])]] = str(frame.bindings[varname]) #[frame.bindings[varname],0]
                         case _:
                             classname = frame.bindings[varname].__class__.__name__
                             #if classname not in objname_dict:
-                                #objname_dict[classname] = 0
+                            #    objname_dict[classname] = 0
     
                             #objname_dict[classname] = objname_dict[classname] + 1
-                            if hasattr(frame.bindings[varname], "__name__"):
+                            if classname == "function":
+                                repr = "#heap-func-" + str(objname_dict["func"])
+                                objname_dict["func"] += 1
+                            elif hasattr(frame.bindings[varname], "__name__"):
                                 repr = classname + " <" + str(frame.bindings[varname].__name__) + ">"
                             else:
                                 repr = classname + " <>"
@@ -389,6 +422,116 @@ class FrameTree():
         print("total framecount", total_framecount)
         return max(0, total_correctframes/total_framecount - total_extraframes/(total_framecount + total_extraframes))
         
+def convert_studentinput_to_json(student_input):
+    frames_dict = {}
+    heap_dict = {}
+    reverse_heap = {}
+    varcount = 0
+    for frame in student_input["frame"]:
+        currframe = {}
+        if frame["frameIndex"] == "0":
+            name = "global"
+            # modifies student input
+            frame["pname"] = "global"
+        else:
+            name = frame["name"]
+            parent_index = 0 if frame["parent"] == "Global" else int(frame["parent"][1:])
+            name = name + "#" + student_input["frame"][parent_index]["pname"]
+            frame["pname"] = name
+        if name not in frames_dict:
+            frames_dict[name] = []
+        for var in frame["var"]:
+            value = var["val"]
+            if value in reverse_heap:
+                currframe[var["name"]] = reverse_heap[value]
+            else:
+                currframe[var["name"]] = varcount
+                heap_dict[varcount] = value
+                reverse_heap[value] = varcount
+                varcount += 1
+        if "return" in frame:
+            value = frame["return"]["val"]
+            if value in reverse_heap:
+                currframe["returnval"] = reverse_heap[value]
+            else:
+                currframe["returnval"] = varcount
+                heap_dict[varcount] = value
+                reverse_heap[value] = varcount
+                varcount += 1
+        frames_dict[name].append(currframe)
+                
+        
+    return frames_dict, heap_dict
+
+def grade_allornothing(A_json_frames = None, A_json_heap = None, B_json_frames = None, B_json_heap = None):
+    """
+    grades all or nothing
+    """
+
+    print("Aframes", A_json_frames)
+    print("Bframes", B_json_frames)
+    # check that the same framekeys exist in both A and B
+    if A_json_frames.keys() != B_json_frames.keys():
+        print("keys in A and B not matching.")
+        return 0
+    # Associates the pointer in A to the pointer in B.
+    A_to_B_pointer_dict = {}
+    # sets the indices of all frames in the other json to be yet to be checked
+    for framekey in A_json_frames:
+        framestomatch = [True]*len(B_json_frames[framekey])
+        # get each frame with the same framename in A and find a match in B
+        for a in range(len(A_json_frames[framekey])):
+            has_match = False
+            # get each frame with the same framename in B
+            for b in range(len(B_json_frames[framekey])):
+                # if b has already found a match in A_json_frames, do not attempt to match it. 
+                if not framestomatch[b]:
+                    continue
+                # we assume that j is a match for i until proven otherwise
+                is_match = True
+                # gets all the variable keys that occur in A
+                a_variablekeys = A_json_frames[framekey][a].keys()
+                # first checks that we have matching keys between a and b
+                if B_json_frames[framekey][b].keys() != a_variablekeys:
+                    #print("not a match, mismatching variables")
+                    is_match = False
+                    continue
+                # checks through each variable in the frame
+                for a_varname in a_variablekeys:
+                    # checks to make sure the variable exists in B
+                    if not a_varname in B_json_frames[framekey][a]:
+                        #print("not a match, other does not have variable ", a_varname)
+                        is_match = False
+                        break
+                    # if we have the pointer from the variable name already recorded, check to make sure the value in the pointer dict
+                    # matches what we expect
+                    elif A_json_frames[framekey][a][a_varname] in A_to_B_pointer_dict:
+                        if B_json_frames[framekey][b][a_varname] != A_to_B_pointer_dict[A_json_frames[framekey][a][a_varname]]:
+                            #print("not a match, variable pointers are mismatched")
+                            is_match = False
+                            break
+                    else:
+                        # check that the values stored in each variable are the same
+                        if A_json_heap[A_json_frames[framekey][a][a_varname]] != B_json_heap[B_json_frames[framekey][b][a_varname]]:
+                            #print("not a match, variable values are not matched")
+                            is_match = False
+                            break
+                        # if they are the same, we can keep track of the equivalence in pointers for future comparisons.
+                        A_to_B_pointer_dict[A_json_frames[framekey][a][a_varname]] = B_json_frames[framekey][b][a_varname]
+                # if everything in b matches everything in a, we have found the matching frames.
+                if is_match:    
+                    # to prevent "b" from being matched to future frames in "A"
+                    framestomatch[b] = False
+                    has_match = True
+                    break
+            # if frame A doesn't have a matching frame, leave
+            if not has_match:
+                print("unable to find matching frame in B for A for frame", framekey)
+                return 0
+        # if there are leftover frames in B, return 0
+        if sum(framestomatch) > 0:
+            return 0
+    return 1
 
 example_meow = """
 # TEST: meow
@@ -430,10 +573,239 @@ def f():
 f()
 """
 
+student_input = {
+    "heap": {
+        "func": [
+            {"name": "f", "parent": "f1", "funcIndex": "0", "nameWidth": 2},
+            {"name": "g", "parent": "Global", "funcIndex": "1", "nameWidth": 2},
+        ],
+        "sequence": [
+            {
+                "item": [
+                    {"val": "#heap-sequence-1", "itemIndex": "0"},
+                    {"val": "2", "valWidth": 2, "itemIndex": "1"},
+                    {"val": '"goo"', "valWidth": 6, "itemIndex": "2"},
+                    {"val": "4.56", "valWidth": 5, "itemIndex": "3"},
+                    {"val": "2.0", "valWidth": 4, "itemIndex": "4"},
+                    {"val": "True", "valWidth": 5, "itemIndex": "5"},
+                    {"val": "False", "valWidth": 6, "itemIndex": "6"},
+                ],
+                "type": "list",
+                "sequenceIndex": "0",
+            },
+            {
+                "item": [
+                    {"val": "3", "valWidth": 2, "itemIndex": "0"},
+                    {"val": "2", "valWidth": 2, "itemIndex": "1"},
+                    {"val": "#heap-func-1", "itemIndex": "2"},
+                ],
+                "type": "tuple",
+                "sequenceIndex": "1",
+            },
+        ],
+    },
+    "frame": [
+        {
+            "var": [
+                {"val": "#heap-func-0", "name": "x", "varIndex": "0", "nameWidth": 2},
+                {
+                    "val": "7",
+                    "name": "y",
+                    "valWidth": 2,
+                    "varIndex": "1",
+                    "nameWidth": 2,
+                },
+            ],
+            "frameIndex": "0",
+        },
+        {
+            "var": [
+                {
+                    "val": "#heap-sequence-0",
+                    "name": "g",
+                    "varIndex": "0",
+                    "nameWidth": 2,
+                }
+            ],
+            "name": "f",
+            "parent": "Global",
+            "return": {"val": "#heap-func-1"},
+            "nameWidth": 2,
+            "frameIndex": "1",
+        },
+        {
+            "var": [
+                {
+                    "val": "5",
+                    "name": "f",
+                    "valWidth": 2,
+                    "varIndex": "0",
+                    "nameWidth": 2,
+                },
+                {
+                    "val": "",
+                    "name": "lst",
+                    "valWidth": 1,
+                    "varIndex": "1",
+                    "nameWidth": 4,
+                },
+            ],
+            "name": "g",
+            "parent": "Global",
+            "return": {"val": "#heap-sequence-1"},
+            "nameWidth": 2,
+            "frameIndex": "3",
+        },
+        {
+            "var": [
+                {
+                    "val": "False",
+                    "name": "y",
+                    "valWidth": 6,
+                    "varIndex": "0",
+                    "nameWidth": 2,
+                },
+                {
+                    "val": "5",
+                    "name": "p",
+                    "valWidth": 2,
+                    "varIndex": "1",
+                    "nameWidth": 2,
+                },
+            ],
+            "name": "f",
+            "parent": "f3",
+            "return": {"val": "True", "valWidth": 5},
+            "nameWidth": 2,
+            "frameIndex": "4",
+        },
+    ],
+    "pointer": [
+        {
+            "d": "M 0, 15.593754768371582 L 125.94375610351562 0",
+            "raw": '{"d":"M 0, 15.593754768371582 L 125.94375610351562 0","width":"125.94375610351562","height":"15.593754768371582","top":"72.5938px","left":"171.994px"}',
+            "top": "72.5938px",
+            "left": "171.994px",
+            "width": "125.94375610351562",
+            "height": "15.593754768371582",
+            "origin": "frame-0-var-0-val",
+            "destination": "heap-func-0",
+        },
+        {
+            "d": "M 0, 65.59376239776611 L 121.60000610351562 0",
+            "raw": '{"d":"M 0, 65.59376239776611 L 121.60000610351562 0","width":"121.60000610351562","height":"65.59376239776611","top":"264.356px","left":"176.338px"}',
+            "top": "264.356px",
+            "left": "176.338px",
+            "width": "121.60000610351562",
+            "height": "65.59376239776611",
+            "origin": "frame-1-return-val",
+            "destination": "heap-func-1",
+        },
+        {
+            "d": "M 0, 126.67501926422119 L 121.60000610351562 0",
+            "raw": '{"d":"M 0, 126.67501926422119 L 121.60000610351562 0","width":"121.60000610351562","height":"126.67501926422119","top":"168.475px","left":"176.338px"}',
+            "top": "168.475px",
+            "left": "176.338px",
+            "width": "121.60000610351562",
+            "height": "126.67501926422119",
+            "origin": "frame-1-var-0-val",
+            "destination": "heap-sequence-0",
+        },
+        {
+            "d": "M 0, 208.6749963760376 L 121.60000610351562 0",
+            "raw": '{"d":"M 0, 208.6749963760376 L 121.60000610351562 0","width":"121.60000610351562","height":"208.6749963760376","top":"360.238px","left":"176.338px"}',
+            "top": "360.238px",
+            "left": "176.338px",
+            "width": "121.60000610351562",
+            "height": "208.6749963760376",
+            "origin": "frame-3-return-val",
+            "destination": "heap-sequence-1",
+        },
+        {
+            "d": "M 29.79998779296875, 0 L 0 179.07499599456787",
+            "raw": '{"d":"M 29.79998779296875, 0 L 0 179.07499599456787","width":"29.79998779296875","height":"179.07499599456787","top":"181.162px","left":"297.938px"}',
+            "top": "181.162px",
+            "left": "297.938px",
+            "width": "29.79998779296875",
+            "height": "179.07499599456787",
+            "origin": "heap-sequence-0-item-0-val",
+            "destination": "heap-sequence-1",
+        },
+        {
+            "d": "M 133.39996337890625, 108.56876850128174 L 0 0",
+            "raw": '{"d":"M 133.39996337890625, 108.56876850128174 L 0 0","width":"133.39996337890625","height":"108.56876850128174","top":"264.356px","left":"297.938px"}',
+            "top": "264.356px",
+            "left": "297.938px",
+            "width": "133.39996337890625",
+            "height": "108.56876850128174",
+            "origin": "heap-sequence-1-item-2-val",
+            "destination": "heap-func-1",
+        },
+    ],
+}
 
+student_input2 = {
+    "heap": {
+        "func": [
+            {"name": "f", "parent": "Global", "funcIndex": "0", "nameWidth": 2},
+            {"name": "g", "parent": "Global", "funcIndex": "1", "nameWidth": 2},
+        ],
+    },
+    "frame": [
+        {
+            "var": [
+                {
+                    "val": "5",
+                    "name": "x",
+                    "valWidth": 2,
+                    "varIndex": "1",
+                    "nameWidth": 2,
+                },
+                {
+                    "val": "6",
+                    "name": "y",
+                    "valWidth": 2,
+                    "varIndex": "0",
+                    "nameWidth": 2,
+                },
+                {"val": "#heap-func-0", "name": "f", "varIndex": "2", "nameWidth": 2},
+            ],
+            "frameIndex": "0",
+        },
+        {
+            "var": [
+                {
+                    "val": "10",
+                    "name": "x",
+                    "valWidth": 2,
+                    "varIndex": "0",
+                    "nameWidth": 2,
+                },
+                {
+                    "val": "20",
+                    "name": "z",
+                    "valWidth": 2,
+                    "varIndex": "1",
+                    "nameWidth": 2,
+                },
+            ],
+            "name": "f",
+            "parent": "Global",
+            "return": {"val": "5"},
+            "nameWidth": 2,
+            "frameIndex": "1",
+        },
+    ],
+}
+
+#print(convert_studentinput_to_json(student_input2))
 intsonly_ft = FrameTree(example_intsonly)
-intsonly2_ft = FrameTree(example_intsonly2)
-#jsonframes, jsonheap = ft2.get_json()
-#print(jsonframes)
-print("grade by frame:", intsonly_ft.grade_byframe(intsonly2_ft))
-print("grade all-or-nothing", intsonly_ft.grade_allornothing(intsonly2_ft))
+
+B_frames, B_heap = convert_studentinput_to_json(student_input2)
+
+print("grade all-or-nothing", intsonly_ft.grade_allornothing(B_json_frames= B_frames, B_json_heap=B_heap))
+
+js = intsonly_ft.get_json()
+print(js[0])
+print(js[1])
+
