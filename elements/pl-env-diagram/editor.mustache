@@ -8,8 +8,14 @@
     <datalist id="frame-indices">
       <option value="Global"></option>
       {{#frame}}
+      {{^name}}
       <option value="f{{frameIndex}}"></option>
+      {{/name}}
       {{/frame}}
+    </datalist>
+    <datalist id="sequence-types">
+      <option value="list"></option>
+      <option value="tuple"></option>
     </datalist>
     <div class="vizLayoutTd" id="vizLayoutTdSecond">
     <div id="dataViz">
@@ -76,7 +82,7 @@
                 {{/heap}}
             </div>
             <button type="button" class="btn" id="addFuncButton" {{^show_controls}}disabled{{/show_controls}}>Add function</button>
-            <button type="button" class="btn" id="addListButton" {{^show_controls}}disabled{{/show_controls}}>Add list</button>
+            <button type="button" class="btn" id="addSequenceButton" {{^show_controls}}disabled{{/show_controls}}>Add list/tuple</button>
             </td>
         </tr>
         </tbody></table>

@@ -134,8 +134,7 @@ class Visualizer {
   
   make_parent_marker(elemType, plKey) {
     let marker = document.createElement(elemType);
-    const dropdown = this.makeInput("frameParentHeader", plKey + "-parent")
-    dropdown.setAttribute("list", "frame-indices");
+    const dropdown = this.makeSelectInput("frameParentHeader", plKey + "-parent", "frame-indices")
 
     // construct "[Parent = <dropdown>]"
     marker.appendChild(document.createTextNode(" [Parent = "));
@@ -194,6 +193,13 @@ class Visualizer {
     input.classList.add(className)
     input.value = ""
     return input
+  }
+
+  makeSelectInput(className, plKey, dataListId) {
+    const dropdown = this.makeInput(className, plKey)
+    dropdown.setAttribute("list", dataListId);
+    dropdown.classList.add("selectInput")
+    return dropdown
   }
   
   updateInputLengthToContent(input, ignorePointers) {
@@ -313,13 +319,21 @@ class Visualizer {
     let heapObject = document.createElement("div")
     heapObject.className = "heapObject";
     topLevelHeapObject.appendChild(heapObject)
-    topLevelHeapObject.appendChild(this.make_remove_button(topLevelHeapObject))
-    if (typeName) {
+
+    let header = document.createElement("div")
+    
+    if (typeName instanceof HTMLElement) {
+      header.appendChild(typeName)
+    } else {
       let typeMarker = document.createElement("div")
+      header.appendChild(typeMarker)
       typeMarker.className = "typeLabel"
       typeMarker.innerText = typeName
-      heapObject.append(typeMarker)
     }
+
+    header.appendChild(this.make_remove_button(topLevelHeapObject))
+
+    heapObject.append(header)
     heapObject.appendChild(content)
     this.executionVisualizer.querySelector("#heap").appendChild(topLevelHeapObject);
   }
@@ -499,40 +513,49 @@ class Visualizer {
     return container
   }
   
-  add_list_object() {
-    let index = this.getLastIndex("heap-list-")
-    let listObj = document.createElement("table")
-    listObj.className = "listTbl"
-    let listHeaderRow = document.createElement("tr")
-    let listContentsRow = document.createElement("tr")
-    listObj.appendChild(listHeaderRow)
-    listObj.appendChild(listContentsRow)
+  add_sequence_object() {
+    let index = this.getLastIndex("heap-sequence-")
+    let sequenceObj = document.createElement("table")
+    sequenceObj.className = "sequenceTbl"
+    let sequenceHeaderRow = document.createElement("tr")
+    let sequenceContentsRow = document.createElement("tr")
+    sequenceObj.appendChild(sequenceHeaderRow)
+    sequenceObj.appendChild(sequenceContentsRow)
+    let viz = this;
     let appendButton = this.make_add_button(function () {
-      
+      let newIndex = viz.increment_sequence_header(sequenceHeaderRow)
+      let newElement = document.createElement("td")
+      newElement.className = "sequenceElt"
+      sequenceContentsRow.appendChild(newElement)
+      let valueContainer = viz.make_value_box("sequenceElementValueContainer", "heap-sequence-" + index + "-item-" + newIndex + "-val")
+      newElement.appendChild(valueContainer)
     })
-    listObj.id = "heap-list-" + index
-    this.add_heap_object(listObj, "list")
+    sequenceObj.appendChild(appendButton)
+    let sequenceTypeInput = this.makeSelectInput("sequenceTypeInput", "heap-sequence-" + index + "-type", "sequence-types")
+    this.add_heap_object("heap-sequence-" + index, sequenceObj, sequenceTypeInput)
   }
   
-  decrement_list_header(listHeaderObj) {
-    if (!listHeaderObj.lastChild) {
+  decrement_sequence_header(sequenceHeaderObj) {
+    if (!sequenceHeaderObj.lastChild) {
       return;
     }
-    listHeaderObj.removeChild(listHeaderObj.lastChild)
+    sequenceHeaderObj.removeChild(sequenceHeaderObj.lastChild)
   }
   
-  increment_list_header(listHeaderObj) {
-    let lastHeader = listHeaderObj.lastChild
+  increment_sequence_header(sequenceHeaderObj) {
+    let lastHeader = sequenceHeaderObj.lastChild
     if (!lastHeader) {
-      listHeaderObj.appendChild(this.make_list_header_object(0))
+      sequenceHeaderObj.appendChild(this.make_sequence_header_object(0))
+      return 0
     }
     let lastNum = parseInt(lastHeader.innerText)
-    listHeaderObj.appendChild(this.make_list_header_object(lastNum + 1))
+    sequenceHeaderObj.appendChild(this.make_sequence_header_object(lastNum + 1))
+    return lastNum + 1
   }
   
-  make_list_header_object(number) {
+  make_sequence_header_object(number) {
     let obj = document.createElement("td")
-    obj.className = "listHeader"
+    obj.className = "sequenceHeader"
     obj.innerText = "" + number
     return obj
   }
@@ -542,7 +565,7 @@ class Visualizer {
     addButton.classList.add("btn", "addButton")
     addButton.type = "button";
     addButton.onclick = onclick
-    return removeframe
+    return addButton
   }
 
   initializeStuff() {
@@ -553,7 +576,7 @@ class Visualizer {
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keyup", (e) => this.varLengthInputListener(e)))
     this.executionVisualizer.querySelector("#addFrameButton").addEventListener("click", (e) => this.add_frame(e))
     this.executionVisualizer.querySelector("#addFuncButton").addEventListener("click", (e) => this.add_function_object(e))
-    this.executionVisualizer.querySelector("#addListButton").addEventListener("click", (e) => this.add_list_object(e))
+    this.executionVisualizer.querySelector("#addSequenceButton").addEventListener("click", (e) => this.add_sequence_object(e))
     this.updateAllInputLengthsToContent()
     this.updateAllPointers(true)
   }
