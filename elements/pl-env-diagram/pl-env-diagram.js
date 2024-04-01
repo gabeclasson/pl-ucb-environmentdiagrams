@@ -25,14 +25,17 @@ class Visualizer {
     console.log(e)
     let button = e.target
     let frame = button.closest(".stackFrame")
-    let variables = frame.querySelector(".stackFrameVarTable")
-    console.log(this)
+    let variables = frame.querySelector(".stackFrameVarTable").children[0]
     let index = this.getLastIndex(frame.id + "-var-")
     //var newvar = document.createElement("div");
     if (frame.id == "frame-0") {
       variables.appendChild(this.make_variable(frame.id + "-var-" + index))
     } else {
+      console.log(button)
+      console.log(frame)
       let returnVal = frame.querySelector(".returnValueTr");
+      console.log(variables)
+      console.log(returnVal)
       variables.insertBefore(this.make_variable(frame.id + "-var-" + index), returnVal)
       this.updatePointerFrom(frame.id + "-return-val", false)
     }
@@ -93,7 +96,9 @@ class Visualizer {
 
     // update the parent pointer dropdowns when a frame is deleted
     if (target.classList.contains("stackFrame")) {
-      this.updateDropdowns();
+      let frameHeader = target.querySelector(".frameHeader").textContent
+      let frameIndex = frameHeader.substring(0, frameHeader.indexOf(":"))
+      this.removeFrameFromDataList(frameIndex)
     }
   }
   
@@ -128,20 +133,32 @@ class Visualizer {
   }
   
   make_parent_marker(elemType, plKey) {
-    const dropdown = document.createElement("select");
-    dropdown.className = "parentDropdown";
     let marker = document.createElement(elemType);
+    const dropdown = this.makeInput("frameParentHeader", plKey + "-parent")
+    dropdown.setAttribute("list", "frame-indices");
 
     // construct "[Parent = <dropdown>]"
-    marker.innerHTML = " [Parent = ";
+    marker.appendChild(document.createTextNode(" [Parent = "));
     marker.appendChild(dropdown);
-
-    // needed to set a timeout, otherwise "Global" wouldn't always populate
-    setTimeout(() => {
-      this.updateDropdowns();
-    }, 0);
-    marker.innerHTML += "]";
+    marker.appendChild(document.createTextNode("]"));
     return marker;
+  }
+
+  addFrameToDataList(frameIndex) {
+    let dataList = this.executionVisualizer.querySelector("#frame-indices")
+    let option = document.createElement("option")
+    option.value = frameIndex;
+    dataList.appendChild(option)
+  }
+
+  removeFrameFromDataList(frameIndex) {
+    let dataList = this.executionVisualizer.querySelector("#frame-indices")
+    for (let option of dataList.children) {
+      if (option.value == frameIndex) {
+        dataList.removeChild(option)
+        return
+      }
+    }
   }
   
   make_value_box(className, plKey) {
@@ -254,17 +271,15 @@ class Visualizer {
     var frame = document.createElement("div");
     var frame_name_label = document.createElement("label");
     var frame_name = this.make_variable_length_input("frameHeader", "frame-" + index + "-name")
-    var variables = document.createElement("table");
+    var table = document.createElement("table")
+    table.className = "stackFrameVarTable"
+    var variables = document.createElement("tbody");
+    table.appendChild(variables)
     var variable_button = document.createElement("button");
-    var test = document.createElement("div");
     
     frame.classList.add("stackFrame", "removable");
     frame_name_label.className = "frameHeader";
-    
-    test.className = "stackFrameValue";
-    
-    variables.className = "stackFrameVarTable";
-  
+      
     let removeframe = this.make_remove_button(frame);
     
     variable_button.className = "btn"
@@ -279,18 +294,16 @@ class Visualizer {
   
     frame.id = "frame-" + index
     
-    //frame.appendChild(test);
     frame.appendChild(removeframe);
     frame.appendChild(frame_name_label);
     frame.appendChild(frame_name);
     frame.appendChild(this.make_parent_marker("label", "frame-" + index));
-    frame.appendChild(variables);
+    frame.appendChild(table);
     frame.appendChild(variable_button);
   
     this.executionVisualizer.querySelector("#globals_area").appendChild(frame);
-    this.updateDropdowns();
+    this.addFrameToDataList("f" + index)
     return frame
-    //document.body.appendChild(frame);
   }
   
   add_heap_object(id, content, typeName) {
@@ -456,9 +469,7 @@ class Visualizer {
 
     this.update_arrow_svg(this.relative_coordinates_obj_to_obj(originElement, destinationElement), pointer)
 
-    if (thorough) {
-      this.updatePointerDataInput(pointer)
-    }
+    this.updatePointerDataInput(pointer)
   }
   
   removePointer(pointer) {

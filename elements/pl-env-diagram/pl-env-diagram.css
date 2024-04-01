@@ -45,14 +45,21 @@
     /* none for now */
     font-family: Andale mono, monospace;
   }
-  
+
   div.ExecutionVisualizer input {
-    background: none;
-    border: none;
+    color: #006;
+  }
+  
+  div.ExecutionVisualizer .varLengthInput {
     font-family: Andale mono, monospace;
     font-size: 14pt;
     color: #006;
     display: inline-block;
+    width: 70px;
+    min-width: 70px;
+  }
+
+  div.ExecutionVisualizer .frameParentHeader {
     width: 70px;
     min-width: 70px;
   }
@@ -608,6 +615,8 @@
   
   div.ExecutionVisualizer td.stackFrameVar input {
     text-align: right;
+    background: none;
+    border: none;
   }
   
   div.ExecutionVisualizer td.stackFrameValue {
@@ -931,6 +940,8 @@
   }
 
   div.ExecutionVisualizer .valueContainer > input {
+    background: none;
+    border: none;
     margin-top: 3px;
     margin-left: 3px;
     margin-bottom: 3px;

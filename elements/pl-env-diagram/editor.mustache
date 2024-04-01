@@ -5,10 +5,17 @@
 </head>
 <body>
     <div class="ExecutionVisualizer {{#show_controls}}ExecutionVisualizerActive{{/show_controls}} {{^show_controls}}ExecutionVisualizerInactive{{/show_controls}}">
+    <datalist id="frame-indices">
+      <option value="Global"></option>
+      {{#frame}}
+      <option value="f{{frameIndex}}"></option>
+      {{/frame}}
+    </datalist>
     <div class="vizLayoutTd" id="vizLayoutTdSecond">
     <div id="dataViz">
         <table id="stackHeapTable">
-          <tbody><tr>
+          <tbody>
+          <tr>
             <td id="stack_td">
               <div id="globals_area">
                 <div id="stackHeader">Frames</div>
@@ -17,12 +24,12 @@
                     {{#return}}
                     <button class="btn removeButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button>
                     <label class="frameHeader">f{{frameIndex}}: </label><input class="frameHeader varLengthInput" id="frame-{{frameIndex}}-name" name="frame-{{frameIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{nameWidth}}ch">
-                    <label> [Parent = <input class="frameParentHeader varLengthInput" id="frame-{{frameIndex}}-parent" name="frame-{{frameIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}}>]</label>
+                    <label> [Parent = <input class="frameParentHeader" id="frame-{{frameIndex}}-parent" name="frame-{{frameIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}} list="frame-indices">]</label>
                     {{/return}}
                     {{^return}}
                     <label class="frameHeader">Global frame</label>
                     {{/return}}
-                    <table class="stackFrameVarTable">
+                    <table class="stackFrameVarTable"><tbody>
                     {{#var}}
                       <tr class="variableTr removable" id="frame-{{frameIndex}}-var-{{varIndex}}">
                         <td class=""><button class="btn removeButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button></td><td class="stackFrameVar"><input class="stackFrameVarInput varLengthInput" id="frame-{{frameIndex}}-var-{{varIndex}}-name" name="frame-{{frameIndex}}-var-{{varIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{nameWidth}}ch"></td>
@@ -45,7 +52,7 @@
                       </div>
                     </td>
                     {{/return}}
-                    </tr></table><button class="btn addVarButton" type="button" {{^show_controls}}disabled{{/show_controls}}>Add Variable</button></div>
+                    </tr></tbody></table><button class="btn addVarButton" type="button" {{^show_controls}}disabled{{/show_controls}}>Add Variable</button></div>
                 {{/frame}}
             </div>
             <button type="button" class="btn" id="addFrameButton" {{^show_controls}}disabled{{/show_controls}}>Add Frame</button>
@@ -61,7 +68,7 @@
                         <div class="funcObj">
                           func 
                           <input class="funcNameInput varLengthInput" id="heap-func-{{funcIndex}}-name" name="heap-func-{{funcIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{nameWidth}}ch">
-                          <span> [Parent = <input class="frameParentHeader" id="heap-func-{{funcIndex}}-parent" name="heap-func-{{funcIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}}>]</span>
+                          <span> [Parent = <input class="frameParentHeader" id="heap-func-{{funcIndex}}-parent" name="heap-func-{{funcIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}} list="frame-indices">]</span>
                         </div>
                       </div>
                       <button class="btn removeButton" type="button"></button></div>
