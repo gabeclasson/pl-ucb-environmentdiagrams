@@ -16,8 +16,8 @@
                   <div class="stackFrame removable" id="frame-{{frameIndex}}">
                     {{#return}}
                     <button class="btn removeButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button>
-                    <label class="frameHeader">f{{frameIndex}}: </label><input class="frameHeader varLengthInput pl-html-input" id="frame-{{frameIndex}}-name" name="frame-{{frameIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}}>
-                    <label> [Parent = <input class="frameParentHeader varLengthInput pl-html-input" id="frame-{{frameIndex}}-parent" name="frame-{{frameIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}}>]</label>
+                    <label class="frameHeader">f{{frameIndex}}: </label><input class="frameHeader varLengthInput" id="frame-{{frameIndex}}-name" name="frame-{{frameIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{nameWidth}}ch">
+                    <label> [Parent = <input class="frameParentHeader varLengthInput" id="frame-{{frameIndex}}-parent" name="frame-{{frameIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}}>]</label>
                     {{/return}}
                     {{^return}}
                     <label class="frameHeader">Global frame</label>
@@ -25,10 +25,10 @@
                     <table class="stackFrameVarTable">
                     {{#var}}
                       <tr class="variableTr removable" id="frame-{{frameIndex}}-var-{{varIndex}}">
-                        <td class=""><button class="btn removeButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button></td><td class="stackFrameVar"><input class="stackFrameVarInput varLengthInput pl-html-input" id="frame-{{frameIndex}}-var-{{varIndex}}-name" name="frame-{{frameIndex}}-var-{{varIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}}></td>
+                        <td class=""><button class="btn removeButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button></td><td class="stackFrameVar"><input class="stackFrameVarInput varLengthInput" id="frame-{{frameIndex}}-var-{{varIndex}}-name" name="frame-{{frameIndex}}-var-{{varIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{nameWidth}}ch"></td>
                         <td class="stackFrameValue">
                           <div class="valueContainer">
-                            <input class="stackFrameValueInput varLengthInput pl-html-input" id="frame-{{frameIndex}}-var-{{varIndex}}-val" name="frame-{{frameIndex}}-var-{{varIndex}}-val" value="{{val}}" {{^show_controls}}disabled{{/show_controls}}>
+                            <input class="stackFrameValueInput varLengthInput {{^valWidth}}varLengthInputPointer{{/valWidth}}" id="frame-{{frameIndex}}-var-{{varIndex}}-val" name="frame-{{frameIndex}}-var-{{varIndex}}-val" value="{{val}}" {{^show_controls}}disabled{{/show_controls}} {{#valWidth}}style="min-width: {{valWidth}}ch"{{/valWidth}}>
                             <button class="btn pointerValueButton pointerButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button>
                           </div>
                         </td>
@@ -40,7 +40,7 @@
                     <td class="stackFrameVar"><span>Return Value</span></td>
                     <td class="stackFrameValue">
                       <div class="valueContainer">
-                        <input class="stackFrameValueInput varLengthInput pl-html-input" id="frame-{{frameIndex}}-return-val" name="frame-{{frameIndex}}-return-val" value="{{val}}" {{^show_controls}}disabled{{/show_controls}}>
+                        <input class="stackFrameValueInput varLengthInput {{^valWidth}}varLengthInputPointer{{/valWidth}}" id="frame-{{frameIndex}}-return-val" name="frame-{{frameIndex}}-return-val" value="{{val}}" {{^show_controls}}disabled{{/show_controls}} {{#valWidth}}style="min-width: {{valWidth}}ch"{{/valWidth}}>
                         <button class="btn pointerValueButton pointerButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button>
                       </div>
                     </td>
@@ -60,8 +60,8 @@
                         <div class="typeLabel">function</div>
                         <div class="funcObj">
                           func 
-                          <input class="funcNameInput varLengthInput pl-html-input" id="heap-func-{{funcIndex}}-name" name="heap-func-{{funcIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}}>
-                          <span> [Parent = <input class="frameParentHeader varLengthInput pl-html-input" id="heap-func-{{funcIndex}}-parent" name="heap-func-{{funcIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}}>]</span>
+                          <input class="funcNameInput varLengthInput" id="heap-func-{{funcIndex}}-name" name="heap-func-{{funcIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{nameWidth}}ch">
+                          <span> [Parent = <input class="frameParentHeader" id="heap-func-{{funcIndex}}-parent" name="heap-func-{{funcIndex}}-parent" value="{{parent}}" {{^show_controls}}disabled{{/show_controls}}>]</span>
                         </div>
                       </div>
                       <button class="btn removeButton" type="button"></button></div>
@@ -77,7 +77,8 @@
       {{#pointer}}
         <div class="pointerArrow pointerTo-{{destination}}" id="pointer-{{origin}}">
           <svg xmlns="http://www.w3.org/2000/svg" 
-          width="0" height="0" viewBox="0 0 0 0" style="top: 0; left: 0"><path d=""></path></svg>
+          width="{{width}}" height="{{height}}" viewBox="0 0 {{width}} {{height}}" style="top: {{top}}; left: {{left}}"><path d="{{d}}"></path></svg>
+          <input class="pointerInput" id="pointer-{{origin}}-input" name="pointer-{{origin}}-input" value="{{raw}}">
         </div>
       {{/pointer}}
       </div>

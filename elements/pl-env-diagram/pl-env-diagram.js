@@ -172,9 +172,9 @@ class Visualizer {
   
   makeInput(className, plKey) {
     let input = document.createElement("input")
-    input.classList.add(className, "pl-html-input")
     input.id = plKey
     input.name = plKey
+    input.classList.add(className)
     input.value = ""
     return input
   }
@@ -409,9 +409,24 @@ class Visualizer {
     svg.setAttribute("width", width)
     svg.setAttribute("height", height)
     svg.setAttribute("viewBox", `0 0 ${width} ${height}`)
-    path.setAttribute("d", `M ${x1 - outerContainerX}, ${y1 - outerContainerY} L ${x2 - outerContainerX} ${y2 - outerContainerY}`)
+    let pointerPathString = `M ${x1 - outerContainerX}, ${y1 - outerContainerY} L ${x2 - outerContainerX} ${y2 - outerContainerY}`;
+    path.setAttribute("d", pointerPathString)
   }
   
+  updatePointerDataInput(pointer) {
+    let svg = pointer.children[0]
+    let path = svg.children[0]
+    let pointerDataInput = pointer.children[1]
+    pointerDataInput.value = JSON.stringify({
+      'd': path.getAttribute("d"),
+      'width': svg.getAttribute("width"),
+      'height': svg.getAttribute('height'),
+      'top': svg.style.top,
+      'left': svg.style.left
+    })
+  }
+  
+  // TODO: fix bug where changing widths mess things up. 
   updatePointer(pointer, thorough) {
     if (pointer == null) {
       return
@@ -431,14 +446,19 @@ class Visualizer {
     }
 
     if (thorough) {
-      originElement.style.visibility = "hidden"
       originElement.value = "#" + destinationElement.id
-      originElement.style.width = ""
+      originElement.style.minWidth = ""
+      originElement.classList.add("varLengthInputPointer")
       let button = originElement.nextElementSibling
       button.classList.add("valueButton")
       button.classList.remove("pointerButton")
     }
+
     this.update_arrow_svg(this.relative_coordinates_obj_to_obj(originElement, destinationElement), pointer)
+
+    if (thorough) {
+      this.updatePointerDataInput(pointer)
+    }
   }
   
   removePointer(pointer) {
@@ -446,9 +466,8 @@ class Visualizer {
     let originId = pointer.id.substring("pointer-".length)
     let valueInput = this.executionVisualizer.querySelector("#" + originId)
     if (valueInput != null) {
-      valueInput.style.visibility = "visible"
       valueInput.value = ""
-      valueInput.sib
+      valueInput.classList.remove("varLengthInputPointer")
       let button = valueInput.nextElementSibling
       button.classList.add("pointerButton")
       button.classList.remove("valueButton")
@@ -464,6 +483,8 @@ class Visualizer {
     let newPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
     svg.appendChild(newPath)
     container.appendChild(svg)
+    let input = this.makeInput("pointerInput", id + "-input")
+    container.appendChild(input)
     return container
   }
   
@@ -528,7 +549,7 @@ class Visualizer {
 
   inactiveInitializeStuff() {
     this.updateAllInputLengthsToContent()
-    this.updateAllPointers(true)
+    //this.updateAllPointers(true)
   }
 }
 

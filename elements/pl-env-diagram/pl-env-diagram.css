@@ -917,6 +917,10 @@
     fill: none;
   }
 
+  div.ExecutionVisualizer .pointerArrow input {
+    display: none;
+  }
+
   div.ExecutionVisualizer .valueContainer {
     display: flex;
     flex-direction: row;
@@ -932,6 +936,11 @@
     margin-bottom: 3px;
     height: 100%;
     flex-grow: 1;
+  }
+
+  div.ExecutionVisualizer .valueContainer .varLengthInputPointer {
+    min-width: 0px !important;
+    visibility: hidden;
   }
 
   div.ExecutionVisualizer .pointerValueButton {
@@ -967,6 +976,6 @@
   }
   
   .ExecutionVisualizerInactive button {
-    display: none !important; 
+    visibility: hidden !important; 
     pointer-events:none !important;
   }

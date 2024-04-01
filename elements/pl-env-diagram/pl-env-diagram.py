@@ -63,19 +63,26 @@ def prepare(element_html, data):
 def parse(element_html, data):
     if not data["submitted_answers"]:
         data['submitted_answers'] = default_submission
-    structured_answers = Frame.unflatten_raw_data(data["submitted_answers"])
+    structured_answers = Frame.unflatten_raw_data(data["submitted_answers"], ('pointer',))
     pointer_list = []
-    def investigate(key, obj, history):
+    def investigate(key, obj, history, parent):
         if type(obj) == list:
             for item in obj:
-                investigate(item[key + "Index"], item, history + [item[key + "Index"]])
+                investigate(item[key + "Index"], item, history + [item[key + "Index"]], obj)
         elif type(obj) == dict:
-            for child_key, child in obj.items():
-                investigate(child_key, child, history + [child_key])
+            for child_key, child in dict(obj).items():
+                investigate(child_key, child, history + [child_key], obj)
         else: 
-            if key == 'val' and type(obj) == str and obj and obj[0] == '#':
-                pointer_list.append({'origin': "-".join(history), 'destination': obj[1:]})
-    investigate(None, structured_answers, [])
+            if (key == 'val' or key == 'name') and type(obj) == str: # Injecting lengths and pointer information
+                if key == 'val' and obj and obj[0] == '#':
+                    origin = "-".join(history)
+                    raw_pointer_data = structured_answers['pointer'][origin+"-input"]
+                    pointer_data = json.loads(raw_pointer_data)
+                    pointer_data.update({'origin': origin, 'destination': obj[1:], 'raw': raw_pointer_data})
+                    pointer_list.append(pointer_data)
+                else: 
+                    parent[key + 'Width'] = len(obj) + 1
+    investigate(None, structured_answers, [], None)
     structured_answers['pointer'] = pointer_list
     data['submitted_answers'] = structured_answers
     return data
