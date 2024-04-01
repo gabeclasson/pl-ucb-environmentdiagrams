@@ -90,16 +90,22 @@ class Visualizer {
     // } else if (target.classList.contains("variableTr")) {
     //   this.updatePointerFrom(target.getElementsByClassName("stackFrameValueInput")[0].id, true)
     // }
-  
-    target.parentElement.removeChild(target);
-    this.updateAllPointers();
 
     // update the parent pointer dropdowns when a frame is deleted
     if (target.classList.contains("stackFrame")) {
       let frameHeader = target.querySelector(".frameHeader").textContent
       let frameIndex = frameHeader.substring(0, frameHeader.indexOf(":"))
       this.removeFrameFromDataList(frameIndex)
+    } else if (target.classList.contains("sequenceHeader")) {
+      let index = parseInt(target.innerText)
+      let table = target.closest("table")
+      target = table.children[1].children[index]
+      this.decrement_sequence_header(table.children[0])
+      this.renumber_sequence_objects(table.children[1])
     }
+
+    target.parentElement.removeChild(target);
+    this.updateAllPointers();
   }
   
   updateAllPointers(thorough) {
@@ -221,7 +227,7 @@ class Visualizer {
   updateDropdowns() {
     // query for the dropdowns and frame names
     const frameNames = document.querySelectorAll(".frameHeader");
-    const dropdowns = document.querySelectorAll(".parentDropdown");
+    const dropdowns = document.querySelectorAll(".frameParentHeader");
 
     // save selected elements (to later re-populate)
     const selectedOptions = [];
@@ -522,17 +528,51 @@ class Visualizer {
     sequenceObj.appendChild(sequenceHeaderRow)
     sequenceObj.appendChild(sequenceContentsRow)
     let viz = this;
-    let appendButton = this.make_add_button(function () {
-      let newIndex = viz.increment_sequence_header(sequenceHeaderRow)
-      let newElement = document.createElement("td")
-      newElement.className = "sequenceElt"
-      sequenceContentsRow.appendChild(newElement)
-      let valueContainer = viz.make_value_box("sequenceElementValueContainer", "heap-sequence-" + index + "-item-" + newIndex + "-val")
-      newElement.appendChild(valueContainer)
-    })
+    let appendButton = this.make_sequence_add_button(function () {
+      viz.add_list_element(null, "heap-sequence-" + index, sequenceHeaderRow, sequenceContentsRow)
+    }, false)
     sequenceObj.appendChild(appendButton)
     let sequenceTypeInput = this.makeSelectInput("sequenceTypeInput", "heap-sequence-" + index + "-type", "sequence-types")
     this.add_heap_object("heap-sequence-" + index, sequenceObj, sequenceTypeInput)
+  }
+
+  add_list_element(before, sequencePlKey, sequenceHeaderRow, sequenceContentsRow) {
+      // if before is null, you are appending to the sequence. 
+      let viz = this
+      let newElement = document.createElement("td")
+      newElement.classList.add("sequenceElt", "removable")
+      let index;
+      if (before) {
+        let input = before.querySelector("input")
+        let beforeIndex = input.id.split("-")[4]
+        index = beforeIndex - 1;
+        before.parentElement.insertBefore(newElement, before)
+      } else {
+        sequenceContentsRow.appendChild(newElement)
+        index = sequenceHeaderRow.children.length
+      }
+      this.increment_sequence_header(sequenceHeaderRow)
+      let valueContainer = this.make_value_box("sequenceElementValueContainer", sequencePlKey + "-item-" + index + "-val")
+      newElement.appendChild(valueContainer)
+      newElement.appendChild(this.make_sequence_add_button(function() {
+        viz.add_list_element(newElement, sequencePlKey, sequenceHeaderRow, sequenceContentsRow)
+      }, true))
+      if (before) { // if we added before, all of the plKeys are messed up and need to be renumbered.
+        this.renumber_sequence_objects(sequenceContentsRow)
+      }
+  }
+
+  make_sequence_add_button(listener, isPrepend) {
+      let buttonContainer = document.createElement("div")
+      buttonContainer.classList.add("sequenceAddButtonContainer")
+      if (isPrepend) {
+        buttonContainer.classList.add("sequencePrependButtonContainer")
+      } else {
+        buttonContainer.classList.add("sequenceAppendButtonContainer")
+      }
+      let button = this.make_add_button(listener)
+      buttonContainer.appendChild(button)
+      return buttonContainer;
   }
   
   decrement_sequence_header(sequenceHeaderObj) {
@@ -555,9 +595,22 @@ class Visualizer {
   
   make_sequence_header_object(number) {
     let obj = document.createElement("td")
-    obj.className = "sequenceHeader"
+    obj.classList.add("sequenceHeader", "removable")
     obj.innerText = "" + number
+    obj.appendChild(this.make_remove_button(obj))
     return obj
+  }
+  
+  renumber_sequence_objects(sequenceElementsRow) {
+    for (let i = 0; i < sequenceElementsRow.children.length; i++) {
+      let element = sequenceElementsRow.children[i]
+      let input = element.querySelector("input")
+      let comps = input.id.split("-")
+      comps[4] = i
+      let newPlKey = comps.join("-")
+      input.id = newPlKey
+      input.name = newPlKey
+    }
   }
   
   make_add_button(onclick) {

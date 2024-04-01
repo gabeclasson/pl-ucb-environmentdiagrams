@@ -1006,3 +1006,9 @@
     visibility: hidden !important; 
     pointer-events:none !important;
   }
+
+  div.ExecutionVisualizer .sequenceAddButtonContainer {
+    height: 100%;
+    width: 10px;
+    position: relative;
+  }
