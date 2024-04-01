@@ -4,7 +4,6 @@ import lxml.html
 from frame import *
 import prairielearn as pl
 import json
-import grading.autoeval as autoeval
 
 def generate(element_html, data):
     pass
