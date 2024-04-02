@@ -79,6 +79,28 @@
                       </div>
                       <button class="btn removeButton" type="button"></button></div>
                   {{/func}}
+                  {{#sequence}}
+                    <div class="topLevelHeapObject removable" id="heap-sequence-{{sequenceIndex}}">
+                    <div class="heapObject">
+                      <div><input id="heap-sequence-{{sequenceIndex}}-type" name="heap-sequence-{{sequenceIndex}}-type" class="sequenceTypeInput selectInput" list="sequence-types" value="{{type}}" {{^show_controls}}disabled{{/show_controls}}><button class="btn removeButton" type="button"></button></div>
+                      <table class="sequenceTbl">
+                      <tr class="sequenceHeaderRow">{{#item}}<td class="sequenceHeader removable">{{itemIndex}}<button class="btn removeButton" type="button"></button></td>{{/item}}</tr>
+                      <tr class="sequenceContentsRow">
+                        {{#item}}
+                          <td class="sequenceElt removable">
+                            <div class="valueContainer">
+                              <input id="heap-sequence-{{sequenceIndex}}-item-{{itemIndex}}-val" name="heap-sequence-{{sequenceIndex}}-item-{{itemIndex}}-val" class="sequenceElementValueContainer varLengthInput" value="{{val}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{valWidth}}ch">
+                              <button class="btn pointerButton pointerValueButton" type="button"></button>
+                            </div>
+                            <div class="sequenceAddButtonContainer sequencePrependButtonContainer"><button class="btn addButton" type="button"></button></div>
+                          </td>
+                        {{/item}}
+                        <div class="sequenceAddButtonContainer sequenceAppendButtonContainer"><button class="btn addButton" type="button"></button></div>
+                      </tr>
+                      </table>
+                      </div>
+                    </div>
+                  {{/sequence}}
                 {{/heap}}
             </div>
             <button type="button" class="btn" id="addFuncButton" {{^show_controls}}disabled{{/show_controls}}>Add function</button>

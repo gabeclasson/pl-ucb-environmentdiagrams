@@ -524,14 +524,16 @@ class Visualizer {
     let sequenceObj = document.createElement("table")
     sequenceObj.className = "sequenceTbl"
     let sequenceHeaderRow = document.createElement("tr")
+    sequenceHeaderRow.className = "sequenceHeaderRow"
     let sequenceContentsRow = document.createElement("tr")
+    sequenceContentsRow.className = "sequenceContentsRow"
     sequenceObj.appendChild(sequenceHeaderRow)
     sequenceObj.appendChild(sequenceContentsRow)
     let viz = this;
     let appendButton = this.make_sequence_add_button(function () {
       viz.add_list_element(null, "heap-sequence-" + index, sequenceHeaderRow, sequenceContentsRow)
     }, false)
-    sequenceObj.appendChild(appendButton)
+    sequenceContentsRow.appendChild(appendButton)
     let sequenceTypeInput = this.makeSelectInput("sequenceTypeInput", "heap-sequence-" + index + "-type", "sequence-types")
     this.add_heap_object("heap-sequence-" + index, sequenceObj, sequenceTypeInput)
   }
@@ -548,7 +550,7 @@ class Visualizer {
         index = beforeIndex - 1;
         before.parentElement.insertBefore(newElement, before)
       } else {
-        sequenceContentsRow.appendChild(newElement)
+        sequenceContentsRow.insertBefore(newElement, sequenceContentsRow.children[sequenceContentsRow.children.length - 1])
         index = sequenceHeaderRow.children.length
       }
       this.increment_sequence_header(sequenceHeaderRow)

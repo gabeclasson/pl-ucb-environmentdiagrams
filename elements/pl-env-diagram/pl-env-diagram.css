@@ -1007,8 +1007,38 @@
     pointer-events:none !important;
   }
 
-  div.ExecutionVisualizer .sequenceAddButtonContainer {
-    height: 100%;
-    width: 10px;
+  div.ExecutionVisualizer .sequenceElt,
+  div.ExecutionVisualizer .sequenceContentsRow {
     position: relative;
+  }
+
+  div.ExecutionVisualizer .sequenceElementValueContainer {
+    text-align: right;
+  }
+
+  div.ExecutionVisualizer .sequenceAddButtonContainer {
+    height: 50px;
+    width: 30px;
+    position: absolute;
+    top: 0;
+  }
+
+  div.ExecutionVisualizer .sequenceAddButtonContainer {
+    margin: auto;
+  }
+
+  div.ExecutionVisualizer .sequencePrependButtonContainer {
+    left: -8px;
+  }
+
+  div.ExecutionVisualizer .sequenceAppendButtonContainer {
+    right: -8px;
+  }
+
+  div.ExecutionVisualizer .sequenceAddButtonContainer > button {
+    display: none;
+  }
+
+  div.ExecutionVisualizer .sequenceAddButtonContainer:hover > button {
+    display: block;
   }

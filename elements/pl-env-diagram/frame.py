@@ -57,21 +57,22 @@ class Frame():
                     if type(prev) == dict:
                         prev[prev_key] = vanguard
                     elif type(prev) == list:
-                        vanguard[grand_prev_key + 'Index'] = prev_key
+                        vanguard[prev_dict_key + 'Index'] = prev_key
                         prev.append(vanguard)
 
                 prev = vanguard
-                grand_prev_key = prev_key
                 prev_key = component
+                if not is_number_str(prev_key):
+                    prev_dict_key = prev_key
                 
                 if type(vanguard) == dict and component in vanguard: 
                     vanguard = vanguard[component]
-                elif type(vanguard) == list and vanguard and vanguard[-1][grand_prev_key + 'Index'] == component:
+                elif type(vanguard) == list and vanguard and vanguard[-1][prev_dict_key + 'Index'] == component:
                     vanguard = vanguard[-1]
                 else: 
                     vanguard = None
 
-                if grand_prev_key in special_keys:
+                if prev_dict_key in special_keys:
                     break
             
             if type(prev) == dict:
