@@ -6,8 +6,6 @@ import re
 Frame = frame.Frame
 
 class FrameTree():
-    originalcodestring = None
-    codestring = None
     root = None
     # TODO: if i set these to {}, does that make these static?
     envframes_dict = None
@@ -18,8 +16,6 @@ class FrameTree():
     framecounter = 0
 
     def __init__(self, codestring, debugmessages = False):
-        self.originalcodestring = codestring
-        self.codestring = codestring
         # a dictionary containing frames with associated variables in the form of a tuple: (type, name, mem loc, value)
         self.envframes_dict = {}
         # associates a frame object to a frame node (or in the case of global, at least for the time being, "global" to a frame node.)
@@ -28,34 +24,28 @@ class FrameTree():
         self.debugmessages = debugmessages
         self.codestrID_parent_dict = {}
         #self.framename_dict = {}
-        self.get_evaldiag()
+        self.get_evaldiag(codestring)
     
     def add_newframe(self, name = None): # func should always refer to the caller
         fobj = inspect.currentframe().f_back
         # if no frame nodes have been initialized, set the frame as the global frame and the root
         if len(self.fobj_framenode_dict.keys()) == 0:
             name = "global"
-            frame = Frame(name = name, fobj = fobj, index=self.framecounter)
+            frame = Frame(name = name, fobj = fobj, index="Global")
             self.fobj_framenode_dict[fobj] = frame
             #self.fobj_name_dict[fobj] = name
             self.root = frame
             # OLD
-            self.envframes_dict[name] = {"name": None, "parent": None, "parent_fobj": None, "curr_fobj": fobj, "index":self.framecounter}
+            self.envframes_dict[name] = {"name": None, "parent": None, "parent_fobj": None, "curr_fobj": fobj, "index":"global"}
         else: 
             parent_frame = fobj.f_back
             parent = self.fobj_framenode_dict[parent_frame] if parent_frame in self.fobj_framenode_dict else self.root
             name = fobj.f_code.co_name
-            self.codestrID_parent_dict[id(fobj.f_code)] = "global" if parent.index == 0 else "f" + str(parent.index)
-            #if name in self.framename_dict:
-            #    self.framename_dict[name] = self.framename_dict[name] + 1
-            #    name = name + str(self.framename_dict[name])
-            #else:
-            #    self.framename_dict[name] = 0
-            
+            self.codestrID_parent_dict[id(fobj.f_code)] = "Global" if parent.index == "Global" else "f" + str(parent.index)
             # OLD: dictionary rep of frame associations. Use for debugging only. 
-            self.envframes_dict[name] = {"name": name, "parent": parent, "parent_fobj": parent_frame, "curr_fobj": fobj, "index":self.framecounter}
+            self.envframes_dict[name] = {"name": name, "parent": parent, "parent_fobj": parent_frame, "curr_fobj": fobj, "index":"f" + str(self.framecounter)}
             # init FrameNode
-            frame = Frame(name = name, parent = parent, fobj=fobj, index=self.framecounter)
+            frame = Frame(name = name, parent = parent, fobj=fobj, index="f" + str(self.framecounter))
             # add self to the pairing dict
             self.fobj_framenode_dict[fobj] = frame
             # modify parent to include self as a child
@@ -67,7 +57,7 @@ class FrameTree():
         self.lastcreatedframe = frame
         return frame
     
-    def get_evaldiag(self):
+    def get_evaldiag(self, codestring):
 
         ##### FRAME TRACKING #####
 
@@ -76,7 +66,7 @@ class FrameTree():
         It then runs the new code made to get exitlines."""
         # does this by finding a 'def' statement, then inserting the init immediately after
         # if code is given as a string
-        code_list = self.codestring.split("\n")
+        code_list = codestring.split("\n")
 
         # TODO: add mutables
         # first init all of the vars
@@ -100,9 +90,9 @@ class FrameTree():
                 # TODO: make sure none of the variables are already in scope in the code.
                 code_list.insert(def_line + 1, ' '*whitespace + "self.add_newframe()") 
             i = i + 1
-        self.codestring = str.join("\n", code_list)
+        codestring = str.join("\n", code_list)
         d =  {"self":self, "inspect":inspect}
-        exec(self.codestring, d, {})
+        exec(codestring, d, {})
         
         ### EXIT LINE TRACING ###
         # TODO: might get rid of: edits all FrameNodes to include a reference to which line it ends on (in the modified code)
@@ -137,7 +127,7 @@ class FrameTree():
         # if code is given as a string
         # TODO: REMOVE BELOW LINE(S) WHEN ALL CODE IS WORKING
         exitlines_pq= exitlines_pq.copy()
-        code_list = self.codestring.split("\n")
+        code_list = codestring.split("\n")
 
         # TODO: fix to include correct variable names
         # set variable names for things we are using to store tracking info. (TODO: CHNAGE NAME GLOBVAR)
@@ -279,14 +269,6 @@ class FrameTree():
         def handle_variable(raw_variable, name = None, listIndex = None, varIndex = None):
             # TODO: i dont know whether its better to have these as separate lines for readibility, or in just one line
                 variable = {
-                    "val": "7",
-                    "name": "y", # none if list element
-                    "valWidth": 2, # no valWidth if object
-                    "varIndex": "1", # none if list element
-                    "nameWidth": 2, # none if list element
-                    "listIndex":0, # none if not list element
-                }
-                variable = {
                     "val": None,
                     "name": name, # none if list element
                     "valWidth": None, # no valWidth if object 
@@ -295,16 +277,16 @@ class FrameTree():
                 }
                 # TODO: i dont know whether its better to have the primitives as separate lines for readibility, or in just one line
                 if type(raw_variable).__name__ == "str":
-                    variable["val"] = '"' + raw_variable.__repr__() + '"'
+                    variable["val"] = raw_variable.__repr__()
                     variable["valWidth"] = len(variable["val"]) + 1
                 elif type(raw_variable).__name__ == "int":
-                    variable["val"] = '"' + raw_variable.__repr__() + '"'
+                    variable["val"] = raw_variable.__repr__()
                     variable["valWidth"] = len(variable["val"]) + 1
                 elif type(raw_variable).__name__ == "float":
-                    variable["val"] = '"' + raw_variable.__repr__() + '"'
+                    variable["val"] = raw_variable.__repr__()
                     variable["valWidth"] = len(variable["val"]) + 1
                 elif type(raw_variable).__name__ == "boolean":
-                    variable["val"] = '"' + raw_variable.__repr__() + '"'
+                    variable["val"] = raw_variable.__repr__()
                     variable["valWidth"] = len(variable["val"]) + 1
                 elif type(raw_variable).__name__ == "function":
                     if id(raw_variable) in mem_to_index_dict:
@@ -341,12 +323,13 @@ class FrameTree():
 
                 return variable
 
-        def addtojson(frame): # frames_dict, heap_dict, objname_dict
+        def addtojson(frame):
             newframe = {}
             # in the end, the values will be converted to a list. It is initially a dictionary just for ease of variable location
             newframe["var"] = []
             if frame.__name__ != "global":
                 newframe["name"] = frame.__name__
+                newframe["parent"] = frame.parent.index
                 # keep this line?
                 newframe["return"] = None
                 # may cause formatting issues, check this
@@ -356,6 +339,10 @@ class FrameTree():
 
             i = 0
             for varname in frame.bindings:
+                if varname == "returnval":
+                    variable = handle_variable(frame.bindings[varname], name = varname, varIndex=i)
+                    newframe["return"] = {"val":variable["val"]}
+                    break
                 # TODO: MOVE TO FRAMETREE DEF
                 newframe["var"].append(handle_variable(frame.bindings[varname], name = varname, varIndex=i))
                 i = i + 1
@@ -523,6 +510,129 @@ class FrameTree():
         print("total framecount", total_framecount)
         return max(0, total_correctframes/total_framecount - total_extraframes/(total_framecount + total_extraframes))
 
+    # recursive function that removes unnecessary variables for comparison
+    def simplify_html_json(iterable):
+        if type(iterable) is list:
+            for i in range(len(iterable)):
+                # TODO: remove this from FrameTree?
+                iterable[i] = FrameTree.simplify_html_json(iterable[i])
+        elif type(iterable) is dict:
+            for badKey in ["nameWidth", "frameIndex", "valWidth", "funcIndex", "sequenceIndex", "varIndex"]:
+                if badKey in iterable:
+                    del iterable[badKey]
+            for key in iterable:
+                iterable[key] = FrameTree.simplify_html_json(iterable[key])
+        return iterable
+
+    # recursive function that removes unnecessary variables for comparison
+    def simplify_html_json2(iterable):
+        if type(iterable) is list:
+            for i in range(len(iterable)):
+                # TODO: remove this from FrameTree?
+                iterable[i] = FrameTree.simplify_html_json(iterable[i])
+        elif type(iterable) is dict:
+            for badKey in ["nameWidth", "frameIndex", "valWidth", "funcIndex", "sequenceIndex", "varIndex"]:
+                if badKey in iterable:
+                    del iterable[badKey]
+            for key in iterable:
+                iterable[key] = FrameTree.simplify_html_json(iterable[key])
+        return iterable
+
+    def grade_allornothing2(self, other):
+        self_heap_dict = FrameTree.simplify_html_json(self.heap_dict)
+        self_frames_list = FrameTree.simplify_html_json(self.frames_list)
+        other_heap_dict = FrameTree.simplify_html_json(other["heap"])
+        other_frames_list = FrameTree.simplify_html_json(other["frame"])
+
+    def grade_allornothing1(self, other):
+        self_heap_dict = FrameTree.simplify_html_json(self.heap_dict)
+        self_frames_list = FrameTree.simplify_html_json(self.frames_list)
+        other_heap_dict = FrameTree.simplify_html_json(other["heap"])
+        other_frames_list = FrameTree.simplify_html_json(other["frame"])
+
+        # set up dictionaries that will assign names of matching frames and matching object pointers across self and other.
+        selfToOther_frames = {"Global":"Global"}
+        selfToOther_objects = {}
+
+        # function that will check variable equality for us, even if the order is different or pointer locations differ
+        # it will not detect if the objects it associates happen to be different. at the end we will check for heap equality given the found associations.
+        # O(n^2) time
+        def equal_ignore_order(a, b):
+            """ Use only when elements are neither hashable nor sortable! """
+            unmatched = list(b)
+            for elementA in a:
+                foundMatch = False
+                for elementB in unmatched:
+                    if elementA["name"] == elementB["name"]: 
+                        # this line only looks at objects with pointers. the first character can only be "#" for objects, since "#" is a comment character which we manually place to denote an object.
+                        if elementA["val"][:1] == "#":
+                            # then, we have to check that the two are the same kind of object. 
+                            if not elementA["val"].split("-")[:-1] ==  elementB["val"].split("-")[:-1]:
+                                break
+                            # now check to see if there is already an association between the object in elementA and elementB, and if there is make sure it is matching.
+                            elif elementA["val"] in selfToOther_objects:
+                                if selfToOther_objects[elementA["val"]] == elementB["val"]:
+                                    foundMatch = True
+                                # if there is an entry but it doesn't match, we haven't found matching variables
+                                break
+                            else:
+                                selfToOther_objects[elementA["val"]] = elementB["val"]
+                                foundMatch = True
+                        # if the two elements are NOT objects and they values stored are equal, they are equivalent.
+                        elif elementA == elementB:
+                            foundMatch = True
+                            break
+
+                if foundMatch:
+                    unmatched.remove(elementB)  
+                else:
+                    return False
+
+            return not unmatched
+
+        # check that the global frames are equivalent
+        # TODO: will not work if objects have differening indices
+        if not equal_ignore_order(self_frames_list[0]["var"], other_frames_list[0]["var"]):
+            print("Failed attempt - global frames are not equivalent")
+            print(self_frames_list[0])
+            print(other_frames_list[0])
+            return 0
+        
+        # now find all of the matching frames for the rest of the function
+        unmatchedSelf = list(self_frames_list[1:])
+        unmatchedOther = list(other_frames_list[1:])
+        # priority queue that tells us whose children to visit next. 
+        parentpq = ["global"]
+        while len(parentpq) > 0:
+            currparent = parentpq[0]
+            matched_frames = []
+            for self_frame in unmatchedSelf:
+                if self_frame["parent"] != currparent:
+                    continue
+                foundMatch = False
+                for other_frame in unmatchedOther:
+                    if self_frame["name"] != other_frame["name"]:
+                        break
+                    elif "parent" in self_frame["parent"] and selfToOther_frames[self_frame["parent"]] != other_frame["parent"]:
+                        break
+                if foundMatch:
+                        selfToOther_frames["f" + self_frame["frameIndex"]] = "f" + other_frame["frameIndex"]
+                        parentpq.append("f" + self_frame["frameIndex"])
+                        matched_frames.append(self_frame)
+                        unmatchedOther.remove(other_frame)  
+                else:
+                    return 0
+            for self_frame in matched_frames:
+                unmatchedSelf.remove(self_frame)
+            parentpq = parentpq[1:]
+        
+        # check in the heap to make sure all matched pointer objects are really the same (from what we can tell)
+
+
+        # at the end we check to make sure that when we modify everything so that the frame and pointer value locations are equivalent, we get them to be completely equal.
+
+        # if the end check does not pass, we can attempt every possible mapping between frame indices and pointers to see if one configuration works. this is slow, but makes it unlikely that a student is mistakenly marked wrong.
+        return 1
         
 def convert_studentinput_to_json(student_input):
     frames_dict = {}
@@ -564,6 +674,7 @@ def convert_studentinput_to_json(student_input):
                 
         
     return frames_dict, heap_dict
+
 
 def grade_allornothing(A_json_frames = None, A_json_heap = None, B_json_frames = None, B_json_heap = None):
     """
@@ -635,6 +746,10 @@ def grade_allornothing(A_json_frames = None, A_json_heap = None, B_json_frames =
             return 0
     return 1
 
+def check_validity(student_input):
+    pass
+
+
 example_meow = """
 # TEST: meow
 def glob_meow():
@@ -658,6 +773,7 @@ y = 6
 example_intsonly = """
 x = 5
 y = 6
+d = '7'
 def f():
     x = 10
     z = 20
@@ -860,17 +976,24 @@ student_input2 = {
                     "val": "5",
                     "name": "x",
                     "valWidth": 2,
-                    "varIndex": "1",
+                    "varIndex": "0",
                     "nameWidth": 2,
                 },
                 {
                     "val": "6",
                     "name": "y",
                     "valWidth": 2,
-                    "varIndex": "0",
+                    "varIndex": "1",
                     "nameWidth": 2,
                 },
-                {"val": "#heap-func-0", "name": "f", "varIndex": "2", "nameWidth": 2},
+                {
+                    "val": "'7'",
+                    "name": "d",
+                    "valWidth": 2,
+                    "varIndex": "2",
+                    "nameWidth": 2,
+                },
+                {"val": "#heap-func-0", "name": "f", "varIndex": "3", "nameWidth": 2},
             ],
             "frameIndex": "0",
         },
@@ -904,8 +1027,9 @@ student_input2 = {
 intsonly_ft = FrameTree(example_intsonly)
 a = intsonly_ft.generate_html_json()
 print(a)
+print(intsonly_ft.grade_allornothing1(student_input2))
 
-B_frames, B_heap = convert_studentinput_to_json(student_input2)
+#B_frames, B_heap = convert_studentinput_to_json(student_input2)
 
 #print("grade all-or-nothing", intsonly_ft.grade_allornothing(B_json_frames= B_frames, B_json_heap=B_heap))
 

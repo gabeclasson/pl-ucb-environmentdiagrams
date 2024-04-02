@@ -7,9 +7,3 @@ def meow_mix():
     cat()
 
 meow_mix()
-
-d = {5:6, 6:7}
-print(list(d.values()))
-print(type("efh").__name__)
-print('"' + "'" + "gse" + "'" + '"')
-print('"' + "wef".__repr__() + '"')
