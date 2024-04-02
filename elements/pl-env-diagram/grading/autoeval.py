@@ -1,4 +1,3 @@
-import pickle
 import inspect
 import heapq
 import frame
@@ -16,6 +15,7 @@ class FrameTree():
     env_mutables = None
     # this is for debugging
     lastcreatedframe = None
+    framecounter = 0
 
     def __init__(self, codestring, debugmessages = False):
         self.originalcodestring = codestring
@@ -26,6 +26,7 @@ class FrameTree():
         self.fobj_framenode_dict = {}
         self.env_mutables = {}
         self.debugmessages = debugmessages
+        self.codestrID_parent_dict = {}
         #self.framename_dict = {}
         self.get_evaldiag()
     
@@ -34,17 +35,17 @@ class FrameTree():
         # if no frame nodes have been initialized, set the frame as the global frame and the root
         if len(self.fobj_framenode_dict.keys()) == 0:
             name = "global"
-            frame = Frame(name = name, fobj = fobj)
+            frame = Frame(name = name, fobj = fobj, index=self.framecounter)
             self.fobj_framenode_dict[fobj] = frame
             #self.fobj_name_dict[fobj] = name
             self.root = frame
             # OLD
-            self.envframes_dict[name] = {"name": None, "parent": None, "parent_fobj": None, "curr_fobj": fobj}
-
+            self.envframes_dict[name] = {"name": None, "parent": None, "parent_fobj": None, "curr_fobj": fobj, "index":self.framecounter}
         else: 
             parent_frame = fobj.f_back
             parent = self.fobj_framenode_dict[parent_frame] if parent_frame in self.fobj_framenode_dict else self.root
             name = fobj.f_code.co_name
+            self.codestrID_parent_dict[id(fobj.f_code)] = "global" if parent.index == 0 else "f" + str(parent.index)
             #if name in self.framename_dict:
             #    self.framename_dict[name] = self.framename_dict[name] + 1
             #    name = name + str(self.framename_dict[name])
@@ -52,9 +53,9 @@ class FrameTree():
             #    self.framename_dict[name] = 0
             
             # OLD: dictionary rep of frame associations. Use for debugging only. 
-            self.envframes_dict[name] = {"name": name, "parent": parent, "parent_fobj": parent_frame, "curr_fobj": fobj}
+            self.envframes_dict[name] = {"name": name, "parent": parent, "parent_fobj": parent_frame, "curr_fobj": fobj, "index":self.framecounter}
             # init FrameNode
-            frame = Frame(name = name, parent = parent, fobj=fobj)
+            frame = Frame(name = name, parent = parent, fobj=fobj, index=self.framecounter)
             # add self to the pairing dict
             self.fobj_framenode_dict[fobj] = frame
             # modify parent to include self as a child
@@ -62,6 +63,7 @@ class FrameTree():
             # OLD: dictionary rep between fobj and frame
             #self.fobj_name_dict[fobj] = name
             #print("test2: ", name, parent.__name__)
+        self.framecounter += 1
         self.lastcreatedframe = frame
         return frame
     
@@ -126,8 +128,10 @@ class FrameTree():
 
         ### BINDING TRACKING ###
 
-        # clear the dictionary
+        # clear the dictionaries and frame counter
         self.fobj_framenode_dict = {}
+        self.codestrID_parent_dict = {}
+        self.framecounter = 0
 
         # keeps track of how many lines have been inserted above the 
         # if code is given as a string
@@ -263,6 +267,103 @@ class FrameTree():
             return objcounter
         addtojson(self.root, 0)
         return frames_dict, heap_dict
+    
+
+    def generate_html_json(self):
+        # stores values of objects.
+        self.heap_dict = {"func":[], "sequence":[]}
+        # keeps track of how many of the same frame name exist
+        self.frames_list = []
+        # maps id() of objects to their index in heapdict. 
+        mem_to_index_dict = {}
+        def handle_variable(raw_variable, name = None, listIndex = None, varIndex = None):
+            # TODO: i dont know whether its better to have these as separate lines for readibility, or in just one line
+                variable = {
+                    "val": "7",
+                    "name": "y", # none if list element
+                    "valWidth": 2, # no valWidth if object
+                    "varIndex": "1", # none if list element
+                    "nameWidth": 2, # none if list element
+                    "listIndex":0, # none if not list element
+                }
+                variable = {
+                    "val": None,
+                    "name": name, # none if list element
+                    "valWidth": None, # no valWidth if object 
+                    "varIndex": varIndex, # none if list element
+                    "nameWidth": len(name) + 1 if name is not None else None, # none if list element
+                }
+                # TODO: i dont know whether its better to have the primitives as separate lines for readibility, or in just one line
+                if type(raw_variable).__name__ == "str":
+                    variable["val"] = '"' + raw_variable.__repr__() + '"'
+                    variable["valWidth"] = len(variable["val"]) + 1
+                elif type(raw_variable).__name__ == "int":
+                    variable["val"] = '"' + raw_variable.__repr__() + '"'
+                    variable["valWidth"] = len(variable["val"]) + 1
+                elif type(raw_variable).__name__ == "float":
+                    variable["val"] = '"' + raw_variable.__repr__() + '"'
+                    variable["valWidth"] = len(variable["val"]) + 1
+                elif type(raw_variable).__name__ == "boolean":
+                    variable["val"] = '"' + raw_variable.__repr__() + '"'
+                    variable["valWidth"] = len(variable["val"]) + 1
+                elif type(raw_variable).__name__ == "function":
+                    if id(raw_variable) in mem_to_index_dict:
+                        func_index = mem_to_index_dict[id(raw_variable)]  
+                        variable["val"] = "#heap-func-" + str(func_index)  
+                    else:
+                        variable["val"] = "#heap-func-" + str(len(self.heap_dict["func"]))
+                        parent = self.codestrID_parent_dict[id(raw_variable.__code__)]
+                        mem_to_index_dict[id(raw_variable)] = len(self.heap_dict["func"])
+                        self.heap_dict["func"].append({"name":raw_variable.__name__, 
+                                                    "parent":parent, 
+                                                    "funcIndex":len(self.heap_dict["func"]), 
+                                                    "nameWidth":len(raw_variable.__name__) + 1})
+                    del variable["valWidth"]
+
+                elif type(raw_variable).__name__ == "list" or type(raw_variable).__name__ == "tuple":
+                    if id(raw_variable) in mem_to_index_dict:
+                        seq_index = mem_to_index_dict[id(raw_variable)]  
+                        variable["val"] = "#heap-sequence-" + str(seq_index)  
+                    else:
+                        variable["val"] = "#heap-sequence-" + str(len(self.heap_dict["sequence"]))
+                        seq = {"item":[], "type":type(raw_variable).__name__, "sequenceIndex":len(self.heap_dict["sequence"])}
+                        mem_to_index_dict[id(raw_variable)] = len(self.heap_dict["sequence"])
+                        for i in range(len(raw_variable)):
+                            seq["item"].append(handle_variable(raw_variable[i], listIndex=i))
+                        self.heap_dict["sequence"].append(seq)
+                    del variable["valWidth"]
+
+                if listIndex is not None:
+                    variable["listIndex"] = listIndex
+                    del variable["name"]
+                    del variable["varIndex"]
+                    del variable["nameWidth"]
+
+                return variable
+
+        def addtojson(frame): # frames_dict, heap_dict, objname_dict
+            newframe = {}
+            # in the end, the values will be converted to a list. It is initially a dictionary just for ease of variable location
+            newframe["var"] = []
+            if frame.__name__ != "global":
+                newframe["name"] = frame.__name__
+                # keep this line?
+                newframe["return"] = None
+                # may cause formatting issues, check this
+                newframe["nameWidth"] = 2
+            newframe["frameIndex"] = len(self.frames_list)
+            self.frames_list.append(newframe)
+
+            i = 0
+            for varname in frame.bindings:
+                # TODO: MOVE TO FRAMETREE DEF
+                newframe["var"].append(handle_variable(frame.bindings[varname], name = varname, varIndex=i))
+                i = i + 1
+            for child in frame.children:
+                addtojson(child)
+        addtojson(self.root)
+        return {"heap": self.heap_dict, "frame":self.frames_list}
+
 
     def grade_allornothing(self, other = None, B_json_frames = None, B_json_heap = None):
         """
@@ -421,6 +522,7 @@ class FrameTree():
         print("total correct", total_correctframes)
         print("total framecount", total_framecount)
         return max(0, total_correctframes/total_framecount - total_extraframes/(total_framecount + total_extraframes))
+
         
 def convert_studentinput_to_json(student_input):
     frames_dict = {}
@@ -800,12 +902,14 @@ student_input2 = {
 
 #print(convert_studentinput_to_json(student_input2))
 intsonly_ft = FrameTree(example_intsonly)
+a = intsonly_ft.generate_html_json()
+print(a)
 
 B_frames, B_heap = convert_studentinput_to_json(student_input2)
 
-print("grade all-or-nothing", intsonly_ft.grade_allornothing(B_json_frames= B_frames, B_json_heap=B_heap))
+#print("grade all-or-nothing", intsonly_ft.grade_allornothing(B_json_frames= B_frames, B_json_heap=B_heap))
 
 js = intsonly_ft.get_json()
-print(js[0])
-print(js[1])
+#print(js[0])
+#print(js[1])
 
