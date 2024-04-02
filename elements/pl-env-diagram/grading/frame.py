@@ -1,7 +1,7 @@
 class Frame():
     is_global = False
 
-    def __init__(self, name = None, bindings=None, parent=None, children=None, fobj=None):
+    def __init__(self, name = None, bindings=None, parent=None, children=None, fobj=None, index = None):
         self.parent = parent
         self.children = set()
         if bindings is None:
@@ -10,6 +10,7 @@ class Frame():
         self.json_name = name + "#" + parent.__name__ if name != "global" else name
         # self's frame object
         self.fobj = fobj
+        self.index = index
 
     def bind(self, name, value):
         self.bindings[name] = value  
