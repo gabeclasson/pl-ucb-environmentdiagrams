@@ -1,5 +1,4 @@
 import autoeval
-import copy
 import hashlib
 
 # function that will make a hash out of a frame dictionary. Assumes input is a simplified frame dictionary
@@ -7,7 +6,6 @@ def hash_frame(frame):
     hashSum = 0
     for key in frame:
         if key == "var":
-            # TODO: might cause bugs with return not being counted if "var" doesn't exist in empty frames.
             variable_dictList = frame["var"] + [frame["return"]] if "return" in frame else frame["var"]
             for variable_dict in variable_dictList:
                 # by summing all of the elements of the variable list, it makes it such that order doesn't matter.
@@ -48,7 +46,6 @@ def simplify_html_json(iterable, pointerlocs = {}, parentNames = {}):
         for key in iterable:
             iterable[key] = simplify_html_json(iterable[key])
     return iterable
-
 
 def sort_frame_json(html_json): 
     """
