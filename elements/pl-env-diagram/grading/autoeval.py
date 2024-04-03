@@ -1,6 +1,7 @@
 import inspect
 import heapq
 import frame
+import copy
 import re
 # i refer to this as "framenode" in some places. this is to avoid ambiguity. we will discuss changing the name.
 Frame = frame.Frame
@@ -323,18 +324,17 @@ class FrameTree():
 
                 return variable
 
-        def addtojson(frame):
+        def addFrameToJson(frame):
             newframe = {}
-            # in the end, the values will be converted to a list. It is initially a dictionary just for ease of variable location
             newframe["var"] = []
             if frame.__name__ != "global":
                 newframe["name"] = frame.__name__
-                newframe["parent"] = frame.parent.index
+                newframe["parent"] = str(frame.parent.index)
                 # keep this line?
                 newframe["return"] = None
                 # may cause formatting issues, check this
                 newframe["nameWidth"] = 2
-            newframe["frameIndex"] = len(self.frames_list)
+            newframe["frameIndex"] = str(len(self.frames_list))
             self.frames_list.append(newframe)
 
             i = 0
@@ -347,8 +347,8 @@ class FrameTree():
                 newframe["var"].append(handle_variable(frame.bindings[varname], name = varname, varIndex=i))
                 i = i + 1
             for child in frame.children:
-                addtojson(child)
-        addtojson(self.root)
+                addFrameToJson(child)
+        addFrameToJson(self.root)
         return {"heap": self.heap_dict, "frame":self.frames_list}
 
 
@@ -510,40 +510,6 @@ class FrameTree():
         print("total framecount", total_framecount)
         return max(0, total_correctframes/total_framecount - total_extraframes/(total_framecount + total_extraframes))
 
-    # recursive function that removes unnecessary variables for comparison
-    def simplify_html_json(iterable):
-        if type(iterable) is list:
-            for i in range(len(iterable)):
-                # TODO: remove this from FrameTree?
-                iterable[i] = FrameTree.simplify_html_json(iterable[i])
-        elif type(iterable) is dict:
-            for badKey in ["nameWidth", "frameIndex", "valWidth", "funcIndex", "sequenceIndex", "varIndex"]:
-                if badKey in iterable:
-                    del iterable[badKey]
-            for key in iterable:
-                iterable[key] = FrameTree.simplify_html_json(iterable[key])
-        return iterable
-
-    # recursive function that removes unnecessary variables for comparison
-    def simplify_html_json2(iterable):
-        if type(iterable) is list:
-            for i in range(len(iterable)):
-                # TODO: remove this from FrameTree?
-                iterable[i] = FrameTree.simplify_html_json(iterable[i])
-        elif type(iterable) is dict:
-            for badKey in ["nameWidth", "frameIndex", "valWidth", "funcIndex", "sequenceIndex", "varIndex"]:
-                if badKey in iterable:
-                    del iterable[badKey]
-            for key in iterable:
-                iterable[key] = FrameTree.simplify_html_json(iterable[key])
-        return iterable
-
-    def grade_allornothing2(self, other):
-        self_heap_dict = FrameTree.simplify_html_json(self.heap_dict)
-        self_frames_list = FrameTree.simplify_html_json(self.frames_list)
-        other_heap_dict = FrameTree.simplify_html_json(other["heap"])
-        other_frames_list = FrameTree.simplify_html_json(other["frame"])
-
     def grade_allornothing1(self, other):
         self_heap_dict = FrameTree.simplify_html_json(self.heap_dict)
         self_frames_list = FrameTree.simplify_html_json(self.frames_list)
@@ -633,121 +599,6 @@ class FrameTree():
 
         # if the end check does not pass, we can attempt every possible mapping between frame indices and pointers to see if one configuration works. this is slow, but makes it unlikely that a student is mistakenly marked wrong.
         return 1
-        
-def convert_studentinput_to_json(student_input):
-    frames_dict = {}
-    heap_dict = {}
-    reverse_heap = {}
-    varcount = 0
-    for frame in student_input["frame"]:
-        currframe = {}
-        if frame["frameIndex"] == "0":
-            name = "global"
-            # modifies student input
-            frame["pname"] = "global"
-        else:
-            name = frame["name"]
-            parent_index = 0 if frame["parent"] == "Global" else int(frame["parent"][1:])
-            name = name + "#" + student_input["frame"][parent_index]["pname"]
-            frame["pname"] = name
-        if name not in frames_dict:
-            frames_dict[name] = []
-        for var in frame["var"]:
-            value = var["val"]
-            if value in reverse_heap:
-                currframe[var["name"]] = reverse_heap[value]
-            else:
-                currframe[var["name"]] = varcount
-                heap_dict[varcount] = value
-                reverse_heap[value] = varcount
-                varcount += 1
-        if "return" in frame:
-            value = frame["return"]["val"]
-            if value in reverse_heap:
-                currframe["returnval"] = reverse_heap[value]
-            else:
-                currframe["returnval"] = varcount
-                heap_dict[varcount] = value
-                reverse_heap[value] = varcount
-                varcount += 1
-        frames_dict[name].append(currframe)
-                
-        
-    return frames_dict, heap_dict
-
-
-def grade_allornothing(A_json_frames = None, A_json_heap = None, B_json_frames = None, B_json_heap = None):
-    """
-    grades all or nothing
-    """
-
-    print("Aframes", A_json_frames)
-    print("Bframes", B_json_frames)
-    # check that the same framekeys exist in both A and B
-    if A_json_frames.keys() != B_json_frames.keys():
-        print("keys in A and B not matching.")
-        return 0
-    # Associates the pointer in A to the pointer in B.
-    A_to_B_pointer_dict = {}
-    # sets the indices of all frames in the other json to be yet to be checked
-    for framekey in A_json_frames:
-        framestomatch = [True]*len(B_json_frames[framekey])
-        # get each frame with the same framename in A and find a match in B
-        for a in range(len(A_json_frames[framekey])):
-            has_match = False
-            # get each frame with the same framename in B
-            for b in range(len(B_json_frames[framekey])):
-                # if b has already found a match in A_json_frames, do not attempt to match it. 
-                if not framestomatch[b]:
-                    continue
-                # we assume that j is a match for i until proven otherwise
-                is_match = True
-                # gets all the variable keys that occur in A
-                a_variablekeys = A_json_frames[framekey][a].keys()
-                # first checks that we have matching keys between a and b
-                if B_json_frames[framekey][b].keys() != a_variablekeys:
-                    #print("not a match, mismatching variables")
-                    is_match = False
-                    continue
-                # checks through each variable in the frame
-                for a_varname in a_variablekeys:
-                    # checks to make sure the variable exists in B
-                    if not a_varname in B_json_frames[framekey][a]:
-                        #print("not a match, other does not have variable ", a_varname)
-                        is_match = False
-                        break
-                    # if we have the pointer from the variable name already recorded, check to make sure the value in the pointer dict
-                    # matches what we expect
-                    elif A_json_frames[framekey][a][a_varname] in A_to_B_pointer_dict:
-                        if B_json_frames[framekey][b][a_varname] != A_to_B_pointer_dict[A_json_frames[framekey][a][a_varname]]:
-                            #print("not a match, variable pointers are mismatched")
-                            is_match = False
-                            break
-                    else:
-                        # check that the values stored in each variable are the same
-                        if A_json_heap[A_json_frames[framekey][a][a_varname]] != B_json_heap[B_json_frames[framekey][b][a_varname]]:
-                            #print("not a match, variable values are not matched")
-                            is_match = False
-                            break
-                        # if they are the same, we can keep track of the equivalence in pointers for future comparisons.
-                        A_to_B_pointer_dict[A_json_frames[framekey][a][a_varname]] = B_json_frames[framekey][b][a_varname]
-                # if everything in b matches everything in a, we have found the matching frames.
-                if is_match:    
-                    # to prevent "b" from being matched to future frames in "A"
-                    framestomatch[b] = False
-                    has_match = True
-                    break
-            # if frame A doesn't have a matching frame, leave
-            if not has_match:
-                print("unable to find matching frame in B for A for frame", framekey)
-                return 0
-        # if there are leftover frames in B, return 0
-        if sum(framestomatch) > 0:
-            return 0
-    return 1
-
-def check_validity(student_input):
-    pass
 
 
 example_meow = """
@@ -962,11 +813,10 @@ student_input = {
     ],
 }
 
-student_input2 = {
+student_input_correct_intsonly = {
     "heap": {
         "func": [
             {"name": "f", "parent": "Global", "funcIndex": "0", "nameWidth": 2},
-            {"name": "g", "parent": "Global", "funcIndex": "1", "nameWidth": 2},
         ],
     },
     "frame": [
@@ -1026,8 +876,8 @@ student_input2 = {
 #print(convert_studentinput_to_json(student_input2))
 intsonly_ft = FrameTree(example_intsonly)
 a = intsonly_ft.generate_html_json()
-print(a)
-print(intsonly_ft.grade_allornothing1(student_input2))
+#print(a)
+#print(intsonly_ft.grade_allornothing1(student_input2))
 
 #B_frames, B_heap = convert_studentinput_to_json(student_input2)
 
