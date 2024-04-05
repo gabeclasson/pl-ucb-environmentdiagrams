@@ -1,9 +1,6 @@
 import question_gen
-import random
 
-# Here you can write your own functions for name/value/line generation. You cannot provide functions that take in a variable.
-
-listComprehensionSimple = lambda : random.choice(['lst.extend([' + str(random.randint(1, 10)) + '])', 'lst.append(' + str(random.randint(1, 10)) + ')', 'lst += [' + str(random.randint(1, 10)) + ']'])
+# To see the options for a question generator, look at exampleQgenerator.py.
 
 ######################################################################
 ###################### REPLACEMENT OPTIONS ###########################
@@ -100,12 +97,6 @@ meow_mix()"""
 # Or as a filepath (from question_gen.py). If you do both, the generator will prioritize the string. 
 
 code_filepath = "example_meow.py"
-
-######################################################################
-########################### SAVE LOCATION ############################
-######################################################################
-
-output_filepath = "example_meow.txt"
 
 ######################################################################
 ############################ GENERATION ##############################

@@ -55,6 +55,8 @@ def sort_frame_json(html_json):
     """
     frame_list = html_json["frame"]
     frame_list[0]["depth"] = 0
+    frame_list[0]["parent"] = ""
+    frame_list[0]["name"] = ""
     parentpq = [("Global", 0)]
     # insert depth into each frame. additionally create a "depths_list" which at each index i has all of the frames at depth i.
     depth_lists = [[frame_list[0]]]
@@ -89,9 +91,10 @@ def sort_frame_json(html_json):
     html_json["frame"] = frame_list
     # modifies functions in the heap in correspondence to the new frame names
     heap_dict = html_json["heap"]
-    for i in range(len(heap_dict["func"])):
-        heap_dict["func"][i]["parent"] = modified_indices[heap_dict["func"][i]["parent"]]
-    html_json["heap"] = heap_dict
+    if "func" in heap_dict:
+        for i in range(len(heap_dict["func"])):
+            heap_dict["func"][i]["parent"] = modified_indices[heap_dict["func"][i]["parent"]]
+        html_json["heap"] = heap_dict
     return html_json
 
 def sort_heap_json(html_json):
@@ -134,9 +137,15 @@ def sort_heap_json(html_json):
     return html_json
 
 def grading(generated_json, student_json, partial_credit = "none"):
-    """ options for partial_credit include:
+    """ returns score and feedback (if applicable) for the student.
+    
+    options for partial_credit include:
     "none" --> no partial credit
     "by_frame" --> gets credit per correct frame, and lose points for extra frames. if heap is not identical, loses 1/3 credit."""
+    if "heap" not in generated_json:
+        generated_json["heap"] = {}
+    if "heap" not in student_json:
+        student_json["heap"] = {}
     generated_json = simplify_html_json(generated_json)
     generated_json = sort_frame_json(generated_json)
     generated_json = sort_heap_json(generated_json)
@@ -146,7 +155,7 @@ def grading(generated_json, student_json, partial_credit = "none"):
 
     if partial_credit == "by_frame":
         if generated_json["heap"] == student_json["heap"] and generated_json["frame"] == student_json["frame"]:
-            return 1
+            return 1, ""
         # if not perfect, continue to partial credit. 
         score = 0
         framesListG = [hash_frame(frame) for frame in generated_json["frame"]]
@@ -157,11 +166,12 @@ def grading(generated_json, student_json, partial_credit = "none"):
             if frame in framesListS:
                 score += 1/len(framesListG)
                 framesListS.remove(frame)
+        #print(max(0, min(1, score)), generated_json["frame"].__repr__() + " \n" + student_json["frame"].__repr__() )
         # return the score with an upper bound of 1 and a lower bound of 0 (just to avoid rounding issues).
-        return max(0, min(1, score))
+        return max(0, min(1, score)), generated_json["frame"].__repr__() + " \n" + student_json["frame"].__repr__()
 
     elif partial_credit == "none":
-        return generated_json["heap"] == student_json["heap"] and generated_json["frame"] == student_json["frame"]
+        return generated_json["heap"] == student_json["heap"] and generated_json["frame"] == student_json["frame"], ""
     
     raise Exception("valid partial credit setting not provided")
 
@@ -513,13 +523,8 @@ student_input_correct_intsonly = {
 
 
 
-intsonly_ft = autoeval.FrameTree(autoeval.example_intsonly)
-intsonly_json = intsonly_ft.generate_html_json()
-#student_input = simplify_html_json(student_input)
-#print(student_input)
-#html_json = sort_frame_json(student_input)
-#html_json = sort_heap_json(html_json)
-#print(html_json)
-print(grading(intsonly_json, student_input_correct_intsonly, partial_credit="by_frame"))
+#intsonly_ft = autoeval.FrameTree(autoeval.example_intsonly)
+#intsonly_json = intsonly_ft.generate_html_json()
+#print(grading(intsonly_json, student_input_correct_intsonly, partial_credit="by_frame"))
 
 

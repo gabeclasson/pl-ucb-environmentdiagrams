@@ -4,6 +4,8 @@ import lxml.html
 from frame import *
 import prairielearn as pl
 import json
+#import exampleQgenerator_meow as meow
+import grading
 
 def generate(element_html, data):
     pass
@@ -106,12 +108,7 @@ def render(element_html, data):
         return chevron.render(template, rendering_data)
 
 def grade(element_html, data):
-    frame = Frame.from_raw_data(data['submitted_answers'])
-    correct_frame = Frame.from_raw_data(data['correct_answers'])
-    #A_frames, A_heap = autoeval.convert_studentinput_to_json(frame)
-    #B_frames, B_heap = autoeval.convert_studentinput_to_json(correct_frame)
-    score = int(frame.freeze() == correct_frame.freeze())
-    #score = autoeval.grade_allornothing(A_json_frames= A_frames, A_json_heap=A_heap, B_json_frames= B_frames, B_json_heap=B_heap)
+    score, feedback = grading.grading(data['submitted_answers'], data['correct_answers'], partial_credit="by_frame")
     data['partial_scores']['problem'] = {'score':score,
-                                    'feedback':'',
+                                    'feedback': feedback,
                                     'weight':1}
