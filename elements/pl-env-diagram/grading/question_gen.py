@@ -12,13 +12,13 @@ common_function_names = lambda : random.choice(list("fgh"))
 
 # built-in options for generating variable values
 small_int = lambda : str(random.randint(-15,99))
-letter_str = lambda : random.choice(lowercase_letters + uppercase_letters).__repr__()
+letter_str = lambda : random.choice([lowercase_letters, uppercase_letters])().__repr__()
 digit_str = lambda : str(random.randint(0,9)).__repr__()
 
 def generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath):
     """ generates an environment diagram question using input from a setup file. """
     if code_string and code_filepath:
-        raise Warning("""User has provided both a code_string and a code_filepath. The code_string will be used. 
+        print("""WARNING: User has provided both a code_string and a code_filepath. The code_string will be used. 
         If this is undesired, please replace the code_string variable with None.""")
     elif code_filepath:
         with open(code_filepath,"r") as file:

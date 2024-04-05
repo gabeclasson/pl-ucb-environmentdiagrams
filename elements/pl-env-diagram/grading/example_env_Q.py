@@ -51,6 +51,7 @@ allowed_names = {
     # For example, if you wanted the value on line 3 to be the integer 5000, you would have to provide that as '5000'. See line 3 below. 
     # If you wanted the value on line 1 to be "Cats say meow", you would have to provide that as '"Cats say meow"' with additional outside quotations. See line 1 below.
     # If you want the new value to include the name of a variable, use the name in the default code. See the example in line 3 below. 
+
 allowed_assignment_values = {
     1:[ '"I love cats"', '"Cats are cool"'],
     3:[question_gen.small_int, 'len(a)', '5000'],
@@ -69,6 +70,7 @@ allowed_assignment_values = {
     # For example, you could make it so that some randomized code includes a .extend statement while other includes a .append statement. 
     # Rules for formatting everything as strings applies. Read the comments on the above dictionary for explanation. 
 # WARNING: If you use this feature, please try a few randomizations on your own to make sure it looks and grades how you expect it to. Small mistakes can cause the problem to not work as expected.
+
 special_replacements = {
     '$1$': [listComprehensionSimple],
     '$2$': ['"Please be careful using this. READ THE COMMENTS ABOVE!"'],
@@ -105,8 +107,15 @@ code_filepath = "example_meow.py"
 
 output_filepath = "example_meow.txt"
 
+######################################################################
+############################ GENERATION ##############################
+######################################################################
+
 # DO NOT MODIFY THE BELOW LINE
 
 generateQ = lambda : question_gen.generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath)
+
+# These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn. 
+
 result_code_string = generateQ()
 print(result_code_string)
