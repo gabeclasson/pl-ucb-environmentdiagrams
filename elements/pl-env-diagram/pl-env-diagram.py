@@ -4,11 +4,16 @@ import lxml.html
 from frame import *
 import prairielearn as pl
 import json
-#import exampleQgenerator_meow as meow
+import io
+import exampleQgenerator_meow as meow
 import grading
 
 def generate(element_html, data):
-    pass
+    codestring = meow.generateQ()
+    data["params"] = {"codestring":codestring, "codelength":len(codestring.split('\n'))}
+    #data["filename"] = "codestring"
+    data["correct_answers"] = grading.get_correctAnswerJSON(codestring) #  directory={{options.client_files_question_dynamic_url}} source-file-name="codestring.txt"
+    
 
 env_diagram_text_pattern = re.compile(r"""
 	(?P<index>[Gg](?:lobal)?|[Ff]\d+)[\t\f ]*(?::[\t\f ]]*
@@ -17,6 +22,9 @@ env_diagram_text_pattern = re.compile(r"""
 	                        (?P<variables>(?:$\n[\t\f ]*(?:\w+)[\t\f ]+.*\S+.*$)*
 	                        (?:$\n[\t\f ]*\#[Rr](?:eturn)?[\t\f ]+(?:.*)$)?)
 	""", re.VERBOSE | re.MULTILINE)
+
+#def file(data):
+#    return data["params"]["codestring"]
 
 def parse_env_diagram_from_text(text):
     m = env_diagram_text_pattern.findall(text)
@@ -58,8 +66,8 @@ def prepare(element_html, data):
     for sub_element in element.iter():
         if sub_element.tag == "correct-env-diagram":
             env_diagram_text = sub_element.text
-            correct_answers = parse_env_diagram_from_text(env_diagram_text)
-            data['correct_answers'] = correct_answers
+            #correct_answers = parse_env_diagram_from_text(env_diagram_text)
+            #data['correct_answers'] = correct_answers
     return data
 
 def parse(element_html, data):
@@ -89,7 +97,7 @@ def parse(element_html, data):
     data['submitted_answers'] = structured_answers
     return data
 
-default_submission = {'frame': [{'name': None, 'frameIndex': 0, 'var': [], 'parent': None}]}
+default_submission = {'frame': [{'name': None, 'frameIndex': 0, 'var': [], 'parent': None}], 'heap': {}}
 def render(element_html, data):
     with open("editor.mustache", "r") as f:
         template = f.read()
@@ -108,7 +116,7 @@ def render(element_html, data):
         return chevron.render(template, rendering_data)
 
 def grade(element_html, data):
-    score, feedback = grading.grading(data['submitted_answers'], data['correct_answers'], partial_credit="by_frame")
-    data['partial_scores']['problem'] = {'score':score,
-                                    'feedback': feedback,
+    #score, feedback = grading.grading(data['submitted_answers'], data['correct_answers'], partial_credit="by_frame")
+    data['partial_scores']['problem'] = {'score':  1,#score,
+                                    'feedback': data["params"]["codestring"] ,#feedback,
                                     'weight':1}

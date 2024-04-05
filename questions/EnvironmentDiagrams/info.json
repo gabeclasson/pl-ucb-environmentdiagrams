@@ -3,6 +3,6 @@
     "title": "Environment Diagram",
     "topic": "Environment Diagrams",
     "type": "v3",
-    "singleVariant": true,
+    "singleVariant": false,
     "partialCredit": true
   }

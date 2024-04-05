@@ -178,6 +178,9 @@ def grading(generated_json, student_json, partial_credit = "none"):
 def check_validity(student_input):
     pass
 
+def get_correctAnswerJSON(codestring):
+    return autoeval.FrameTree(codestring).generate_html_json()
+
 
 student_input = {
     "heap": {

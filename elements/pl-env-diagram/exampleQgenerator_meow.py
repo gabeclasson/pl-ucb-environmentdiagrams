@@ -109,7 +109,8 @@ code_filepath = None #"meow.py"
 
 generateQ = lambda : question_gen.generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath)
 
-# These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn. 
+# These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.
+# You might want to comment them out when you actually run it, because otherwise Prarielearn will show errors.  
 
-result_code_string = generateQ()
-print(result_code_string)
+#result_code_string = generateQ()
+#print(result_code_string)

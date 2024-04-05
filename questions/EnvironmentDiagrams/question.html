@@ -1,17 +1,12 @@
 <pl-question-panel>
     <p> 
-        Draw the environment diagram after finishing execution of line 2 for the following code:
+        Draw the environment diagram after finishing execution of line {{params.codelength}} for the following code:
     </p>
-<pl-code language="python">
-x = 5
-y = 3 * x + 2
-</pl-code>
+<pl-code language="python" show-line-numbers = true> {{params.codestring}} </pl-code>
 
 <pl-env-diagram>
   <correct-env-diagram>
-  Global
-    x 5
-    y 17
+placeholder
   </correct-env-diagram>
 </pl-env-diagram>
 </pl-question-panel>
