@@ -1,20 +1,44 @@
 import question_gen
 import random
 
-# Here you can write your own functions for name/value/line generation.
+# Here you can write your own functions for name/value/line generation. You cannot provide functions that take in a variable.
 
-listComprehensionSimple = lambda : random.choice('lst.extend([' + str(random.choice(10)) + '])', 'lst.append(' + str(random.choice(10)) + ')', 'lst + [' + str(random.choice(10)) + ']')
+listComprehensionSimple = lambda : random.choice(['lst.extend([' + str(random.randint(1, 10)) + '])', 'lst.append(' + str(random.randint(1, 10)) + ')', 'lst += [' + str(random.randint(1, 10)) + ']'])
 
-# Provide possible options to rename variables and functions with.
+######################################################################
+###################### REPLACEMENT OPTIONS ###########################
+######################################################################
+
+# Below there are options for replacement of various parts of your default code. 
+# Please note that replacement occurs in the following order:
+# 1. Value replacements
+# 2. Special replacements
+# 3. Namespace replacements (replace the names of variables/functions)
+
+# WARNING: it is possible to choose options that do not work and will not compile. 
+# Please test any given problem a few times (not just generating the problem, but 
+# also completing it) before releasing it to students.
+
+######################################################################
+################## OPTIONS FOR NAMESPACE REPLACEMENT #################
+######################################################################
+
+# Provide possible options to rename variables and functions with. 
+# WARNING: If you do not provide enough options such that each variable can get a unique name, the question generator will time out. 
 
 allowed_names = {
     # below are our variable names
-    "a":question_gen.lowercase_letters + ["priscilla", "munchkin"], 
-    "b":question_gen.lowercase_letters + ["precious", "munchkin"],
-    "z":question_gen.common_variable_names + ["priscilla", "oreo"],
+    "a": [question_gen.lowercase_letters, ["priscilla", "munchkin"]], 
+    "b": [question_gen.lowercase_letters, ["precious", "munchkin"]],
+    "z": [question_gen.common_variable_names, "oreo"],
+    "lst": ["my_list", "lst", "LIST", "list__"],
     # below are our function names
-    "meow_mix":question_gen.common_function_names + ["meow_munch"], 
-    "cat":question_gen.lowercase_letters + ["feline", "kitty"],}
+    "meow_mix": [question_gen.common_function_names, ["meow_munch"]], 
+    "cat": [question_gen.lowercase_letters, ["feline", "kitty"]],}
+
+######################################################################
+############# OPTIONS FOR VALUE ASSIGNMENT REPLACEMENT ###############
+######################################################################
 
 # On lines where a variable assignment happens, you can provide different options for the value
 # assigned. Indicate the line number, and the value options. Line numbers that correspond to 
@@ -34,20 +58,29 @@ allowed_assignment_values = {
     7:[question_gen.digit_str, question_gen.letter_str,], # this line will be ignored since line 7 is a return statement.
     }
 
-# If you would instead like to replace particular tags in a code_string with a set of options, you can use this dictionary. 
-# Tags should not appear in any way outside of the intended tags as these will use simple regex substitution. We recommend naming your tags
-# with a sequence of characters that are unlikely to appear in normal code, like $5$.
-# This might be useful for segments of the code that you may want to replace that are not covered by variable name substitution or value assignment changes. 
-# For example, you could make it so that some randomized code includes a .extend statement while other includes a .append statement. 
+######################################################################
+##################### SPECIAL REPLACEMENT OPTIONS ####################
+######################################################################
+
+# If you would instead like to replace particular tags in your code with a set of options, you can use this dictionary. 
+    # Tags should not appear in any way outside of the intended tags as these will use simple pythonic string substitution. We recommend naming your tags
+    # with a sequence of characters that are unlikely to appear in normal code, like $5$.
+    # This might be useful for segments of the code that you may want to replace that are not covered by variable name substitution or value assignment changes. 
+    # For example, you could make it so that some randomized code includes a .extend statement while other includes a .append statement. 
+    # Rules for formatting everything as strings applies. Read the comments on the above dictionary for explanation. 
 # WARNING: If you use this feature, please try a few randomizations on your own to make sure it looks and grades how you expect it to. Small mistakes can cause the problem to not work as expected.
 special_replacements = {
     '$1$': [listComprehensionSimple],
     '$2$': ['"Please be careful using this. READ THE COMMENTS ABOVE!"'],
 }
 
+######################################################################
+########################## INPUT BASE CODE ###########################
+######################################################################
+
 # You can choose to input the problem's base code as a string,
 
-code_string = """
+code_string = """ 
 def meow_mix():
     a = "I love 'cats'"
     print(a + "!!!!")
@@ -56,15 +89,24 @@ def meow_mix():
         # I love cats
         z = 5
         return z + a
-    cat(b)
+    lst = [cat(b)]
+    $1$                # we include tags here as an example, but would recommend against using them. 
+    lst.append($2$)
+    return lst
+meow_mix()""" 
 
-meow_mix()""" # if you don't want to use this option, replace it with None.
+# Or as a filepath (from question_gen.py). If you do both, the generator will prioritize the string. 
 
-# Or as a filepath. If you do both, the generator will prioritize the string. 
+code_filepath = "example_meow.py"
 
-code_filepath = None #"example_meow.py" # if you don't want to use this option, replace it with None.
+######################################################################
+########################### SAVE LOCATION ############################
+######################################################################
+
+output_filepath = "example_meow.txt"
 
 # DO NOT MODIFY THE BELOW LINE
 
-result_code_string = question_gen.generate_question(allowed_names, allowed_assignment_values, code_string, code_filepath)
+generateQ = lambda : question_gen.generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath)
+result_code_string = generateQ()
 print(result_code_string)
