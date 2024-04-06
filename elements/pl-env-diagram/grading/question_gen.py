@@ -2,7 +2,7 @@ import random
 import re
 import signal
 
-timeout = 20
+timeout = 20 # TODO: allow user to set this in their Q generator themselves. 
 
 # built-in options for generating variable and function names
 lowercase_letters = lambda : random.choice(list("qwertyuiopasdfghjklzxcvbnm"))
@@ -15,8 +15,9 @@ small_int = lambda : str(random.randint(-15,99))
 letter_str = lambda : random.choice([lowercase_letters, uppercase_letters])().__repr__()
 digit_str = lambda : str(random.randint(0,9)).__repr__()
 
-def generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath):
+def generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed):
     """ generates an environment diagram question using input from a setup file. """
+    random.seed(seed)
     if code_string and code_filepath:
         print("""WARNING: User has provided both a code_string and a code_filepath. The code_string will be used. 
         If this is undesired, please replace the code_string variable with None.""")
@@ -104,6 +105,6 @@ def timeout_handler(signum, frame):
     print("While loop in name replacement took too long. It is possible that you haven't provided enough options for the namespace, or you just got very unlucky.")
     raise Exception("Question Generator took longer than ", timeout, " seconds to run. The most likely cause of this error is not enough options for variable names, or just very bad luck.")
 
-signal.signal(signal.SIGALRM, timeout_handler)
+#signal.signal(signal.SIGALRM, timeout_handler)
 
-signal.alarm(timeout)
+#signal.alarm(timeout)

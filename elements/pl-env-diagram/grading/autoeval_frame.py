@@ -1,7 +1,7 @@
 class Frame():
     is_global = False
 
-    def __init__(self, name = None, bindings=None, parent=None, children=None, fobj=None, index = None):
+    def __init__(self, name = None, bindings=None, parent=None, children=None, fobj=None, index = None, codeloc = None):
         self.parent = parent
         self.children = set()
         if bindings is None:
@@ -10,16 +10,21 @@ class Frame():
         self.json_name = name + "#" + parent.__name__ if name != "global" else name
         # self's frame object
         self.fobj = fobj
+        # keeps track of the memory location of the .__code__ of the function that created this frame. This is used to later identify the parent of that function as an object.
+        self.codeloc = codeloc
         self.index = index
 
     def bind(self, name, value):
         self.bindings[name] = value  
     
-    def bind(self, name_value_dict, exclude = None):
+    def bind(self, name_value_dict, exclude = None, codestrID_parent_dict = None):
         if not exclude is None:
             for name in exclude:
                 del name_value_dict[name]
         self.bindings = name_value_dict 
+        for key in self.bindings:
+            if callable(self.bindings[key]) and id(self.bindings[key]) not in codestrID_parent_dict:
+                codestrID_parent_dict[id(self.bindings[key].__code__)] = "Global" if self.index == "Global" else "f" + str(self.index)
     
     def set_name(self, name):
         self.__name__ = name

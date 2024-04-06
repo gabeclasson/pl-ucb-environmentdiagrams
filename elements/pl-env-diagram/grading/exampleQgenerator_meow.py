@@ -1,6 +1,9 @@
-import question_gen
+import grading.question_gen as question_gen
 
-# To see the options for a question generator, look at exampleQgenerator.py.
+# Here you can write your own functions for name/value/line generation. You cannot provide functions that take in a variable.
+
+import random
+listComprehensionSimple = lambda : random.choice(['lst.extend([' + str(random.randint(1, 10)) + '])', 'lst.append(' + str(random.randint(1, 10)) + ')', 'lst += [' + str(random.randint(1, 10)) + ']'])
 
 ######################################################################
 ###################### REPLACEMENT OPTIONS ###########################
@@ -50,10 +53,10 @@ allowed_names = {
     # If you want the new value to include the name of a variable, use the name in the default code. See the example in line 3 below. 
 
 allowed_assignment_values = {
-    1:[ '"I love cats"', '"Cats are cool"'],
-    3:[question_gen.small_int, 'len(a)', '5000'],
-    6:[question_gen.small_int],
-    7:[question_gen.digit_str, question_gen.letter_str,], # this line will be ignored since line 7 is a return statement.
+    2:[ '"I love cats"', '"Cats are cool"'],
+    4:[question_gen.small_int, 'len(a)', '5000'],
+    7:[question_gen.small_int],
+    8:[question_gen.digit_str, question_gen.letter_str,], # this line will be ignored since line 8 is a return statement.
     }
 
 ######################################################################
@@ -96,7 +99,7 @@ meow_mix()"""
 
 # Or as a filepath (from question_gen.py). If you do both, the generator will prioritize the string. 
 
-code_filepath = "example_meow.py"
+code_filepath = None #"meow.py"
 
 ######################################################################
 ############################ GENERATION ##############################
@@ -104,9 +107,10 @@ code_filepath = "example_meow.py"
 
 # DO NOT MODIFY THE BELOW LINE
 
-generateQ = lambda : question_gen.generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath)
+generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed)
 
-# These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn. 
+# These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.
+# You might want to comment them out when you actually run it, because otherwise Prarielearn will show errors.  
 
-result_code_string = generateQ()
-print(result_code_string)
+#result_code_string = generateQ()
+#print(result_code_string)

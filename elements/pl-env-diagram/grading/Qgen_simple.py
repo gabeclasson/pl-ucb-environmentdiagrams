@@ -1,9 +1,6 @@
-import question_gen
+import grading.question_gen as question_gen
 
 # Here you can write your own functions for name/value/line generation. You cannot provide functions that take in a variable.
-
-import random
-listComprehensionSimple = lambda : random.choice(['lst.extend([' + str(random.randint(1, 10)) + '])', 'lst.append(' + str(random.randint(1, 10)) + ')', 'lst += [' + str(random.randint(1, 10)) + ']'])
 
 ######################################################################
 ###################### REPLACEMENT OPTIONS ###########################
@@ -28,13 +25,11 @@ listComprehensionSimple = lambda : random.choice(['lst.extend([' + str(random.ra
 
 allowed_names = {
     # below are our variable names
-    "a": [question_gen.lowercase_letters, ["priscilla", "munchkin"]], 
-    "b": [question_gen.lowercase_letters, ["precious", "munchkin"]],
-    "z": [question_gen.common_variable_names, "oreo"],
-    "lst": ["my_list", "lst", "LIST", "list__"],
+    "a": [question_gen.lowercase_letters], 
+    "b": [question_gen.lowercase_letters],
     # below are our function names
-    "meow_mix": [question_gen.common_function_names, ["meow_munch"]], 
-    "cat": [question_gen.lowercase_letters, ["feline", "kitty"]],}
+    "f": [question_gen.common_function_names], 
+    }
 
 ######################################################################
 ############# OPTIONS FOR VALUE ASSIGNMENT REPLACEMENT ###############
@@ -53,10 +48,7 @@ allowed_names = {
     # If you want the new value to include the name of a variable, use the name in the default code. See the example in line 3 below. 
 
 allowed_assignment_values = {
-    1:[ '"I love cats"', '"Cats are cool"'],
-    3:[question_gen.small_int, 'len(a)', '5000'],
-    6:[question_gen.small_int],
-    7:[question_gen.digit_str, question_gen.letter_str,], # this line will be ignored since line 7 is a return statement.
+    1:[question_gen.small_int]
     }
 
 ######################################################################
@@ -72,8 +64,6 @@ allowed_assignment_values = {
 # WARNING: If you use this feature, please try a few randomizations on your own to make sure it looks and grades how you expect it to. Small mistakes can cause the problem to not work as expected.
 
 special_replacements = {
-    '$1$': [listComprehensionSimple],
-    '$2$': ['"Please be careful using this. READ THE COMMENTS ABOVE!"'],
 }
 
 ######################################################################
@@ -83,23 +73,15 @@ special_replacements = {
 # You can choose to input the problem's base code as a string,
 
 code_string = """ 
-def meow_mix():
-    a = "I love 'cats'"
-    print(a + "!!!!")
-    b = 6
-    def cat(a):
-        # I love cats
-        z = 5
-        return z + a
-    lst = [cat(b)]
-    $1$                # we include tags here as an example, but would recommend against using them. 
-    lst.append($2$)
-    return lst
-meow_mix()""" 
+a = 5
+def f(b):
+    return b + 4
+f(a)
+""" 
 
 # Or as a filepath (from question_gen.py). If you do both, the generator will prioritize the string. 
 
-code_filepath = None #"meow.py"
+code_filepath = None
 
 ######################################################################
 ############################ GENERATION ##############################
@@ -107,7 +89,7 @@ code_filepath = None #"meow.py"
 
 # DO NOT MODIFY THE BELOW LINE
 
-generateQ = lambda : question_gen.generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath)
+generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed)
 
 # These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.
 # You might want to comment them out when you actually run it, because otherwise Prarielearn will show errors.  

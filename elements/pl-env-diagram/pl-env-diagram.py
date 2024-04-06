@@ -4,12 +4,14 @@ import lxml.html
 from frame import *
 import prairielearn as pl
 import json
-import io
-import exampleQgenerator_meow as meow
-import grading
+import grading.Qgen_simple as Qgen
+import grading.grading as grading
+import random
+
+# maybe issue is in info.json? check documentation
 
 def generate(element_html, data):
-    codestring = meow.generateQ()
+    codestring = Qgen.generateQ(data["variant_seed"])
     data["params"] = {"codestring":codestring, "codelength":len(codestring.split('\n'))}
     #data["filename"] = "codestring"
     data["correct_answers"] = grading.get_correctAnswerJSON(codestring) #  directory={{options.client_files_question_dynamic_url}} source-file-name="codestring.txt"
@@ -61,7 +63,45 @@ def parse_env_diagram_from_text(text):
         frame_lst.append(frame)
     return {'frame': frame_lst}
 
+def parse_text_from_env_diagram(json):
+    if not json:
+        print("Error in instructor-provided correct environment diagram.")
+    frame_text_lst = []
+    for frame in json["frame"]:
+
+        return
+        frame = {}
+        index = index.strip()
+        if index[0].lower() == "g" or index == "f0":
+            frame['frameIndex'] = str(0)
+        else: 
+            frame['frameIndex'] = index[1:]
+        frame['name'] = name
+        frame['parent'] = parent
+        lines = vars.split("\n")
+        frame['var'] = bindings = []
+        for j, line in enumerate(lines):
+            line = line.strip()
+            try: 
+                index = line.index(" ")
+            except:
+                continue
+            var = line[:index].strip()
+            val = line[index:].strip()
+            if var[0] == '#':
+                frame['return'] = {'val': val}
+            else: 
+                bindings.append({
+                    'varIndex': j,
+                    'name': var,
+                    'val': val
+                })
+        frame_lst.append(frame)
+    return {'frame': frame_lst}
+
 def prepare(element_html, data):
+    #print(data["params"]["codestring"])
+    generate(element_html, data)
     element = lxml.html.fragment_fromstring(element_html)
     for sub_element in element.iter():
         if sub_element.tag == "correct-env-diagram":
@@ -99,6 +139,8 @@ def parse(element_html, data):
 
 default_submission = {'frame': [{'name': None, 'frameIndex': 0, 'var': [], 'parent': None}], 'heap': {}}
 def render(element_html, data):
+    #generate(element_html, data)
+    #print(data["params"]["codestring"])
     with open("editor.mustache", "r") as f:
         template = f.read()
         if data['panel'] == 'answer':
@@ -117,6 +159,6 @@ def render(element_html, data):
 
 def grade(element_html, data):
     #score, feedback = grading.grading(data['submitted_answers'], data['correct_answers'], partial_credit="by_frame")
-    data['partial_scores']['problem'] = {'score':  1,#score,
-                                    'feedback': data["params"]["codestring"] ,#feedback,
+    data['partial_scores']['problem'] = {'score': 1, #score,
+                                    'feedback': "hjwf", #data["params"]["codestring"], #feedback,
                                     'weight':1}

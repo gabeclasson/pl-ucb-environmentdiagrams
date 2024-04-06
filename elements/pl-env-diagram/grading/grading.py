@@ -1,4 +1,7 @@
-import autoeval
+try:
+    import autoeval
+except:
+    import grading.autoeval as autoeval
 import hashlib
 
 # function that will make a hash out of a frame dictionary. Assumes input is a simplified frame dictionary
