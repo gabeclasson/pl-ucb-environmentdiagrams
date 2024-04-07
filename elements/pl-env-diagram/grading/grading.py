@@ -43,11 +43,12 @@ def simplify_html_json(iterable, pointerlocs = {}, parentNames = {}):
         if "val" in iterable:
             if iterable["val"] in pointerlocs:
                 iterable["val"] = pointerlocs[iterable["val"]]
+            # reformats strings so they all have the same enclosing marks
             if len(iterable["val"]) > 0 and iterable["val"][0] == '"' and iterable["val"][-1] == '"':
                 iterable["val"] = "'" + iterable["val"][1:-1] + "'"
         if "frameIndex" in iterable and iterable["frameIndex"] in parentNames:
             iterable["frameIndex"] = parentNames[iterable["frameIndex"]]
-        if "parent" in iterable and iterable["parent"][1:] in parentNames:
+        if "parent" in iterable and iterable["parent"] and iterable["parent"][1:] in parentNames: ##### TODO
             iterable["parent"] = "f" + parentNames[iterable["parent"]]
         for key in iterable:
             iterable[key] = simplify_html_json(iterable[key])
@@ -70,6 +71,8 @@ def sort_frame_json(html_json):
         currParent = parentpq[0][0]
         currDepth = parentpq[0][1] + 1
         for frame in frame_list:
+            if type(frame["frameIndex"]) != str:
+                frame["frameIndex"] = str(frame["frameIndex"])
             if "parent" in frame and frame["parent"] == currParent:
                 frame["depth"] = str(currDepth)
                 parentpq.append(("f" + str(frame["frameIndex"]), currDepth))
@@ -148,6 +151,13 @@ def grading(generated_json, student_json, partial_credit = "none"):
     options for partial_credit include:
     "none" --> no partial credit
     "by_frame" --> gets credit per correct frame, and lose points for extra frames. if heap is not identical, loses 1/3 credit."""
+    # Fix formatting for empty student input so it can be graded.
+    try:
+        if student_json["frame"][0]["parent"] is None:
+            del student_json["frame"][0]["parent"]
+            del student_json["frame"][0]["name"]
+    except:
+        pass
     if "heap" not in generated_json:
         generated_json["heap"] = {}
     if "heap" not in student_json:
@@ -528,11 +538,4 @@ student_input_correct_intsonly = {
         },
     ],
 }
-
-
-
-#intsonly_ft = autoeval.FrameTree(autoeval.example_intsonly)
-#intsonly_json = intsonly_ft.generate_html_json()
-#print(grading(intsonly_json, student_input_correct_intsonly, partial_credit="by_frame"))
-
 
