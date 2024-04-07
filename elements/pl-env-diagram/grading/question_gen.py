@@ -3,8 +3,6 @@ import re
 import signal
 import json
 
-timeout = 20 # TODO: allow user to set this in their Q generator themselves. 
-
 # built-in options for generating variable and function names
 lowercase_letters = lambda : random.choice(list("qwertyuiopasdfghjklzxcvbnm"))
 uppercase_letters = lambda : random.choice(list("qwertyuiopasdfghjklzxcvbnm".upper()))
@@ -18,6 +16,13 @@ digit_str = lambda : str(random.randint(0,9)).__repr__()
 
 def generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed):
     """ generates an environment diagram question using input from a setup file. """
+    # Makes the generation time out if it takes too long.
+    #if timeout:
+    #    def timeout_handler(signum, frame):
+    #        raise Exception("Question Generator took longer than ", timeout, " seconds to run. The most likely cause of this error is not enough options for variable names, or just very bad luck.")
+    #    signal.signal(signal.SIGALRM, timeout_handler)
+    #    signal.alarm(timeout)
+    # Sets the random seed
     random.seed(seed)
     if code_string and code_filepath:
         print("""WARNING: User has provided both a code_string and a code_filepath. The code_string will be used. 
@@ -26,21 +31,18 @@ def generate_question(allowed_names, allowed_assignment_values, special_replacem
         with open(code_filepath,"r") as file:
             code_string = file.read()
     line_list = code_string.split("\n")
-    # remove all whitespace at beginning of code
-    while line_list[0] == "":
+    # Removes all whitespace at beginning of code and the end of the code
+    while re.fullmatch("\s*", line_list[0]):
         del line_list[0]
+    while re.fullmatch("\s*", line_list[-1]):
+        del line_list[-1]
     # Do special replacements 
     line_list = replace_special(special_replacements, "\n".join(line_list)).split("\n")
     # Do value replacements
     line_list = replace_values(allowed_assignment_values, line_list)
     # Do namespace replacements
     line_list = replace_names(allowed_names, line_list)
-    # Replaces strings in code that use ' as the outer enclosing in strings that use " so formatting is consistent.
-    #code_string = "\n".join(line_list)
-    #line_list = re.split('(\"[^\"]*\"|\'[^\']*\')', code_string)
-    #for i in range(len(line_list)):
-    #    if len(line_list[i]) > 0 and line_list[i][0] == '"':
-    #        line_list[i] = line_list[i][1:-1].__repr__()
+    print(line_list)
     return "\n".join(line_list)
 
 def replace_special(special_replacements, code_string):
@@ -107,11 +109,3 @@ def replace_names(allowed_names, line_list):
                 split_line[k] = newNames_dict[split_line[k]]
         line_list[i] = "".join(split_line)
     return line_list
-
-def timeout_handler(signum, frame):
-    print("While loop in name replacement took too long. It is possible that you haven't provided enough options for the namespace, or you just got very unlucky.")
-    raise Exception("Question Generator took longer than ", timeout, " seconds to run. The most likely cause of this error is not enough options for variable names, or just very bad luck.")
-
-#signal.signal(signal.SIGALRM, timeout_handler)
-
-#signal.alarm(timeout)

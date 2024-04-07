@@ -87,6 +87,12 @@ b = 8
 code_filepath = None
 
 ######################################################################
+############################## TIMEOUT ###############################
+######################################################################
+
+timeout = None
+
+######################################################################
 ############################ GENERATION ##############################
 ######################################################################
 
@@ -94,10 +100,9 @@ code_filepath = None
 
 generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed)
 
-# These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.
-# You might want to comment them out when you actually run it, because otherwise Prarielearn will show errors.  
+# These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.  
+# COMMENT OUT THESE LINES WHEN TESTING PRARIELEARN OR IT WILL CAUSE ERRORS
 
-#result_code_string = generateQ()
-#h = """'wfe"f"ew'"""
-#h = '"' + h[1:-1] + '"'
-#print(h)
+#result_code_string = generateQ(876)
+#print(result_code_string)
+

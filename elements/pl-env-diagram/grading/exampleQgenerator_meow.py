@@ -1,4 +1,8 @@
-import grading.question_gen as question_gen
+try:
+    import grading.question_gen as question_gen
+except:
+    import question_gen
+
 
 # Here you can write your own functions for name/value/line generation. You cannot provide functions that take in a variable.
 
