@@ -13,8 +13,7 @@ import random
 def generate(element_html, data):
     codestring = Qgen.generateQ(data["variant_seed"])
     data["params"] = {"codestring":codestring, "codelength":len(codestring.split('\n'))}
-    #data["filename"] = "codestring"
-    data["correct_answers"] = grading.get_correctAnswerJSON(codestring) #  directory={{options.client_files_question_dynamic_url}} source-file-name="codestring.txt"
+    data["correct_answers"] = grading.get_correctAnswerJSON(codestring)
     
 
 env_diagram_text_pattern = re.compile(r"""
@@ -24,9 +23,6 @@ env_diagram_text_pattern = re.compile(r"""
 	                        (?P<variables>(?:$\n[\t\f ]*(?:\w+)[\t\f ]+.*\S+.*$)*
 	                        (?:$\n[\t\f ]*\#[Rr](?:eturn)?[\t\f ]+(?:.*)$)?)
 	""", re.VERBOSE | re.MULTILINE)
-
-#def file(data):
-#    return data["params"]["codestring"]
 
 def parse_env_diagram_from_text(text):
     m = env_diagram_text_pattern.findall(text)
@@ -139,8 +135,6 @@ def parse(element_html, data):
 
 default_submission = {'frame': [{'name': None, 'frameIndex': 0, 'var': [], 'parent': None}], 'heap': {}}
 def render(element_html, data):
-    #generate(element_html, data)
-    #print(data["params"]["codestring"])
     with open("editor.mustache", "r") as f:
         template = f.read()
         if data['panel'] == 'answer':
@@ -158,7 +152,7 @@ def render(element_html, data):
         return chevron.render(template, rendering_data)
 
 def grade(element_html, data):
-    #score, feedback = grading.grading(data['submitted_answers'], data['correct_answers'], partial_credit="by_frame")
-    data['partial_scores']['problem'] = {'score': 1, #score,
-                                    'feedback': "hjwf", #data["params"]["codestring"], #feedback,
+    score, feedback = grading.grading(data['correct_answers'], data['submitted_answers'], partial_credit="by_frame")
+    data['partial_scores']['problem'] = {'score': score,
+                                    'feedback': feedback,
                                     'weight':1}

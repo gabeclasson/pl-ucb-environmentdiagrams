@@ -1,6 +1,7 @@
 import random
 import re
 import signal
+import json
 
 timeout = 20 # TODO: allow user to set this in their Q generator themselves. 
 
@@ -34,6 +35,12 @@ def generate_question(allowed_names, allowed_assignment_values, special_replacem
     line_list = replace_values(allowed_assignment_values, line_list)
     # Do namespace replacements
     line_list = replace_names(allowed_names, line_list)
+    # Replaces strings in code that use ' as the outer enclosing in strings that use " so formatting is consistent.
+    #code_string = "\n".join(line_list)
+    #line_list = re.split('(\"[^\"]*\"|\'[^\']*\')', code_string)
+    #for i in range(len(line_list)):
+    #    if len(line_list[i]) > 0 and line_list[i][0] == '"':
+    #        line_list[i] = line_list[i][1:-1].__repr__()
     return "\n".join(line_list)
 
 def replace_special(special_replacements, code_string):

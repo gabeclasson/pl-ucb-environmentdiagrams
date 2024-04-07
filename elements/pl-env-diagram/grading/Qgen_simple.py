@@ -1,4 +1,7 @@
-import grading.question_gen as question_gen
+try:
+    import grading.question_gen as question_gen
+except:
+    import question_gen
 
 # Here you can write your own functions for name/value/line generation. You cannot provide functions that take in a variable.
 
@@ -27,7 +30,6 @@ allowed_names = {
     # below are our variable names
     "a": [question_gen.lowercase_letters], 
     "b": [question_gen.lowercase_letters],
-    # below are our function names
     "f": [question_gen.common_function_names], 
     }
 
@@ -48,7 +50,9 @@ allowed_names = {
     # If you want the new value to include the name of a variable, use the name in the default code. See the example in line 3 below. 
 
 allowed_assignment_values = {
-    1:[question_gen.small_int]
+    1:[question_gen.small_int],
+    2:[question_gen.digit_str, question_gen.small_int],
+    3:['"bok"', '"cvijet"', '"morski pas"'],
     }
 
 ######################################################################
@@ -74,9 +78,8 @@ special_replacements = {
 
 code_string = """ 
 a = 5
-def f(b):
-    return b + 4
-f(a)
+f = "hello"
+b = 8
 """ 
 
 # Or as a filepath (from question_gen.py). If you do both, the generator will prioritize the string. 
@@ -95,4 +98,6 @@ generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_
 # You might want to comment them out when you actually run it, because otherwise Prarielearn will show errors.  
 
 #result_code_string = generateQ()
-#print(result_code_string)
+#h = """'wfe"f"ew'"""
+#h = '"' + h[1:-1] + '"'
+#print(h)

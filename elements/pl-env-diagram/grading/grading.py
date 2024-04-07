@@ -40,8 +40,11 @@ def simplify_html_json(iterable, pointerlocs = {}, parentNames = {}):
         for badKey in ["nameWidth", "valWidth", "funcIndex", "sequenceIndex", "varIndex"]:
             if badKey in iterable:
                 del iterable[badKey]
-        if "val" in iterable and iterable["val"] in pointerlocs:
-            iterable["val"] = pointerlocs[iterable["val"]]
+        if "val" in iterable:
+            if iterable["val"] in pointerlocs:
+                iterable["val"] = pointerlocs[iterable["val"]]
+            if len(iterable["val"]) > 0 and iterable["val"][0] == '"' and iterable["val"][-1] == '"':
+                iterable["val"] = "'" + iterable["val"][1:-1] + "'"
         if "frameIndex" in iterable and iterable["frameIndex"] in parentNames:
             iterable["frameIndex"] = parentNames[iterable["frameIndex"]]
         if "parent" in iterable and iterable["parent"][1:] in parentNames:
@@ -169,7 +172,6 @@ def grading(generated_json, student_json, partial_credit = "none"):
             if frame in framesListS:
                 score += 1/len(framesListG)
                 framesListS.remove(frame)
-        #print(max(0, min(1, score)), generated_json["frame"].__repr__() + " \n" + student_json["frame"].__repr__() )
         # return the score with an upper bound of 1 and a lower bound of 0 (just to avoid rounding issues).
         return max(0, min(1, score)), generated_json["frame"].__repr__() + " \n" + student_json["frame"].__repr__()
 
