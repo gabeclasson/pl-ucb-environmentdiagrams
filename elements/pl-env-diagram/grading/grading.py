@@ -151,6 +151,9 @@ def grading(generated_json, student_json, partial_credit = "by_frame"):
     options for partial_credit include:
     "none" --> no partial credit
     "by_frame" --> gets credit per correct frame, and lose points for extra frames. if heap is not identical, loses 1/3 credit."""
+    score, feedback = check_validity(student_json)
+    if feedback:
+        return score, feedback
     # Fix formatting for empty student input so it can be graded.
     try:
         if student_json["frame"][0]["parent"] is None:
@@ -191,7 +194,9 @@ def grading(generated_json, student_json, partial_credit = "by_frame"):
     raise Exception("valid partial credit setting not provided")
 
 def check_validity(student_input):
-    pass
+    if student_input["frame"][1]["name"][0] == "#":
+        return 0, "Frame 1 has an invalid name. Cannot grade."
+    return 1, None
 
 def get_correctAnswerJSON(codestring):
     return autoeval.FrameTree(codestring).generate_html_json()
