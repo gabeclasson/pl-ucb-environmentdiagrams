@@ -30,6 +30,7 @@ allowed_names = {
     # below are our variable names
     "a": [question_gen.lowercase_letters], 
     "b": [question_gen.lowercase_letters],
+    "c": [question_gen.lowercase_letters],
     "f": [question_gen.common_function_names], 
     }
 
@@ -50,9 +51,9 @@ allowed_names = {
     # If you want the new value to include the name of a variable, use the name in the default code. See the example in line 3 below. 
 
 allowed_assignment_values = {
-    1:[question_gen.small_int],
-    2:[question_gen.digit_str, question_gen.small_int],
+    0:[question_gen.small_int],
     3:['"bok"', '"cvijet"', '"morski pas"'],
+    4:["f(b)", "f(a)", "f(9)", "f('plavu')"],
     }
 
 ######################################################################
@@ -78,8 +79,10 @@ special_replacements = {
 
 code_string = """ 
 a = 5
-f = "hello"
-b = 8
+def f(c):
+    return [a, b, c]
+b = "hello"
+c = f(b)
 """ 
 
 # Or as a filepath (from question_gen.py). If you do both, the generator will prioritize the string. 
@@ -103,6 +106,7 @@ generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_
 # These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.  
 # COMMENT OUT THESE LINES WHEN TESTING PRARIELEARN OR IT WILL CAUSE ERRORS
 
-#result_code_string = generateQ(876)
+#import random
+#result_code_string = generateQ(random.randint(0, 50))
 #print(result_code_string)
 
