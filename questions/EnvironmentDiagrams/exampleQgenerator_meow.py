@@ -1,5 +1,5 @@
 try:
-    import question_gen as question_gen
+    import grading.question_gen as question_gen
 except:
     import question_gen
 
