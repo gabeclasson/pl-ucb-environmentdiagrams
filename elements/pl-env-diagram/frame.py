@@ -46,7 +46,7 @@ class Frame():
             key_components = key.split("-")
             prev = None
             prev_key = None
-            grand_prev_key = None
+            prev_dict_key = None
             vanguard = parsed_response
             for i, component in enumerate(key_components):
                 if vanguard is None:
