@@ -79,9 +79,9 @@ special_replacements = {
 
 code_string = """ 
 a = 5
+b = "hello"
 def f(c):
     return [a, b, c]
-b = "hello"
 c = f(b)
 """ 
 
