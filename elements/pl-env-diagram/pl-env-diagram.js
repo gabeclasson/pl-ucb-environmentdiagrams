@@ -437,8 +437,7 @@ class Visualizer {
     let height = Math.abs(y2 - y1)
     let outerContainerX = Math.min(x1, x2)
     let outerContainerY = Math.min(y1, y2)
-    svg.style.top = outerContainerY
-    svg.style.left = outerContainerX
+    svg.setAttribute("style", "top: " + outerContainerY + "px; left: " + outerContainerX + "px;")
     svg.setAttribute("width", width)
     svg.setAttribute("height", height)
     svg.setAttribute("viewBox", `0 0 ${width} ${height}`)
