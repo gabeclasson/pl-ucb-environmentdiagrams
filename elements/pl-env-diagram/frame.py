@@ -41,6 +41,8 @@ class Frame():
         {'frame': [{'index': '0', 'var': [{'index': '0', 'name': 'x', 'val': '5'}, {'index': '2', 'name': 'y', 'val': '17'}]}, {'index': '1', 'name': 'g', 'parent': 'Global', 'return': {'val': '3'}, 'var': [{'index': '0', 'name': 'z', 'val': '"hi"'}]}]}
         """
         parsed_response = {}
+
+        break_cond = False
         
         for key, value in sorted(raw_data.items(), key=lambda x: x[0]):
             key_components = key.split("-")
@@ -61,19 +63,20 @@ class Frame():
                         prev.append(vanguard)
 
                 prev = vanguard
+
+                if prev_key in special_keys:
+                    break
+
                 prev_key = component
                 if not is_number_str(prev_key):
                     prev_dict_key = prev_key
-                
+
                 if type(vanguard) == dict and component in vanguard: 
                     vanguard = vanguard[component]
                 elif type(vanguard) == list and vanguard and vanguard[-1][prev_dict_key + 'Index'] == component:
                     vanguard = vanguard[-1]
                 else: 
                     vanguard = None
-
-                if prev_dict_key in special_keys:
-                    break
             
             if type(prev) == dict:
                 prev["-".join(key_components[i:])] = value

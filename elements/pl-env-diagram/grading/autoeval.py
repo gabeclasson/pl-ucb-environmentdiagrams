@@ -23,7 +23,9 @@ class FrameTree():
         self.codestrID_parent_dict = {}
         # Make sure the inputted code actually runs before generating the FrameTree
         try:
-            exec(codestring, {})
+            with open(os.devnull, 'w') as devnull:
+                with contextlib.redirect_stdout(devnull):
+                    exec(codestring, {})
         except:
             raise Exception("Inputted codestring errs.")
         # Generate the FrameTree! 
