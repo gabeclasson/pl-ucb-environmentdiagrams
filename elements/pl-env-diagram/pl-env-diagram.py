@@ -4,19 +4,18 @@ import lxml.html
 from frame import *
 import prairielearn as pl
 import json
-import grading.Qgen_simple as Qgen
 import grading.grading as grading
-import os, contextlib
 
 # maybe issue is in info.json? check documentation
 
 def generate(element_html, data):
     # These two 'with' statements silence the execution so no print statements are printed, which can bug out prarielearn. 
-    with open(os.devnull, 'w') as devnull:
-        with contextlib.redirect_stdout(devnull):
-            codestring = Qgen.generateQ(data["variant_seed"])
-    data["params"] = {"codestring":codestring, "codelength":len(codestring.split('\n')) - 1}
-    data["correct_answers"] = grading.get_correctAnswerJSON(codestring)
+    # with open(os.devnull, 'w') as devnull:
+    #     with contextlib.redirect_stdout(devnull):
+    #         codestring = Qgen.generateQ(data["variant_seed"])
+    # data["params"] = {"codestring":codestring, "codelength":len(codestring.split('\n')) - 1}
+    # data["correct_answers"] = grading.get_correctAnswerJSON(codestring)
+    pass
     
 
 env_diagram_text_pattern = re.compile(r"""
@@ -104,8 +103,9 @@ def prepare(element_html, data):
     generate(element_html, data)
     element = lxml.html.fragment_fromstring(element_html)
     for sub_element in element.iter():
-        if sub_element.tag == "correct-env-diagram":
-            env_diagram_text = sub_element.text
+        if sub_element.tag == "base-code":
+            base_code = sub_element.text
+            data["correct_answers"] = grading.get_correctAnswerJSON(base_code)
             #correct_answers = parse_env_diagram_from_text(env_diagram_text)
             #data['correct_answers'] = correct_answers
     return data
@@ -125,6 +125,7 @@ def parse(element_html, data):
         else: 
             if (key == 'val' or key == 'name') and type(obj) == str: # Injecting lengths and pointer information
                 if key == 'val' and obj and obj[0] == '#':
+                    print(structured_answers)
                     origin = "-".join(history)
                     raw_pointer_data = structured_answers['pointer'][origin+"-input"]
                     pointer_data = json.loads(raw_pointer_data)
