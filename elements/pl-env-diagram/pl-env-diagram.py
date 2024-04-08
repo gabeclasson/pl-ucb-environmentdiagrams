@@ -5,6 +5,7 @@ from frame import *
 import prairielearn as pl
 import json
 import grading.Qgen_simple as Qgen
+import grading.exampleQgenerator_meow as meow
 import grading.grading as grading
 import os, contextlib
 
@@ -14,7 +15,7 @@ def generate(element_html, data):
     # These two 'with' statements silence the execution so no print statements are printed, which can bug out prarielearn. 
     with open(os.devnull, 'w') as devnull:
         with contextlib.redirect_stdout(devnull):
-            codestring = Qgen.generateQ(data["variant_seed"])
+            codestring = meow.generateQ(data["variant_seed"])
     data["params"] = {"codestring":codestring, "codelength":len(codestring.split('\n')) - 1}
     data["correct_answers"] = grading.get_correctAnswerJSON(codestring)
     
