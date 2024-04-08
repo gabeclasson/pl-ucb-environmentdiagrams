@@ -57,10 +57,10 @@ allowed_names = {
     # If you want the new value to include the name of a variable, use the name in the default code. See the example in line 3 below. 
 
 allowed_assignment_values = {
-    2:[ '"I love cats"', '"Cats are cool"'],
-    4:[question_gen.small_int, 'len(a)', '5000'],
-    7:[question_gen.small_int],
-    8:[question_gen.digit_str, question_gen.letter_str,], # this line will be ignored since line 8 is a return statement.
+    1:[ '"I love cats"', '"Cats are cool"'],
+    3:[question_gen.small_int, 'len(a)', '5000'],
+    6:[question_gen.small_int],
+    7:[question_gen.digit_str, question_gen.letter_str,], # this line will be ignored since line 8 is a return statement.
     }
 
 ######################################################################
@@ -77,7 +77,7 @@ allowed_assignment_values = {
 
 special_replacements = {
     '$1$': [listComprehensionSimple],
-    '$2$': ['"Please be careful using this. READ THE COMMENTS ABOVE!"'],
+    '$2$': ['a'],
 }
 
 ######################################################################
@@ -89,14 +89,14 @@ special_replacements = {
 code_string = """ 
 def meow_mix():
     a = "I love 'cats'"
-    print(a + "!!!!")
+    # cats are my favorite :3
     b = 6
     def cat(a):
         # I love cats
         z = 5
         return z + a
     lst = [cat(b)]
-    $1$                # we include tags here as an example, but would recommend against using them. 
+    $1$          
     lst.append($2$)
     return lst
 meow_mix()""" 
@@ -116,5 +116,5 @@ generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_
 # These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.
 # You might want to comment them out when you actually run it, because otherwise Prarielearn will show errors.  
 
-#result_code_string = generateQ()
+#result_code_string = generateQ(325)
 #print(result_code_string)

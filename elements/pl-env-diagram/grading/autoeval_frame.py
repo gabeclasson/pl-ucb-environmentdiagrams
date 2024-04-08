@@ -3,11 +3,11 @@ class Frame():
 
     def __init__(self, name = None, bindings=None, parent=None, children=None, fobj=None, index = None, codeloc = None):
         self.parent = parent
-        self.children = set()
+        self.children = children if children else set()
         if bindings is None:
             self.bindings = {}
         self.__name__ = name
-        self.json_name = name + "#" + parent.__name__ if name != "global" else name
+        self.json_name = name + "#" + parent.__name__ if name != "Global" else name
         # self's frame object
         self.fobj = fobj
         # keeps track of the memory location of the .__code__ of the function that created this frame. This is used to later identify the parent of that function as an object.
@@ -20,7 +20,8 @@ class Frame():
     def bind(self, name_value_dict, exclude = None, codestrID_parent_dict = None):
         if not exclude is None:
             for name in exclude:
-                del name_value_dict[name]
+                if name in name_value_dict:
+                    del name_value_dict[name]
         self.bindings = name_value_dict 
         for key in self.bindings:
             if callable(self.bindings[key]) and id(self.bindings[key]) not in codestrID_parent_dict:
