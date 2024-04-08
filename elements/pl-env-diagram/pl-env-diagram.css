@@ -44,6 +44,7 @@
   div.ExecutionVisualizer {
     /* none for now */
     font-family: Andale mono, monospace;
+    overflow: scroll
   }
 
   div.ExecutionVisualizer input {
@@ -87,13 +88,14 @@
     background-position: center center;
   }
   
-  div.ExecutionVisualizer .removeButton:hover {
+  div.ExecutionVisualizer .removeButton:hover,
+  div.ExecutionVisualizer .removeButton:focus-visible {
     background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-trash-fill" viewBox="0 0 16 16"><path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/></svg>');
     cursor: pointer;
   }
 
   div.ExecutionVisualizer .addButton {
-    display: inline;
+    display: block;
     background: none;
       border: none;
       padding: 0;
@@ -105,7 +107,9 @@
     background-position: center center;
   }
 
-  div.ExecutionVisualizer .addButton:hover {
+  div.ExecutionVisualizer .addButton:hover,
+  div.ExecutionVisualizer .addButton:focus-visible 
+  {
     background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="blue" class="bi bi-plus-square-fill" viewBox="0 0 16 16"><path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm6.5 4.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3a.5.5 0 0 1 1 0"/></svg>');    cursor: pointer;
   }
   
@@ -930,10 +934,16 @@
     position: relative;
   }
 
+  div.ExecutionVisualizer .pointerArrowHeadDefSvg {
+    width: 0px;
+    height: 0px;
+  }
+
   div.ExecutionVisualizer .pointerArrow svg {
     display: block;
     position: absolute;
     pointer-events:none;
+    overflow: visible;
   }
 
   div.ExecutionVisualizer .pointerArrow path {
@@ -982,12 +992,13 @@
     background-position: center center;
   }
 
-  div.ExecutionVisualizer .pointerButton:after {
-    content: "P";
+  div.ExecutionVisualizer .pointerButton {
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-right" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M14 2.5a.5.5 0 0 0-.5-.5h-6a.5.5 0 0 0 0 1h4.793L2.146 13.146a.5.5 0 0 0 .708.708L13 3.707V8.5a.5.5 0 0 0 1 0z"/></svg>');
   }
 
-  div.ExecutionVisualizer .valueButton:after {
-    content: "V";
+  div.ExecutionVisualizer .valueButton {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cursor-text" viewBox="0 0 16 16"><path d="M5 2a.5.5 0 0 1 .5-.5c.862 0 1.573.287 2.06.566.174.099.321.198.44.286.119-.088.266-.187.44-.286A4.17 4.17 0 0 1 10.5 1.5a.5.5 0 0 1 0 1c-.638 0-1.177.213-1.564.434a3.5 3.5 0 0 0-.436.294V7.5H9a.5.5 0 0 1 0 1h-.5v4.272c.1.08.248.187.436.294.387.221.926.434 1.564.434a.5.5 0 0 1 0 1 4.17 4.17 0 0 1-2.06-.566A5 5 0 0 1 8 13.65a5 5 0 0 1-.44.285 4.17 4.17 0 0 1-2.06.566.5.5 0 0 1 0-1c.638 0 1.177-.213 1.564-.434.188-.107.335-.214.436-.294V8.5H7a.5.5 0 0 1 0-1h.5V3.228a3.5 3.5 0 0 0-.436-.294A3.17 3.17 0 0 0 5.5 2.5.5.5 0 0 1 5 2m2.648 10.645"/></svg>');
+
   }
 
   div.ExecutionVisualizer .pointerValueButton:hover {
@@ -1017,28 +1028,28 @@
   }
 
   div.ExecutionVisualizer .sequenceAddButtonContainer {
-    height: 50px;
+    height: 55px;
     width: 30px;
     position: absolute;
-    top: 0;
-  }
-
-  div.ExecutionVisualizer .sequenceAddButtonContainer {
-    margin: auto;
+    top: -22px;
   }
 
   div.ExecutionVisualizer .sequencePrependButtonContainer {
-    left: -8px;
+    left: -15px;
   }
 
   div.ExecutionVisualizer .sequenceAppendButtonContainer {
-    right: -8px;
+    right: -15px;
   }
 
   div.ExecutionVisualizer .sequenceAddButtonContainer > button {
-    display: none;
+    opacity: 0;
+    margin-top: 25px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  div.ExecutionVisualizer .sequenceAddButtonContainer:hover > button {
-    display: block;
+  div.ExecutionVisualizer .sequenceAddButtonContainer:hover > button, 
+  div.ExecutionVisualizer .sequenceAddButtonContainer > button:focus-visible {
+    opacity: 100%;
   }

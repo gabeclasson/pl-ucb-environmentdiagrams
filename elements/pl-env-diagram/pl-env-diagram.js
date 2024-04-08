@@ -513,6 +513,7 @@ class Visualizer {
     svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
     let newPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
     svg.appendChild(newPath)
+    newPath.setAttribute("marker-end", "url(#pointerArrowHead)")
     container.appendChild(svg)
     let input = this.makeInput("pointerInput", id + "-input")
     container.appendChild(input)
@@ -606,6 +607,9 @@ class Visualizer {
   renumber_sequence_objects(sequenceElementsRow) {
     for (let i = 0; i < sequenceElementsRow.children.length; i++) {
       let element = sequenceElementsRow.children[i]
+      if (element.classList.contains("sequenceAddButtonContainer")) {
+        continue
+      }
       let input = element.querySelector("input")
       let comps = input.id.split("-")
       comps[4] = i
