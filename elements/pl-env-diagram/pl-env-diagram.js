@@ -315,6 +315,7 @@ class Visualizer {
   
     this.executionVisualizer.querySelector("#globals_area").appendChild(frame);
     this.addFrameToDataList("f" + index)
+    this.updateAllPointers();
     return frame
   }
   
@@ -342,6 +343,7 @@ class Visualizer {
     heapObject.append(header)
     heapObject.appendChild(content)
     this.executionVisualizer.querySelector("#heap").appendChild(topLevelHeapObject);
+    this.updateAllPointers();
   }
   
   add_function_object() {
@@ -546,8 +548,7 @@ class Visualizer {
       let index;
       if (before) {
         let input = before.querySelector("input")
-        let beforeIndex = input.id.split("-")[4]
-        index = beforeIndex - 1;
+        let index = parseInt(input.id.split("-")[4])
         before.parentElement.insertBefore(newElement, before)
       } else {
         sequenceContentsRow.insertBefore(newElement, sequenceContentsRow.children[sequenceContentsRow.children.length - 1])
@@ -562,11 +563,18 @@ class Visualizer {
       if (before) { // if we added before, all of the plKeys are messed up and need to be renumbered.
         this.renumber_sequence_objects(sequenceContentsRow)
       }
+      this.updateAllPointers();
   }
 
   make_sequence_add_button(listener, isPrepend) {
       let buttonContainer = document.createElement("div")
       buttonContainer.classList.add("sequenceAddButtonContainer")
+      buttonContainer.addEventListener("mousedown", function(e) {
+        if (e.target.elemType == "button") {
+          return
+        }
+        e.stopImmediatePropagation()
+      })
       if (isPrepend) {
         buttonContainer.classList.add("sequencePrependButtonContainer")
       } else {
@@ -613,6 +621,14 @@ class Visualizer {
       let comps = input.id.split("-")
       comps[4] = i
       let newPlKey = comps.join("-")
+      if (input.value && input.value[0] == "#") { // Need to renumber the pointer object as well. 
+        let pointerId = "pointer-" + input.id
+        let pointerElement = this.executionVisualizer.querySelector("#" + pointerId)
+        pointerElement.id = "pointer-" + newPlKey
+        let pointerInput = pointerElement.children[1]
+        pointerInput.id = "pointer-" + newPlKey + "-input"
+        pointerInput.name = "pointer-" + newPlKey + "-input"
+      }
       input.id = newPlKey
       input.name = newPlKey
     }
