@@ -194,8 +194,6 @@ def grading(generated_json, student_json, partial_credit = "by_frame"):
     raise Exception("valid partial credit setting not provided")
 
 def check_validity(student_input):
-    if student_input["frame"][1]["name"][0] == "#":
-        return 0, "Frame 1 has an invalid name. Cannot grade."
     return 1, None
 
 def get_correctAnswerJSON(codestring):
