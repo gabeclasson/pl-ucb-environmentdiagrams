@@ -3,6 +3,7 @@ try:
 except:
     import grading.autoeval as autoeval
 import hashlib
+import copy
 
 # function that will make a hash out of a frame dictionary. Assumes input is a simplified frame dictionary
 def hash_frame(frame):
@@ -155,6 +156,7 @@ def grading(generated_json, student_json, partial_credit = "by_frame"):
     if feedback:
         return score, feedback
     # Fix formatting for empty student input so it can be graded.
+    student_json = copy.deepcopy(student_json)
     try:
         if student_json["frame"][0]["parent"] is None:
             del student_json["frame"][0]["parent"]
@@ -186,7 +188,7 @@ def grading(generated_json, student_json, partial_credit = "by_frame"):
                 score += 1/len(framesListG)
                 framesListS.remove(frame)
         # return the score with an upper bound of 1 and a lower bound of 0 (just to avoid rounding issues).
-        return max(0, min(1, score)), generated_json["frame"].__repr__() + " \n" + student_json["frame"].__repr__()
+        return max(0, min(1, score)), ""#student_json["frame"].__repr__() + ""#generated_json["frame"].__repr__() + " \n" + student_json["frame"].__repr__()
 
     elif partial_credit == "none":
         return generated_json["heap"] == student_json["heap"] and generated_json["frame"] == student_json["frame"], ""

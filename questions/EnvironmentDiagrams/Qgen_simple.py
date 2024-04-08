@@ -52,7 +52,7 @@ allowed_names = {
 
 allowed_assignment_values = {
     0:[question_gen.small_int],
-    1:['"bok"', '"cvijet"', '"morski pas", "dan garcia", "armando fox", "narges norouzi"'],
+    1:['"bok"', '"cvijet"', '"morski pas"', '"dan garcia"', '"armando fox"', '"narges norouzi"'],
     4:["f(b)", "f(a)", "f(9)", "f('plavu')"],
     }
 
@@ -106,7 +106,7 @@ generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_
 # These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.  
 # COMMENT OUT THESE LINES WHEN TESTING PRARIELEARN OR IT WILL CAUSE ERRORS
 
-import random
-result_code_string = generateQ(seed = random.randint(0, 50))
-print(result_code_string)
+#import random
+#result_code_string = generateQ(seed = random.randint(0, 50))
+#print(result_code_string)
 
