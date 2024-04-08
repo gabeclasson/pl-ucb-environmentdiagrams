@@ -679,11 +679,13 @@
     border: 2px dotted white;
     border-color: white;
     */
+    z-index: 20;
   }
   
   div.ExecutionVisualizer div.heapObject {
     display: inline-block;
     padding-left: 2px; /* leave a TINY amount of room for connector endpoints */
+    z-index: 50;
   }
   
   div.ExecutionVisualizer div.heapPrimitive {
@@ -1032,6 +1034,7 @@
     width: 30px;
     position: absolute;
     top: -22px;
+    z-index: 35;
   }
 
   div.ExecutionVisualizer .sequencePrependButtonContainer {
