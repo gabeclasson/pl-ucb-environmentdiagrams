@@ -52,7 +52,7 @@ allowed_names = {
 
 allowed_assignment_values = {
     0:[question_gen.small_int],
-    3:['"bok"', '"cvijet"', '"morski pas"'],
+    1:['"bok"', '"cvijet"', '"morski pas"', '"dan garcia"', '"armando fox"', '"narges norouzi"'],
     4:["f(b)", "f(a)", "f(9)", "f('plavu')"],
     }
 
@@ -79,9 +79,9 @@ special_replacements = {
 
 code_string = """ 
 a = 5
+b = "hello"
 def f(c):
     return [a, b, c]
-b = "hello"
 c = f(b)
 """ 
 
@@ -107,6 +107,6 @@ generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_
 # COMMENT OUT THESE LINES WHEN TESTING PRARIELEARN OR IT WILL CAUSE ERRORS
 
 #import random
-#result_code_string = generateQ(random.randint(0, 50))
+#result_code_string = generateQ(seed = random.randint(0, 50))
 #print(result_code_string)
 
