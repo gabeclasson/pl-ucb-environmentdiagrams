@@ -38,6 +38,7 @@ class Visualizer {
       console.log(returnVal)
       variables.insertBefore(this.make_variable(frame.id + "-var-" + index), returnVal)
       this.updatePointerFrom(frame.id + "-return-val", false)
+      this.updateAllPointers()
     }
   }
 
