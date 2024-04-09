@@ -10,12 +10,6 @@ import os, contextlib
 # maybe issue is in info.json? check documentation
 
 def generate(element_html, data):
-    # These two 'with' statements silence the execution so no print statements are printed, which can bug out prarielearn. 
-    # with open(os.devnull, 'w') as devnull:
-    #     with contextlib.redirect_stdout(devnull):
-    #         codestring = Qgen.generateQ(data["variant_seed"])
-    # data["params"] = {"codestring":codestring, "codelength":len(codestring.split('\n')) - 1}
-    # data["correct_answers"] = grading.get_correctAnswerJSON(codestring)
     pass
     
 
@@ -63,14 +57,14 @@ def parse_env_diagram_from_text(text):
     return {'frame': frame_lst}
 
 def prepare(element_html, data):
-    #print(data["params"]["codestring"])
     element = lxml.html.fragment_fromstring(element_html)
+    if data["params"]["codestring"] == "Question generation failed. Question file may be malformed.":
+        # TODO: add handling
+        pass
     for sub_element in element.iter():
         if sub_element.tag == "base-code":
             base_code = sub_element.text
             data["correct_answers"] = grading.get_correctAnswerJSON(base_code)
-            #correct_answers = parse_env_diagram_from_text(env_diagram_text)
-            #data['correct_answers'] = correct_answers
     return data
 
 def parse(element_html, data):
@@ -120,7 +114,16 @@ def render(element_html, data):
         return chevron.render(template, rendering_data)
 
 def grade(element_html, data):
-    score, feedback = grading.grading(data['correct_answers'], data['submitted_answers'], partial_credit="by_frame")
+    try:
+        score, feedback = grading.grading(data['correct_answers'], data['submitted_answers'], partial_credit="by_frame")
+    except:
+        score = None
+        feedback = ""
+    if score is None:
+        gradable = False
+    else:
+        gradable = True
     data['partial_scores']['problem'] = {'score': score,
                                     'feedback': feedback,
-                                    'weight':1}
+                                    'weight':1,
+                                    'gradable':gradable}

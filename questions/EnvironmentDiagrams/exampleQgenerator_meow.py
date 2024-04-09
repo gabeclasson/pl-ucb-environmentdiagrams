@@ -57,8 +57,8 @@ allowed_names = {
     # If you want the new value to include the name of a variable, use the name in the default code. See the example in line 3 below. 
 
 allowed_assignment_values = {
-    1:[ '"I love cats"', '"Cats are cool"'],
-    3:[question_gen.small_int, 'len(a)', '5000'],
+    1:[ '"cats"', '"<3"'],
+    3:[question_gen.small_int, 'len(a)'],
     6:[question_gen.small_int],
     7:[question_gen.digit_str, question_gen.letter_str,], # this line will be ignored since line 8 is a return statement.
     }
@@ -88,7 +88,7 @@ special_replacements = {
 
 code_string = """ 
 def meow_mix():
-    a = "I love 'cats'"
+    a = "meow"
     # cats are my favorite :3
     b = 6
     def cat(a):

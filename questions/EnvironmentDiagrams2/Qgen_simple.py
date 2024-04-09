@@ -69,7 +69,6 @@ allowed_assignment_values = {
 # WARNING: If you use this feature, please try a few randomizations on your own to make sure it looks and grades how you expect it to. Small mistakes can cause the problem to not work as expected.
 
 special_replacements = {
-    "#####":["h = 7"]
 }
 
 ######################################################################

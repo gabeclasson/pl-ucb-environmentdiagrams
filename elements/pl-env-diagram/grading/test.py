@@ -394,22 +394,10 @@ def g(h):
     return h + str(t)
 print(g("hello"))"""
 
-ft = autoeval.FrameTree(testfunccode)
-print(grading.grading(ft.generate_html_json(), student_input_correct_testfunccode, partial_credit="by_frame"))
+#ft = autoeval.FrameTree(testfunccode)
+#print(grading.grading(ft.generate_html_json(), student_input_correct_testfunccode, partial_credit="by_frame"))
 
 if True:
-    import inspect
-    x = 5
-    f = lambda a: a + x
-    g = lambda : inspect.currentframe()
-    f(7)
-    d = {5:"wfejnk", 8:"wfe", 1:"wfejnjk", 9:"hi"}
-    print(d)
-    fr = g()
-    print(fr.f_globals)
 
-    x = 5
-    def g(h):
-        t = 7 + x
-        return h + str(t)
-    print(g("hello"))
+    if 0:
+        print("hi")

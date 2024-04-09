@@ -10,7 +10,7 @@ def hash_frame(frame):
     hashSum = 0
     for key in frame:
         if key == "var":
-            variable_dictList = frame["var"] + [frame["return"]] if "return" in frame else frame["var"]
+            variable_dictList = frame["var"] + [frame["return"]] if ("return" in frame and frame["return"]) else frame["var"]
             for variable_dict in variable_dictList:
                 # by summing all of the elements of the variable list, it makes it such that order doesn't matter.
                 for key2 in variable_dict:
@@ -47,10 +47,13 @@ def simplify_html_json(iterable, pointerlocs = {}, parentNames = {}):
             # reformats strings so they all have the same enclosing marks
             if len(iterable["val"]) > 0 and iterable["val"][0] == '"' and iterable["val"][-1] == '"':
                 iterable["val"] = "'" + iterable["val"][1:-1] + "'"
-        if "frameIndex" in iterable and iterable["frameIndex"] in parentNames:
-            iterable["frameIndex"] = parentNames[iterable["frameIndex"]]
-        if "parent" in iterable and iterable["parent"] and iterable["parent"][1:] in parentNames: ##### TODO
-            iterable["parent"] = "f" + parentNames[iterable["parent"]]
+        if "frameIndex" in iterable:
+            if "var" not in iterable:
+                iterable["var"] = []
+            if iterable["frameIndex"] in parentNames:
+                iterable["frameIndex"] = parentNames[iterable["frameIndex"]]
+        if "parent" in iterable and iterable["parent"] and iterable["parent"][1:] in parentNames:
+            iterable["parent"] = parentNames[iterable["parent"]] #####
         for key in iterable:
             iterable[key] = simplify_html_json(iterable[key])
     return iterable
@@ -64,7 +67,7 @@ def sort_frame_json(html_json):
     frame_list = html_json["frame"]
     frame_list[0]["depth"] = 0
     frame_list[0]["parent"] = ""
-    frame_list[0]["name"] = ""
+    frame_list[0]["name"] = "Global"
     parentpq = [("Global", 0)]
     # insert depth into each frame. additionally create a "depths_list" which at each index i has all of the frames at depth i.
     depth_lists = [[frame_list[0]]]
@@ -74,7 +77,7 @@ def sort_frame_json(html_json):
         for frame in frame_list:
             if type(frame["frameIndex"]) != str:
                 frame["frameIndex"] = str(frame["frameIndex"])
-            if "parent" in frame and frame["parent"] == currParent:
+            if "parent" in frame and (frame["parent"] == currParent) or (frame["parent"] == "f" + currParent):
                 frame["depth"] = str(currDepth)
                 parentpq.append(("f" + str(frame["frameIndex"]), currDepth))
                 if len(depth_lists) <= currDepth:
@@ -93,7 +96,8 @@ def sort_frame_json(html_json):
             depth_frames[i]["var"] = sorted(depth_frames[i]["var"], key = lambda x: int(hashlib.sha256((x["name"] + x["val"]).encode('utf-8')).hexdigest(), 16))
             if depth_frames[i]["frameIndex"] == "0":
                 continue
-            depth_frames[i]["parent"] = modified_indices[depth_frames[i]["parent"]]
+           ### parent = modified_indices[depth_frames[i]["parent"]]
+            depth_frames[i]["parent"] = modified_indices[depth_frames[i]["parent"]] ###"Global" if parent == "Global" else "f" + parent
             oldIndex = depth_frames[i]["frameIndex"]
             depth_frames[i]["frameIndex"] = depth_frames[i]["depth"] + ":" + str(i)
             modified_indices["f" + oldIndex] = depth_frames[i]["frameIndex"]
@@ -155,8 +159,9 @@ def grading(generated_json, student_json, partial_credit = "by_frame"):
     score, feedback = check_validity(student_json)
     if feedback:
         return score, feedback
-    # Fix formatting for empty student input so it can be graded.
     student_json = copy.deepcopy(student_json)
+    orig = generated_json
+    generated_json = copy.deepcopy(generated_json)
     try:
         if student_json["frame"][0]["parent"] is None:
             del student_json["frame"][0]["parent"]
@@ -170,25 +175,40 @@ def grading(generated_json, student_json, partial_credit = "by_frame"):
     generated_json = simplify_html_json(generated_json)
     generated_json = sort_frame_json(generated_json)
     generated_json = sort_heap_json(generated_json)
-    student_json = simplify_html_json(student_json)
-    student_json = sort_frame_json(student_json)
-    student_json = sort_heap_json(student_json)
+    try:
+        student_json = simplify_html_json(student_json)
+        student_json = sort_frame_json(student_json)
+        student_json = sort_heap_json(student_json)
+    except:
+        return None, ""
 
     if partial_credit == "by_frame":
+        feedback = []
         if generated_json["heap"] == student_json["heap"] and generated_json["frame"] == student_json["frame"]:
             return 1, ""
         # if not perfect, continue to partial credit. 
         score = 0
         framesListG = [hash_frame(frame) for frame in generated_json["frame"]]
         framesListS = [hash_frame(frame) for frame in student_json["frame"]]
+        student_frame_count = len(framesListS)
         # if student provided more frames than exist, remove the amount of extras divided by their total framecount from the score.
         score -= max(0, len(framesListS) - len(framesListG))/len(framesListS)
         for frame in framesListG:
+            # TEMPORARY SOLUTION
+            findex = framesListG.index(frame)
             if frame in framesListS:
-                score += 1/len(framesListG)
+                score += 1/student_frame_count
                 framesListS.remove(frame)
+            elif findex < student_frame_count:
+                feedback.append(("Global" if findex == 0 else "f" + str(findex)) + " is incorrect.\n")
+        # for frame in generated_json["frame"]:
+            #if hash_frame(frame) in framesListS:
+            #    score += 1/len(student_json["frame"])
+            #    framesListS.remove(frame)
+            #else:
+            #    feedback.append("Frame "+ frame["name"])
         # return the score with an upper bound of 1 and a lower bound of 0 (just to avoid rounding issues).
-        return max(0, min(1, score)), ""#student_json["frame"].__repr__() + ""#generated_json["frame"].__repr__() + " \n" + student_json["frame"].__repr__()
+        return max(0, min(1, score)), "\n".join(feedback) + "\n student" + student_json["frame"].__repr__() + " \n gen" + generated_json["frame"].__repr__() + "\n orig" + orig["frame"].__repr__()
 
     elif partial_credit == "none":
         return generated_json["heap"] == student_json["heap"] and generated_json["frame"] == student_json["frame"], ""
@@ -200,3 +220,5 @@ def check_validity(student_input):
 
 def get_correctAnswerJSON(codestring):
     return autoeval.FrameTree(codestring).generate_html_json()
+
+

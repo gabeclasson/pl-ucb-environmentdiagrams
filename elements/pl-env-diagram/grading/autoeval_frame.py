@@ -2,7 +2,7 @@ class Frame():
     is_global = False
 
     def __init__(self, name = None, bindings=None, parent=None, children=None, fobj=None, index = None, codeloc = None):
-        self.parent = parent
+        self.parent = parent 
         self.children = children if children else set()
         if bindings is None:
             self.bindings = {}
