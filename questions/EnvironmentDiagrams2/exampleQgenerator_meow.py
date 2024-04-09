@@ -58,7 +58,7 @@ allowed_names = {
 
 allowed_assignment_values = {
     1:[ '"I love cats"', '"Cats are cool"'],
-    3:[question_gen.small_int, 'len(a)', '5000'],
+    3:[question_gen.small_int, 'len(a)'],
     6:[question_gen.small_int],
     7:[question_gen.digit_str, question_gen.letter_str,], # this line will be ignored since line 8 is a return statement.
     }
