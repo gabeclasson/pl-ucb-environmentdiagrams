@@ -1,7 +1,8 @@
-try:
-    import question_gen as question_gen
-except:
-    import question_gen
+#import sys
+# caution: path[0] is reserved for script path (or '' in REPL)
+#sys.path.insert(0, "../elements/pl-env-diagram/")
+#print(sys.path)
+import question_gen
 
 # Here you can write your own functions for name/value/line generation. You cannot provide functions that take in a variable.
 
@@ -69,7 +70,6 @@ allowed_assignment_values = {
 # WARNING: If you use this feature, please try a few randomizations on your own to make sure it looks and grades how you expect it to. Small mistakes can cause the problem to not work as expected.
 
 special_replacements = {
-    "#####":["h = 7"]
 }
 
 ######################################################################
