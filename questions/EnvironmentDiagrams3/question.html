@@ -1,0 +1,16 @@
+<pl-question-panel>
+    <p> 
+        Draw the environment diagram after finishing execution for the following code:
+    </p>
+<pl-code language="python">
+{{params.codestring}}
+</pl-code>
+
+<pl-env-diagram>
+<base-code>
+{{params.codestring}}
+</base-code>
+</pl-env-diagram>
+</pl-question-panel>
+<pl-submission-panel> {{partial_scores.problem.feedback}} </pl-submission-panel>
+
