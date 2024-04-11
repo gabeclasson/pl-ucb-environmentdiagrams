@@ -71,8 +71,8 @@
 
   div.ExecutionVisualizer .frameParentHeader {
     font-size: 14pt;
-    width: 70px;
-    min-width: 70px;
+    width: 90px;
+    min-width: 90px;
     border: none;
     height: 100%;
     border-bottom: solid black 1px;
