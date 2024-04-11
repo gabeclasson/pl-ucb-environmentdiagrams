@@ -1,8 +1,13 @@
+# TODO: move question_gen.py to elements/pl-env-diagram and figure out how to import it from there
 #import sys
 # caution: path[0] is reserved for script path (or '' in REPL)
 #sys.path.insert(0, "../elements/pl-env-diagram/")
 #print(sys.path)
 import question_gen
+
+######################################################################
+######################### CUSTOM FUNCTIONS ###########################
+######################################################################
 
 # Here you can write your own functions for name/value/line generation. You cannot provide functions that take in a variable.
 

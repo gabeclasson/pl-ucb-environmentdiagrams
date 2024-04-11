@@ -1,8 +1,12 @@
+# TODO: move question_gen.py to elements/pl-env-diagram and figure out how to import it from there
 try:
     import grading.question_gen as question_gen
 except:
     import question_gen
 
+######################################################################
+######################### CUSTOM FUNCTIONS ###########################
+######################################################################
 
 # Here you can write your own functions for name/value/line generation. You cannot provide functions that take in a variable.
 
