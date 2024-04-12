@@ -97,16 +97,25 @@ class Visualizer {
       let frameHeader = target.querySelector(".frameHeader").textContent
       let frameIndex = frameHeader.substring(0, frameHeader.indexOf(":"))
       this.removeFrameFromDataList(frameIndex)
+
+      target.parentElement.removeChild(target);
+      this.updateAllPointers();
     } else if (target.classList.contains("sequenceHeader")) {
       let index = parseInt(target.innerText)
       let table = target.closest("table")
-      target = table.children[1].children[index]
+      let seqContentElement = table.children[1].children[index]
+      let sequence = target.closest(".heapObject")
+
+      seqContentElement.parentElement.removeChild(seqContentElement);
+      this.updateAllPointers();
+
       this.decrement_sequence_header(table.children[0])
       this.renumber_sequence_objects(table.children[1])
+      this.fix_empty_sequence_type(sequence)
+    } else {
+      target.parentElement.removeChild(target);
+      this.updateAllPointers();
     }
-
-    target.parentElement.removeChild(target);
-    this.updateAllPointers();
   }
   
   updateAllPointers(thorough) {
@@ -538,7 +547,7 @@ class Visualizer {
       viz.add_list_element(null, plKey, sequenceHeaderRow, sequenceContentsRow)
     }, false)
     sequenceContentsRow.appendChild(appendButton)
-    this.add_heap_object(plKey, sequenceObj, typeName)
+    this.add_heap_object(plKey, sequenceObj, "empty " + typeName)
   }
 
   add_list_element(before, sequencePlKey, sequenceHeaderRow, sequenceContentsRow) {
@@ -557,13 +566,14 @@ class Visualizer {
       }
       this.increment_sequence_header(sequenceHeaderRow)
       let valueContainer = this.make_value_box("sequenceElementValueContainer", sequencePlKey + "-item-" + index + "-val")
-      newElement.appendChild(valueContainer)
       newElement.appendChild(this.make_sequence_add_button(function() {
         viz.add_list_element(newElement, sequencePlKey, sequenceHeaderRow, sequenceContentsRow)
       }, true))
+      newElement.appendChild(valueContainer)
       if (before) { // if we added before, all of the plKeys are messed up and need to be renumbered.
         this.renumber_sequence_objects(sequenceContentsRow)
       }
+      this.fix_empty_sequence_type(sequenceContentsRow.closest(".heapObject"))
       this.updateAllPointers();
   }
 
@@ -610,6 +620,16 @@ class Visualizer {
     obj.innerText = "" + number
     obj.appendChild(this.make_remove_button(obj))
     return obj
+  }
+
+  fix_empty_sequence_type(sequence) {
+    let sequenceElts = sequence.querySelector(".sequenceElt");
+    let typeLabel = sequence.querySelector(".typeLabel")
+    if (!sequenceElts) {
+      typeLabel.textContent = "empty list"
+    } else {
+      typeLabel.textContent = "list"
+    }
   }
   
   renumber_sequence_objects(sequenceElementsRow) {
