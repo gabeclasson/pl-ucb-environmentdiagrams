@@ -74,6 +74,8 @@ def parse(element_html, data):
     pointer_list = []
     def investigate(key, obj, history, parent):
         if type(obj) == list:
+            if obj: # Need injecting "lastElementIndicators"
+                obj[-1]["isLastElement"] = True
             for item in obj:
                 investigate(item[key + "Index"], item, history + [item[key + "Index"]], obj)
         elif type(obj) == dict:

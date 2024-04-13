@@ -87,7 +87,7 @@
     width: 70px;
     min-width: 70px;
   }
-  
+
   div.ExecutionVisualizer .removeButton {
     display: inline-block;
     background: none;
@@ -110,7 +110,11 @@
     opacity: 100%;
   }
 
-  div.ExecutionVisualizer .removable:hover .removeButton
+
+  div.ExecutionVisualizer .removablePrimary:hover .removeButtonPrimary,
+  div.ExecutionVisualizer .removableSecondary:hover .removeButtonSecondary,
+  div.ExecutionVisualizer .removablePrimary:focus-within .removeButtonPrimary,
+  div.ExecutionVisualizer .removableSecondary:focus-within .removeButtonSecondary
   {
     opacity: 100%;
   }
@@ -358,30 +362,25 @@
   
   /* Rendering of basic compound types */
   
-  div.ExecutionVisualizer table.listTbl,
-  div.ExecutionVisualizer table.tupleTbl,
+
   div.ExecutionVisualizer table.setTbl,
-  div.ExecutionVisualizer table.sequenceTbl {
+  div.ExecutionVisualizer .sequenceElt {
     background-color: #ffffc6;
   }
   
   
-  div.ExecutionVisualizer table.listTbl,
-  div.ExecutionVisualizer table.sequenceTbl {
+  div.ExecutionVisualizer .sequence {
     border: 0px solid black;
     border-spacing: 0px;
   }
   
-  div.ExecutionVisualizer table.listTbl td.listHeader,
-  div.ExecutionVisualizer table.sequenceTbl td.sequenceHeader,
-  div.ExecutionVisualizer table.tupleTbl td.tupleHeader {
+  div.ExecutionVisualizer .sequenceHeader{
     padding-left: 4px;
     padding-top: 2px;
     padding-bottom: 3px;
     font-size: 8pt;
     color: #777;
     text-align: left;
-    border-left: 1px solid #555555;
   }
   
   div.ExecutionVisualizer table.tupleTbl {
@@ -395,7 +394,7 @@
   
   
   div.ExecutionVisualizer table.listTbl td.listElt,
-  div.ExecutionVisualizer table.sequenceTbl td.sequenceElt
+  div.ExecutionVisualizer .sequence .sequenceElt
    {
     border-bottom: 1px solid #555555; /* must match td.listHeader border */
     border-left: 1px solid #555555; /* must match td.listHeader border */
@@ -495,14 +494,14 @@
     font-size: 9pt; /* make this smaller */
   }
   
-  div.ExecutionVisualizer table.listTbl td.listElt,
-  div.ExecutionVisualizer table.tupleTbl td.tupleElt,
-  div.ExecutionVisualizer table.sequenceTbl td.sequenceElt {
+  div.ExecutionVisualizer .sequence .sequenceElt {
     /* padding-top: 0px;
     padding-bottom: 8px;
     padding-left: 10px;
     padding-right: 10px; */
     vertical-align: bottom;
+    display: inline-block;
+    position: relative;
   }
   
   div.ExecutionVisualizer table.setTbl {
@@ -1050,8 +1049,13 @@
   }
 
   div.ExecutionVisualizer .sequenceElt,
-  div.ExecutionVisualizer .sequenceContentsRow {
+  div.ExecutionVisualizer .sequenceContent, 
+  div.ExecutionVisualizer .sequence {
     position: relative;
+  }
+
+  div.ExecutionVisualizer .sequenceContent {
+    white-space: nowrap;
   }
 
   div.ExecutionVisualizer .sequenceElementValueContainer {
@@ -1059,29 +1063,72 @@
   }
 
   div.ExecutionVisualizer .sequenceAddButtonContainer {
-    height: 55px;
-    width: 30px;
+    opacity: 0;
+    display: inline-block;
+  }
+
+  div.ExecutionVisualizer .topLevelHeapObject:hover .sequenceAddButtonContainer,
+  div.ExecutionVisualizer .topLevelHeapObject:focus-within .sequenceAddButtonContainer {
+    opacity: 1
+  }
+/* Now for the stuff relevant to add buttons when lists are non=empty */
+
+  div.ExecutionVisualizer .sequenceElt .sequenceAddButtonContainer {
     position: absolute;
-    top: -22px;
+  }
+
+  div.ExecutionVisualizer .sequenceElt .sequencePrependButtonContainer {
+    top: 20px;
+    left: -8px;
+  }
+  
+  div.ExecutionVisualizer .sequenceElt .sequenceAddButtonContainer > button {
+    opacity: 0;
+    /* margin-top: 25px;
+    margin-left: auto;
+    margin-right: auto; */
+  }
+
+  div.ExecutionVisualizer .sequenceElt:hover .sequenceAddButtonContainer > button, 
+  div.ExecutionVisualizer .sequenceElt .sequenceAddButtonContainer > button:focus-visible,
+  div.ExecutionVisualizer .sequenceElt:hover + .sequenceElt > .sequencePrependButtonContainer > button, 
+  div.ExecutionVisualizer .sequenceElt .sequenceAddButtonContainer:hover > button
+  {
+    opacity: 1;
+  }
+
+  div.ExecutionVisualizer .sequenceElt:first-child .sequencePrependButtonContainer, 
+  div.ExecutionVisualizer .sequenceElt:last-child .sequenceAppendButtonContainer {
+    height: 100%;
+    width: 15px;
+    position: absolute;
+    top: 0px;
     z-index: 35;
   }
 
-  div.ExecutionVisualizer .sequencePrependButtonContainer {
+  div.ExecutionVisualizer .sequenceElt:first-child .sequencePrependButtonContainer{
     left: -15px;
   }
 
-  div.ExecutionVisualizer .sequenceAppendButtonContainer {
+  div.ExecutionVisualizer .sequenceElt:last-child .sequenceAppendButtonContainer {
     right: -15px;
   }
 
-  div.ExecutionVisualizer .sequenceAddButtonContainer > button {
-    opacity: 0;
-    margin-top: 25px;
-    margin-left: auto;
-    margin-right: auto;
+  div.ExecutionVisualizer .sequenceElt:first-child .sequencePrependButtonContainer > button, 
+  div.ExecutionVisualizer .sequenceElt:last-child .sequenceAppendButtonContainer > button {
+    position: absolute;
+    top: 20px;
   }
 
-  div.ExecutionVisualizer .sequenceAddButtonContainer:hover > button, 
-  div.ExecutionVisualizer .sequenceAddButtonContainer > button:focus-visible {
+  div.ExecutionVisualizer .sequenceElt:first-child .sequencePrependButtonContainer > button {
+    right: -50%;
+  }
+
+  div.ExecutionVisualizer .sequenceElt:last-child .sequenceAppendButtonContainer > button {
+    left: -50%;
+  }
+
+  div.ExecutionVisualizer .sequenceElt .sequenceAddButtonContainer:hover > button, 
+  div.ExecutionVisualizer .sequenceElt .sequenceAddButtonContainer > button:focus-visible {
     opacity: 100%;
   }

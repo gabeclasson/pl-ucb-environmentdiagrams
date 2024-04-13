@@ -24,9 +24,9 @@
     <datalist id="frame-indices">
       <option value="Global"></option>
       {{#frame}}
-      {{^name}}
+      {{^parent}}
       <option value="f{{frameIndex}}"></option>
-      {{/name}}
+      {{/parent}}
       {{/frame}}
     </datalist>
     <div class="vizLayoutTd" id="vizLayoutTdSecond">
@@ -38,7 +38,7 @@
               <div id="globals_area">
                 <div id="stackHeader">Frames</div>
                 {{#frame}}
-                  <div class="stackFrame removable" id="frame-{{frameIndex}}">
+                  <div class="stackFrame removable removablePrimary" id="frame-{{frameIndex}}">
                     {{#return}}
                     <button class="btn removeButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button>
                     <label class="frameHeader">f{{frameIndex}}: </label><input class="frameHeader varLengthInput" id="frame-{{frameIndex}}-name" name="frame-{{frameIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{nameWidth}}ch">
@@ -49,7 +49,7 @@
                     {{/return}}
                     <table class="stackFrameVarTable"><tbody>
                     {{#var}}
-                      <tr class="variableTr removable" id="frame-{{frameIndex}}-var-{{varIndex}}">
+                      <tr class="variableTr removable removableSecondary" id="frame-{{frameIndex}}-var-{{varIndex}}">
                         <td class=""><button class="btn removeButton" type="button" {{^show_controls}}disabled{{/show_controls}}></button></td><td class="stackFrameVar"><input class="stackFrameVarInput varLengthInput" id="frame-{{frameIndex}}-var-{{varIndex}}-name" name="frame-{{frameIndex}}-var-{{varIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{nameWidth}}ch"></td>
                         <td class="stackFrameValue">
                           <div class="valueContainer">
@@ -80,7 +80,7 @@
                 <div id="heapHeader">Objects</div>
                 {{#heap}}
                   {{#func}}
-                    <div class="topLevelHeapObject removable" id="heap-func-{{funcIndex}}">
+                    <div class="topLevelHeapObject removable removablePrimary" id="heap-func-{{funcIndex}}">
                       <div class="heapObject">
                         <div><div class="typeLabel">function</div><button class="btn removeButton" type="button"></button></div>
                         <div class="funcObj">
@@ -92,48 +92,80 @@
                     </div>
                   {{/func}}
                   {{#list}}
-                    <div class="topLevelHeapObject removable" id="heap-list-{{listIndex}}">
+                    <div class="topLevelHeapObject removablePrimary" id="heap-list-{{listIndex}}">
                     <div class="heapObject">
-                      <div><div class="typeLabel">list</div><button class="btn removeButton" type="button"></button></div>
-                      <table class="sequenceTbl">
-                      <tr class="sequenceHeaderRow">{{#item}}<td class="sequenceHeader removable">{{itemIndex}}<button class="btn removeButton" type="button"></button></td>{{/item}}</tr>
-                      <tr class="sequenceContentsRow">
-                        {{#item}}
-                          <td class="sequenceElt removable">
+                      <div>
+                        <div class="typeLabel">{{^item}}empty{{/item}} list</div>
+                        <button class="btn removeButton removeButtonPrimary" type="button"></button>
+                      </div>
+                      <div class="sequence">
+                        <div class="sequenceContent">
+                          {{#item}}
+                          <div id="heap-list-{{listIndex}}-item-{{itemIndex}}" class="sequenceElt removable removableSecondary">
+                            <div class="sequenceAddButtonContainer sequencePrependButtonContainer">
+                              <button class="btn addButton" type="button"></button>
+                            </div>
+                            <div class="sequenceHeader">
+                              <span class="sequenceEltIndex">0</span>
+                              <button class="btn removeButton removeButtonSecondary" type="button"></button>
+                            </div>
                             <div class="valueContainer">
-                              <input id="heap-list-{{listIndex}}-item-{{itemIndex}}-val" name="heap-list-{{listIndex}}-item-{{itemIndex}}-val" class="sequenceElementValueContainer varLengthInput" value="{{val}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{valWidth}}ch">
+                              <input id="heap-list-{{listIndex}}-item-{{itemIndex}}-val" name="heap-list-{{listIndex}}-item-{{itemIndex}}-val" class="sequenceElementValueContainer varLengthInput">
                               <button class="btn pointerButton pointerValueButton" type="button"></button>
                             </div>
-                            <div class="sequenceAddButtonContainer sequencePrependButtonContainer"><button class="btn addButton" type="button"></button></div>
-                          </td>
+                            {{#isLastElement}}
+                            <div class="sequenceAddButtonContainer sequenceAppendButtonContainer">
+                              <button class="btn addButton" type="button"></button>
+                            </div>
+                            {{/isLastElement}}
+                          </div>
+                          {{/item}}
+                        </div>
+                        {{^item}}
+                          <div class="sequenceAddButtonContainer sequenceAppendButtonContainer">
+                            <button class="btn addButton" type="button"></button>
+                          </div>
                         {{/item}}
-                        <div class="sequenceAddButtonContainer sequenceAppendButtonContainer"><button class="btn addButton" type="button"></button></div>
-                      </tr>
-                      </table>
                       </div>
-                    </div>
+                    </div></div>
                   {{/list}}
                   {{#tuple}}
-                    <div class="topLevelHeapObject removable" id="heap-tuple-{{tupleIndex}}">
+                    <div class="topLevelHeapObject removablePrimary" id="heap-tuple-{{tupleIndex}}">
                     <div class="heapObject">
-                      <div><div class="typeLabel">tuple</div><button class="btn removeButton" type="button"></button></div>
-                      <table class="sequenceTbl">
-                      <tr class="sequenceHeaderRow">{{#item}}<td class="sequenceHeader removable">{{itemIndex}}<button class="btn removeButton" type="button"></button></td>{{/item}}</tr>
-                      <tr class="sequenceContentsRow">
-                        {{#item}}
-                          <td class="sequenceElt removable">
+                      <div>
+                        <div class="typeLabel">{{^item}}empty{{/item}} tuple</div>
+                        <button class="btn removeButton removeButtonPrimary" type="button"></button>
+                      </div>
+                      <div class="sequence">
+                        <div class="sequenceContent">
+                          {{#item}}
+                          <div id="heap-tuple-{{tupleIndex}}-item-{{itemIndex}}" class="sequenceElt removable removableSecondary">
+                            <div class="sequenceAddButtonContainer sequencePrependButtonContainer">
+                              <button class="btn addButton" type="button"></button>
+                            </div>
+                            <div class="sequenceHeader">
+                              <span class="sequenceEltIndex">0</span>
+                              <button class="btn removeButton removeButtonSecondary" type="button"></button>
+                            </div>
                             <div class="valueContainer">
-                              <input id="heap-tuple-{{tupleIndex}}-item-{{itemIndex}}-val" name="heap-tuple-{{tupleIndex}}-item-{{itemIndex}}-val" class="sequenceElementValueContainer varLengthInput" value="{{val}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{valWidth}}ch">
+                              <input id="heap-tuple-{{tupleIndex}}-item-{{itemIndex}}-val" name="heap-tuple-{{tupleIndex}}-item-{{itemIndex}}-val" class="sequenceElementValueContainer varLengthInput">
                               <button class="btn pointerButton pointerValueButton" type="button"></button>
                             </div>
-                            <div class="sequenceAddButtonContainer sequencePrependButtonContainer"><button class="btn addButton" type="button"></button></div>
-                          </td>
+                            {{#isLastElement}}
+                            <div class="sequenceAddButtonContainer sequenceAppendButtonContainer">
+                              <button class="btn addButton" type="button"></button>
+                            </div>
+                            {{/isLastElement}}
+                          </div>
+                          {{/item}}
+                        </div>
+                        {{^item}}
+                          <div class="sequenceAddButtonContainer sequenceAppendButtonContainer">
+                            <button class="btn addButton" type="button"></button>
+                          </div>
                         {{/item}}
-                        <div class="sequenceAddButtonContainer sequenceAppendButtonContainer"><button class="btn addButton" type="button"></button></div>
-                      </tr>
-                      </table>
                       </div>
-                    </div>
+                    </div></div>
                   {{/tuple}}
                 {{/heap}}
             </div>
