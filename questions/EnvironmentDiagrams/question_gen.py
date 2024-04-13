@@ -32,9 +32,9 @@ def generate_question(allowed_names, allowed_assignment_values, special_replacem
             code_string = file.read()
     line_list = code_string.split("\n")
     # Removes all whitespace at beginning of code and the end of the code
-    while len(line_list) > 0 and re.fullmatch("\s*", line_list[0]):
+    while re.fullmatch("\s*", line_list[0]):
         del line_list[0]
-    while len(line_list) > 0 and re.fullmatch("\s*", line_list[-1]):
+    while re.fullmatch("\s*", line_list[-1]):
         del line_list[-1]
     # Do special replacements 
     line_list = replace_special(special_replacements, "\n".join(line_list)).split("\n")
@@ -42,7 +42,15 @@ def generate_question(allowed_names, allowed_assignment_values, special_replacem
     line_list = replace_values(allowed_assignment_values, line_list)
     # Do namespace replacements
     line_list = replace_names(allowed_names, line_list)
-    print(line_list)
+    new_code_string = "\n".join(line_list)
+    # Make sure the code properly executes before returning- and if it doesn't, try again until we get a working codestring. 
+    try:
+        d = {}
+        exec(new_code_string, d, d)
+    except:
+        # Return a new string with a different seed. If this also doesn't work, the generator is likely not good.
+        print("WARNING: Initial code generation failed. Please verify that your randomization does not cause issues. Seed is:", seed, ". Attempting with new seed.")
+        return generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed + 1)
     return "\n".join(line_list)
 
 def replace_special(special_replacements, code_string):

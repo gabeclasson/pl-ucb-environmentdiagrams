@@ -24,11 +24,15 @@ import question_gen
 ################## OPTIONS FOR NAMESPACE REPLACEMENT #################
 ######################################################################
 
-# Provide possible options to rename variables and functions with. 
+# Provide possible options to rename variables and functions with. You should provide all function/variable names here, even if you would like to leave them unchanged. The code will not necessarily err if you neglect to do this, but in some cases or on some seeds it might. This is because the question generation stage cannot detect all of the variables in the codestring unless you provide them, so it won't know if there are overlapping names.
 # WARNING: If you do not provide enough options such that each variable can get a unique name, the question generator will time out. 
+# WARNING 2: If you provide options for some variables but not for others, and it is possible for other variables to be given the same name as the unchanged variable(s),
+# the code may err or you may just be testing students on a different kind of environment diagram in some cases. If you would like to leave a variable unchanged, just 
+# provide the variable name and only itself as an option in the list, and it should go before randomizable variable names. For example, if you wanted to leave "f" unchanged, provide "f":["f"], and it should go first.
 
 allowed_names = {
     # below are our variable names
+    "f": ["f"],
     "a": [question_gen.common_function_names], 
     "b": [question_gen.lowercase_letters],
     "c": [question_gen.lowercase_letters],
@@ -109,6 +113,10 @@ generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_
 # COMMENT OUT THESE LINES WHEN TESTING PRARIELEARN OR IT WILL CAUSE ERRORS
 
 #import random
-#result_code_string = generateQ(seed = random.randint(0, 50))
+#try:
+#   seed = random.randint(0,5000)
+#   result_code_string = generateQ(seed = seed)
+#except:
+#   print(seed)
 #print(result_code_string)
 

@@ -309,9 +309,9 @@ class FrameTree():
                 if varname == "returnval":
                     variable = handle_variable(frame.bindings[varname], name = varname, varIndex=i)
                     newframe["return"] = {"val":variable["val"]}
-                    break
                 # TODO: MOVE TO FRAMETREE DEF
-                newframe["var"].append(handle_variable(frame.bindings[varname], name = varname, varIndex=i))
+                else:
+                    newframe["var"].append(handle_variable(frame.bindings[varname], name = varname, varIndex=i))
                 i = i + 1
             for child in frame.children:
                 addFrameToJson(child)
@@ -329,3 +329,19 @@ class FrameTree():
                 framepq.append(child)
             framepq = framepq[1:]
         return "\n".join(line_list)
+
+bad_code = """def h(t):
+  if len(t) == 1:
+    return t[0]
+  else:
+    f = t[0]
+    return f + h(t[1:])
+j = [5, 9]
+total = h(j)"""
+
+bad_answer = """{"heap":{"func":[{"name":"h","parent":"Global","funcIndex":0,"nameWidth":2}],"sequence":[{"item":[{"val":"5","valWidth":2,"listIndex":0},{"val":"9","valWidth":2,"listIndex":1}],"type":"list","sequenceIndex":0},{"item":[{"val":"9","valWidth":2,"listIndex":0}],"type":"list","sequenceIndex":1}]},"frame":[{"var":[{"val":"#heap-func-0","name":"h","varIndex":0,"nameWidth":2},{"val":"#heap-sequence-0","name":"j","varIndex":1,"nameWidth":2},{"val":"14","name":"total","valWidth":3,"varIndex":2,"nameWidth":6}],"frameIndex":"0"},{"var":[{"val":"#heap-sequence-0","name":"t","varIndex":0,"nameWidth":2}],"name":"h","parent":"Global","return":{"val":"14"},"nameWidth":2,"frameIndex":"1"},{"var":[{"val":"#heap-sequence-1","name":"t","varIndex":0,"nameWidth":2}],"name":"h","parent":"f1","return":{"val":"9"},"nameWidth":2,"frameIndex":"2"}]}"""
+
+ft = FrameTree(bad_code)
+#print(ft)
+js = ft.generate_html_json()
+#print(js["frame"][2])

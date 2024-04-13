@@ -191,8 +191,8 @@ def grading(generated_json, student_json, partial_credit = "by_frame"):
         framesListG = [hash_frame(frame) for frame in generated_json["frame"]]
         framesListS = [hash_frame(frame) for frame in student_json["frame"]]
         student_frame_count = len(framesListS)
-        # if student provided more frames than exist, remove the amount of extras divided by their total framecount from the score.
-        score -= max(0, len(framesListS) - len(framesListG))/len(framesListS)
+        # if student provided less frames than exist, remove the amount of extras divided by their total framecount from the score.
+        score -= max(0, len(framesListG) - len(framesListS))/len(framesListG)
         for frame in framesListG:
             # TEMPORARY SOLUTION
             findex = framesListG.index(frame)
@@ -208,7 +208,7 @@ def grading(generated_json, student_json, partial_credit = "by_frame"):
             #else:
             #    feedback.append("Frame "+ frame["name"])
         # return the score with an upper bound of 1 and a lower bound of 0 (just to avoid rounding issues).
-        return max(0, min(1, score)), "\n".join(feedback) + "\n student" + student_json["frame"].__repr__() + " \n gen" + generated_json["frame"].__repr__() + "\n orig" + orig["frame"].__repr__()
+        return max(0, min(1, score)), "\n".join(feedback) #+ "\n student" + student_json["frame"].__repr__() + " \n gen" + generated_json["frame"].__repr__() + "\n orig" + orig["frame"].__repr__()
 
     elif partial_credit == "none":
         return generated_json["heap"] == student_json["heap"] and generated_json["frame"] == student_json["frame"], ""
@@ -220,5 +220,4 @@ def check_validity(student_input):
 
 def get_correctAnswerJSON(codestring):
     return autoeval.FrameTree(codestring).generate_html_json()
-
 

@@ -401,3 +401,5 @@ if True:
 
     if 0:
         print("hi")
+    t =[5,9]
+    k = t[0] + [9]
