@@ -38,7 +38,7 @@ def simplify_html_json(iterable, pointerlocs = {}, parentNames = {}):
             # TODO: remove this from FrameTree?
             iterable[i] = simplify_html_json(iterable[i])
     elif type(iterable) is dict:
-        for badKey in ["nameWidth", "valWidth", "funcIndex", "sequenceIndex", "varIndex"]:
+        for badKey in ["nameWidth", "valWidth", "funcIndex", "listIndex", "tupleIndex", "varIndex"]:
             if badKey in iterable:
                 del iterable[badKey]
         if "val" in iterable:
@@ -115,7 +115,7 @@ def sort_heap_json(html_json):
     """assumes input is a simplified html_json, and that the frames are sorted."""
     heap_dict = html_json["heap"]
     modified_indices = {}
-    newHeap_dict = {"func":[], "sequence":[]}
+    newHeap_dict = {"func":[], "list":[], "tuple": []}
     # TODO: since contents of loops in this one and the next are identical, consider moving to func.
     for frame in html_json["frame"]:
         variable_list = frame["var"] + [frame["return"]] if "return" in frame else frame["var"]
@@ -132,21 +132,22 @@ def sort_heap_json(html_json):
                 modified_indices[variable["val"]] = "-".join(val[:2] + [str(len(newHeap_dict[varType]))])
                 variable["val"] = modified_indices[variable["val"]]
                 newHeap_dict[varType].append(html_json["heap"][varType][oldVarIndex])
-    if "sequence" in html_json["heap"]:
-        for sequence in html_json["heap"]["sequence"]:
-            for variable in sequence["item"]:
-                if type(variable["val"]) == str and len(variable["val"]) > 0 and variable["val"][0] == "#":
-                    if variable["val"] in modified_indices:
+    for sequence_type_name in ("list", "tuple"):
+        if sequence_type_name in html_json["heap"]:
+            for sequence in html_json["heap"][sequence_type_name]:
+                for variable in sequence["item"]:
+                    if type(variable["val"]) == str and len(variable["val"]) > 0 and variable["val"][0] == "#":
+                        if variable["val"] in modified_indices:
+                            variable["val"] = modified_indices[variable["val"]]
+                            continue
+                        val = variable["val"].split("-")
+                        varType = val[1]
+                        oldVarIndex = int(val[2])
+                        if varType not in newHeap_dict:
+                            newHeap_dict[varType] = []
+                        modified_indices[variable["val"]] = "-".join(val[:2] + [str(len(newHeap_dict[varType]))])
                         variable["val"] = modified_indices[variable["val"]]
-                        continue
-                    val = variable["val"].split("-")
-                    varType = val[1]
-                    oldVarIndex = int(val[2])
-                    if varType not in newHeap_dict:
-                        newHeap_dict[varType] = []
-                    modified_indices[variable["val"]] = "-".join(val[:2] + [str(len(newHeap_dict[varType]))])
-                    variable["val"] = modified_indices[variable["val"]]
-                    newHeap_dict[varType].append(html_json["heap"][varType][oldVarIndex])
+                        newHeap_dict[varType].append(html_json["heap"][varType][oldVarIndex])
     html_json["heap"] = newHeap_dict
     return html_json
 
@@ -179,7 +180,7 @@ def grading(generated_json, student_json, partial_credit = "by_frame"):
         student_json = simplify_html_json(student_json)
         student_json = sort_frame_json(student_json)
         student_json = sort_heap_json(student_json)
-    except:
+    except Exception as e:
         return None, ""
 
     if partial_credit == "by_frame":

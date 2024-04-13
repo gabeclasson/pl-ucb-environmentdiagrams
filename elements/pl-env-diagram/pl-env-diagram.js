@@ -97,16 +97,25 @@ class Visualizer {
       let frameHeader = target.querySelector(".frameHeader").textContent
       let frameIndex = frameHeader.substring(0, frameHeader.indexOf(":"))
       this.removeFrameFromDataList(frameIndex)
+
+      target.parentElement.removeChild(target);
+      this.updateAllPointers();
     } else if (target.classList.contains("sequenceHeader")) {
       let index = parseInt(target.innerText)
       let table = target.closest("table")
-      target = table.children[1].children[index]
+      let seqContentElement = table.children[1].children[index]
+      let sequence = target.closest(".heapObject")
+
+      seqContentElement.parentElement.removeChild(seqContentElement);
+      this.updateAllPointers();
+
       this.decrement_sequence_header(table.children[0])
       this.renumber_sequence_objects(table.children[1])
+      this.fix_empty_sequence_type(sequence)
+    } else {
+      target.parentElement.removeChild(target);
+      this.updateAllPointers();
     }
-
-    target.parentElement.removeChild(target);
-    this.updateAllPointers();
   }
   
   updateAllPointers(thorough) {
@@ -297,7 +306,7 @@ class Visualizer {
     
     variable_button.className = "btn"
     variable_button.type = "button"
-    variable_button.innerHTML = "add variable";
+    variable_button.innerHTML = "Add variable";
     variable_button.onclick = ((e) => this.add_variable_listener(e))
   
   
@@ -522,9 +531,10 @@ class Visualizer {
     return container
   }
   
-  add_sequence_object() {
-    let index = this.getLastIndex("heap-sequence-")
+  add_sequence_object(typeName) {
+    let index = this.getLastIndex("heap-" + typeName + "-")
     let sequenceObj = document.createElement("table")
+    let plKey = "heap-" + typeName + "-" + index;
     sequenceObj.className = "sequenceTbl"
     let sequenceHeaderRow = document.createElement("tr")
     sequenceHeaderRow.className = "sequenceHeaderRow"
@@ -534,11 +544,10 @@ class Visualizer {
     sequenceObj.appendChild(sequenceContentsRow)
     let viz = this;
     let appendButton = this.make_sequence_add_button(function () {
-      viz.add_list_element(null, "heap-sequence-" + index, sequenceHeaderRow, sequenceContentsRow)
+      viz.add_list_element(null, plKey, sequenceHeaderRow, sequenceContentsRow)
     }, false)
     sequenceContentsRow.appendChild(appendButton)
-    let sequenceTypeInput = this.makeSelectInput("sequenceTypeInput", "heap-sequence-" + index + "-type", "sequence-types")
-    this.add_heap_object("heap-sequence-" + index, sequenceObj, sequenceTypeInput)
+    this.add_heap_object(plKey, sequenceObj, "empty " + typeName)
   }
 
   add_list_element(before, sequencePlKey, sequenceHeaderRow, sequenceContentsRow) {
@@ -557,13 +566,14 @@ class Visualizer {
       }
       this.increment_sequence_header(sequenceHeaderRow)
       let valueContainer = this.make_value_box("sequenceElementValueContainer", sequencePlKey + "-item-" + index + "-val")
-      newElement.appendChild(valueContainer)
       newElement.appendChild(this.make_sequence_add_button(function() {
         viz.add_list_element(newElement, sequencePlKey, sequenceHeaderRow, sequenceContentsRow)
       }, true))
+      newElement.appendChild(valueContainer)
       if (before) { // if we added before, all of the plKeys are messed up and need to be renumbered.
         this.renumber_sequence_objects(sequenceContentsRow)
       }
+      this.fix_empty_sequence_type(sequenceContentsRow.closest(".heapObject"))
       this.updateAllPointers();
   }
 
@@ -611,6 +621,16 @@ class Visualizer {
     obj.appendChild(this.make_remove_button(obj))
     return obj
   }
+
+  fix_empty_sequence_type(sequence) {
+    let sequenceElts = sequence.querySelector(".sequenceElt");
+    let typeLabel = sequence.querySelector(".typeLabel")
+    if (!sequenceElts) {
+      typeLabel.textContent = "empty list"
+    } else {
+      typeLabel.textContent = "list"
+    }
+  }
   
   renumber_sequence_objects(sequenceElementsRow) {
     for (let i = 0; i < sequenceElementsRow.children.length; i++) {
@@ -651,7 +671,8 @@ class Visualizer {
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keyup", (e) => this.varLengthInputListener(e)))
     this.executionVisualizer.querySelector("#addFrameButton").addEventListener("click", (e) => this.add_frame(e))
     this.executionVisualizer.querySelector("#addFuncButton").addEventListener("click", (e) => this.add_function_object(e))
-    this.executionVisualizer.querySelector("#addSequenceButton").addEventListener("click", (e) => this.add_sequence_object(e))
+    this.executionVisualizer.querySelector("#addListButton").addEventListener("click", (e) => this.add_sequence_object("list"))
+    this.executionVisualizer.querySelector("#addTupleButton").addEventListener("click", (e) => this.add_sequence_object("tuple"))
     this.updateAllInputLengthsToContent()
     this.updateAllPointers(true)
   }

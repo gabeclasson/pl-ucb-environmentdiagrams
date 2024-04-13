@@ -58,6 +58,10 @@
     display: inline-block;
     width: 70px;
     min-width: 70px;
+    height: 100%;
+    border: none;
+    border-bottom: solid black 1px;
+    background: none;
   }
 
   div.ExecutionVisualizer .sequenceElt .varLengthInput {
@@ -66,8 +70,17 @@
   }
 
   div.ExecutionVisualizer .frameParentHeader {
-    width: 70px;
-    min-width: 70px;
+    font-size: 14pt;
+    width: 90px;
+    min-width: 90px;
+    border: none;
+    height: 100%;
+    border-bottom: solid black 1px;
+    background: none;
+  }
+
+  div.ExecutionVisualizer .stackFrame label {
+    display: inline;
   }
 
   div.ExecutionVisualizer .sequenceTypeInput {
@@ -81,17 +94,25 @@
       border: none;
       padding: 0;
     /* icon is from bootstap icons, licensed under MIT license */
+    color: #333333;
     background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" class="bi bi-trash-fill" viewBox="0 0 16 16"><path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/></svg>');
     width: 16px;
     height: 16px;
     background-repeat: no-repeat;
     background-position: center center;
+    opacity: 0;
   }
   
   div.ExecutionVisualizer .removeButton:hover,
   div.ExecutionVisualizer .removeButton:focus-visible {
     background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-trash-fill" viewBox="0 0 16 16"><path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/></svg>');
     cursor: pointer;
+    opacity: 100%;
+  }
+
+  div.ExecutionVisualizer .removable:hover .removeButton
+  {
+    opacity: 100%;
   }
 
   div.ExecutionVisualizer .addButton {
@@ -596,6 +617,7 @@
     padding-right: 6px;
     padding-bottom: 4px;
     font-size: 10pt;
+    white-space: nowrap;
   }
   
   div.ExecutionVisualizer div.zombieStackFrame {
@@ -631,6 +653,7 @@
     padding-right: 8px;
     padding-top: 3px;
     padding-bottom: 3px;
+    border-bottom: 1px solid #aaaaaa;
   }
   
   div.ExecutionVisualizer td.stackFrameVar input {
@@ -652,7 +675,7 @@
   div.ExecutionVisualizer .stackFrameVarTable {
     text-align: right;
     padding-top: 3px;
-
+    border-spacing: 10px;
     white-space:nowrap;
   
     /* right-align the table */
@@ -662,7 +685,6 @@
   
     /* hack to counteract possible nasty CSS reset styles from parent divs */
     border-collapse: separate;
-    border-spacing: 2px;
   }
   
   div.ExecutionVisualizer div#heap {
@@ -973,7 +995,6 @@
     margin-top: 3px;
     margin-left: 3px;
     margin-bottom: 3px;
-    height: 100%;
     flex-grow: 1;
   }
 
@@ -985,13 +1006,21 @@
   div.ExecutionVisualizer .pointerValueButton {
     display: inline;
     background: none;
-      border: none;
+      border: 1px solid #333333;
+      color: #333333;
       padding: 0;
     /* icon is from bootstap icons, licensed under MIT license */
     width: 16px;
     height: 16px;
     background-repeat: no-repeat;
     background-position: center center;
+    background-size: contain;
+    opacity: 0;
+  }
+
+  div.ExecutionVisualizer .valueContainer:hover .pointerValueButton,
+  div.ExecutionVisualizer .valueContainer:focus-within .pointerValueButton {
+    opacity: 100%;
   }
 
   div.ExecutionVisualizer .pointerButton {
@@ -999,7 +1028,7 @@
   }
 
   div.ExecutionVisualizer .valueButton {
-    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cursor-text" viewBox="0 0 16 16"><path d="M5 2a.5.5 0 0 1 .5-.5c.862 0 1.573.287 2.06.566.174.099.321.198.44.286.119-.088.266-.187.44-.286A4.17 4.17 0 0 1 10.5 1.5a.5.5 0 0 1 0 1c-.638 0-1.177.213-1.564.434a3.5 3.5 0 0 0-.436.294V7.5H9a.5.5 0 0 1 0 1h-.5v4.272c.1.08.248.187.436.294.387.221.926.434 1.564.434a.5.5 0 0 1 0 1 4.17 4.17 0 0 1-2.06-.566A5 5 0 0 1 8 13.65a5 5 0 0 1-.44.285 4.17 4.17 0 0 1-2.06.566.5.5 0 0 1 0-1c.638 0 1.177-.213 1.564-.434.188-.107.335-.214.436-.294V8.5H7a.5.5 0 0 1 0-1h.5V3.228a3.5 3.5 0 0 0-.436-.294A3.17 3.17 0 0 0 5.5 2.5.5.5 0 0 1 5 2m2.648 10.645"/></svg>');
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-fonts" viewBox="0 0 16 16"><path d="M12.258 3h-8.51l-.083 2.46h.479c.26-1.544.758-1.783 2.693-1.845l.424-.013v7.827c0 .663-.144.82-1.3.923v.52h4.082v-.52c-1.162-.103-1.306-.26-1.306-.923V3.602l.431.013c1.934.062 2.434.301 2.693 1.846h.479z"/></svg>');
 
   }
 

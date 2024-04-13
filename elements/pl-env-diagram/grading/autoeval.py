@@ -226,7 +226,7 @@ class FrameTree():
     
     def generate_html_json(self):
         # stores values of objects.
-        self.heap_dict = {"func":[], "sequence":[]}
+        self.heap_dict = {"func":[], "list":[], "tuple":[]}
         # keeps track of how many of the same frame name exist
         self.frames_list = []
         # maps id() of objects to their index in heapdict. 
@@ -270,16 +270,18 @@ class FrameTree():
                     del variable["valWidth"]
 
                 elif type(raw_variable).__name__ == "list" or type(raw_variable).__name__ == "tuple":
+                    seq_type_name = type(raw_variable).__name__
+                    pl_key_prefix = "#heap-" + seq_type_name + "-"
                     if id(raw_variable) in mem_to_index_dict:
                         seq_index = mem_to_index_dict[id(raw_variable)]  
-                        variable["val"] = "#heap-sequence-" + str(seq_index)  
+                        variable["val"] = pl_key_prefix + str(seq_index)  
                     else:
-                        variable["val"] = "#heap-sequence-" + str(len(self.heap_dict["sequence"]))
-                        seq = {"item":[], "type":type(raw_variable).__name__, "sequenceIndex":len(self.heap_dict["sequence"])}
-                        mem_to_index_dict[id(raw_variable)] = len(self.heap_dict["sequence"])
+                        variable["val"] = pl_key_prefix + str(len(self.heap_dict[seq_type_name]))
+                        seq = {"item":[], seq_type_name + "Index":len(self.heap_dict[seq_type_name])}
+                        mem_to_index_dict[id(raw_variable)] = len(self.heap_dict[seq_type_name])
                         for i in range(len(raw_variable)):
                             seq["item"].append(handle_variable(raw_variable[i], listIndex=i))
-                        self.heap_dict["sequence"].append(seq)
+                        self.heap_dict[seq_type_name].append(seq)
                     del variable["valWidth"]
 
                 if listIndex is not None:

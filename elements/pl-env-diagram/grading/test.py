@@ -7,10 +7,10 @@ student_input = {
             {"name": "f", "parent": "f1", "funcIndex": "0", "nameWidth": 2},
             {"name": "g", "parent": "Global", "funcIndex": "1", "nameWidth": 2},
         ],
-        "sequence": [
+        "list": [
             {
                 "item": [
-                    {"val": "#heap-sequence-1", "itemIndex": "0"},
+                    {"val": "#heap-tuple-0", "itemIndex": "0"},
                     {"val": "2", "valWidth": 2, "itemIndex": "1"},
                     {"val": '"goo"', "valWidth": 6, "itemIndex": "2"},
                     {"val": "4.56", "valWidth": 5, "itemIndex": "3"},
@@ -18,19 +18,20 @@ student_input = {
                     {"val": "True", "valWidth": 5, "itemIndex": "5"},
                     {"val": "False", "valWidth": 6, "itemIndex": "6"},
                 ],
-                "type": "list",
-                "sequenceIndex": "0",
-            },
+                "listIndex": "0",
+            }
+        ],
+
+        "tuple": [
             {
                 "item": [
                     {"val": "3", "valWidth": 2, "itemIndex": "0"},
                     {"val": "2", "valWidth": 2, "itemIndex": "1"},
                     {"val": "#heap-func-1", "itemIndex": "2"},
                 ],
-                "type": "tuple",
-                "sequenceIndex": "1",
+                "tupleIndex": "0",
             },
-        ],
+        ]
     },
     "frame": [
         {
@@ -49,7 +50,7 @@ student_input = {
         {
             "var": [
                 {
-                    "val": "#heap-sequence-0",
+                    "val": "#heap-list-0",
                     "name": "g",
                     "varIndex": "0",
                     "nameWidth": 2,
@@ -80,7 +81,7 @@ student_input = {
             ],
             "name": "g",
             "parent": "Global",
-            "return": {"val": "#heap-sequence-1"},
+            "return": {"val": "#heap-tuple-0"},
             "nameWidth": 2,
             "frameIndex": "3",
         },
@@ -137,7 +138,7 @@ student_input = {
             "width": "121.60000610351562",
             "height": "126.67501926422119",
             "origin": "frame-1-var-0-val",
-            "destination": "heap-sequence-0",
+            "destination": "heap-list-0",
         },
         {
             "d": "M 0, 208.6749963760376 L 121.60000610351562 0",
@@ -147,7 +148,7 @@ student_input = {
             "width": "121.60000610351562",
             "height": "208.6749963760376",
             "origin": "frame-3-return-val",
-            "destination": "heap-sequence-1",
+            "destination": "heap-tuple-0",
         },
         {
             "d": "M 29.79998779296875, 0 L 0 179.07499599456787",
@@ -156,8 +157,8 @@ student_input = {
             "left": "297.938px",
             "width": "29.79998779296875",
             "height": "179.07499599456787",
-            "origin": "heap-sequence-0-item-0-val",
-            "destination": "heap-sequence-1",
+            "origin": "heap-list-0-item-0-val",
+            "destination": "heap-tuple-0",
         },
         {
             "d": "M 133.39996337890625, 108.56876850128174 L 0 0",
@@ -166,7 +167,7 @@ student_input = {
             "left": "297.938px",
             "width": "133.39996337890625",
             "height": "108.56876850128174",
-            "origin": "heap-sequence-1-item-2-val",
+            "origin": "heap-tuple-0-item-2-val",
             "destination": "heap-func-1",
         },
     ],
@@ -178,10 +179,10 @@ student_input_modified = {
             {"name": "g", "parent": "Global", "funcIndex": "0", "nameWidth": 2},
             {"name": "f", "parent": "f1", "funcIndex": "1", "nameWidth": 2},
         ],
-        "sequence": [
+        "list": [
             {
                 "item": [
-                    {"val": "#heap-sequence-1", "itemIndex": "0"},
+                    {"val": "#heap-tuple-0", "itemIndex": "0"},
                     {"val": "2", "valWidth": 2, "itemIndex": "1"},
                     {"val": '"goo"', "valWidth": 6, "itemIndex": "2"},
                     {"val": "4.56", "valWidth": 5, "itemIndex": "3"},
@@ -190,7 +191,7 @@ student_input_modified = {
                     {"val": "False", "valWidth": 6, "itemIndex": "6"},
                 ],
                 "type": "list",
-                "sequenceIndex": "0",
+                "listIndex": "0",
             },
             {
                 "item": [
@@ -199,7 +200,7 @@ student_input_modified = {
                     {"val": "#heap-func-0", "itemIndex": "2"},
                 ],
                 "type": "tuple",
-                "sequenceIndex": "1",
+                "listIndex": "1",
             },
         ],
     },
@@ -220,7 +221,7 @@ student_input_modified = {
         {
             "var": [
                 {
-                    "val": "#heap-sequence-0",
+                    "val": "#heap-list-0",
                     "name": "g",
                     "varIndex": "0",
                     "nameWidth": 2,
@@ -251,7 +252,7 @@ student_input_modified = {
             ],
             "name": "g",
             "parent": "Global",
-            "return": {"val": "#heap-sequence-1"},
+            "return": {"val": "#heap-tuple-0"},
             "nameWidth": 2,
             "frameIndex": "3",
         },
