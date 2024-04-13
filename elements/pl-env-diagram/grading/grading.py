@@ -38,7 +38,7 @@ def simplify_html_json(iterable, pointerlocs = {}, parentNames = {}):
             # TODO: remove this from FrameTree?
             iterable[i] = simplify_html_json(iterable[i])
     elif type(iterable) is dict:
-        for badKey in ["nameWidth", "valWidth", "funcIndex", "listIndex", "tupleIndex", "varIndex"]:
+        for badKey in ["nameWidth", "valWidth", "funcIndex", "listIndex", "tupleIndex", "varIndex", "isLastElement"]:
             if badKey in iterable:
                 del iterable[badKey]
         if "val" in iterable:

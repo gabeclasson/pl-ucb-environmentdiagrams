@@ -225,6 +225,7 @@ class FrameTree():
         del self.root.bindings["globvar"]
     
     def generate_html_json(self):
+        """Generates JSON corresponding to a frame. Data used for visualization is not included. """
         # stores values of objects.
         self.heap_dict = {"func":[], "list":[], "tuple":[]}
         # keeps track of how many of the same frame name exist
@@ -236,23 +237,17 @@ class FrameTree():
                 variable = {
                     "val": None,
                     "name": name, # none if list element
-                    "valWidth": None, # no valWidth if object 
                     "varIndex": varIndex, # none if list element
-                    "nameWidth": len(name) + 1 if name is not None else None, # none if list element
                 }
                 # TODO: i dont know whether its better to have the primitives as separate lines for readibility, or in just one line
                 if type(raw_variable).__name__ == "str":
                     variable["val"] = raw_variable.__repr__()
-                    variable["valWidth"] = len(variable["val"]) + 1
                 elif type(raw_variable).__name__ == "int":
                     variable["val"] = raw_variable.__repr__()
-                    variable["valWidth"] = len(variable["val"]) + 1
                 elif type(raw_variable).__name__ == "float":
                     variable["val"] = raw_variable.__repr__()
-                    variable["valWidth"] = len(variable["val"]) + 1
                 elif type(raw_variable).__name__ == "boolean":
                     variable["val"] = raw_variable.__repr__()
-                    variable["valWidth"] = len(variable["val"]) + 1
                 elif type(raw_variable).__name__ == "function":
                     if id(raw_variable) in mem_to_index_dict:
                         func_index = mem_to_index_dict[id(raw_variable)]  
@@ -266,8 +261,7 @@ class FrameTree():
                         self.heap_dict["func"].append({"name":raw_variable.__name__, 
                                                     "parent":parent, 
                                                     "funcIndex":len(self.heap_dict["func"]), 
-                                                    "nameWidth":len(raw_variable.__name__) + 1})
-                    del variable["valWidth"]
+                                                })
 
                 elif type(raw_variable).__name__ == "list" or type(raw_variable).__name__ == "tuple":
                     seq_type_name = type(raw_variable).__name__
@@ -282,13 +276,11 @@ class FrameTree():
                         for i in range(len(raw_variable)):
                             seq["item"].append(handle_variable(raw_variable[i], listIndex=i))
                         self.heap_dict[seq_type_name].append(seq)
-                    del variable["valWidth"]
 
                 if listIndex is not None:
-                    variable["listIndex"] = listIndex
+                    variable["itemIndex"] = listIndex
                     del variable["name"]
                     del variable["varIndex"]
-                    del variable["nameWidth"]
 
                 return variable
 
@@ -302,7 +294,6 @@ class FrameTree():
                 # keep this line?
                 newframe["return"] = None
                 # may cause formatting issues, check this
-                newframe["nameWidth"] = 2
             newframe["frameIndex"] = str(len(self.frames_list))
             self.frames_list.append(newframe)
 

@@ -101,16 +101,21 @@ class Visualizer {
 
       target.parentElement.removeChild(target);
     } else if (target.classList.contains("sequenceElt")) {
-      let sequence = target.closest(".heapObject")
+      let heapObject = target.closest(".heapObject")
+      let sequence = target.closest(".sequence")
       let sequenceContent = target.closest(".sequenceContent")
       let previousElement = target.previousElementSibling;
       let appendButton = target.querySelector(".sequenceAppendButtonContainer")
       sequenceContent.removeChild(target);
-      if (appendButton) {
-        sequenceContent.children[sequenceContent.children.length - 1].appendChild(appendButton)
+      if (appendButton) { // Only runs if we remove the last element
+        if (sequenceContent.children.length > 0) {
+          sequenceContent.children[sequenceContent.children.length - 1].appendChild(appendButton)
+        } else {
+          sequence.appendChild(appendButton)
+        }
       }
       this.renumber_sequence_objects(sequenceContent, previousElement)
-      this.fix_empty_sequence_type(sequence, sequenceContent)
+      this.fix_empty_sequence_type(heapObject, sequenceContent)
     } else {
       target.parentElement.removeChild(target);
     }
@@ -331,7 +336,7 @@ class Visualizer {
   
   add_heap_object(id, content, typeName) {
     let topLevelHeapObject = document.createElement("div")
-    topLevelHeapObject.classList.add("topLevelHeapObject", "removablePrimary")
+    topLevelHeapObject.classList.add("topLevelHeapObject", "removable", "removablePrimary")
     topLevelHeapObject.id = id;
     let heapObject = document.createElement("div")
     heapObject.className = "heapObject";
@@ -540,15 +545,29 @@ class Visualizer {
     sequenceContent.className = "sequenceContent"
     sequenceObj.appendChild(sequenceContent)
     let viz = this;
-    let appendButton = this.make_sequence_add_button(function () {
-      viz.add_list_element(null, plKey, sequenceObj, sequenceContent)
+    let appendButton = this.make_sequence_add_button(function (e) {
+      viz.sequenceAddButtonListener(e)
     }, false)
     sequenceObj.appendChild(appendButton)
     this.add_heap_object(plKey, sequenceObj, "empty " + typeName)
   }
 
-  add_list_element(before, sequencePlKey, sequence, sequenceContent) {
-      // if before is null, you are appending to the sequence. 
+  sequenceAddButtonListener(e) {
+    let button = e.target
+    let buttonContainer = button.parentElement
+    let topLevelHeapObject = button.closest(".topLevelHeapObject")
+    if (buttonContainer.classList.contains("sequenceAppendButtonContainer")) {
+      this.add_list_element(null, topLevelHeapObject)
+    } else {
+      let sequenceElt = button.closest(".sequenceElt")
+      this.add_list_element(sequenceElt, topLevelHeapObject)
+    }
+  }
+
+  add_list_element(before, topLevelHeapObject) {
+      let sequencePlKey = topLevelHeapObject.id;
+      let sequence = topLevelHeapObject.querySelector(".sequence")
+      let sequenceContent = topLevelHeapObject.querySelector(".sequenceContent")
       
       let index;
       if (before) {
@@ -563,8 +582,8 @@ class Visualizer {
       let newElement = document.createElement("div")
       newElement.id = elementId
       newElement.classList.add("sequenceElt", "removable", "removableSecondary")
-      newElement.appendChild(this.make_sequence_add_button(function() {
-        viz.add_list_element(newElement, sequencePlKey, sequence, sequenceContent)
+      newElement.appendChild(this.make_sequence_add_button(function(e) {
+        viz.sequenceAddButtonListener(e)
       }, true))
       let elementHeader = document.createElement('div')
       elementHeader.classList.add("sequenceHeader")
@@ -574,31 +593,25 @@ class Visualizer {
       elementHeader.appendChild(sequenceEltIndex)
       elementHeader.appendChild(this.make_remove_button(true))
       newElement.appendChild(elementHeader)
-      let valueContainer = this.make_value_box("sequenceElementValueContainer", elementId + "-" + index + "-val")
+      let valueContainer = this.make_value_box("sequenceElementValueContainer", elementId + "-val")
       newElement.appendChild(valueContainer)
 
       if (before) {
         sequenceContent.insertBefore(newElement, before)
         this.renumber_sequence_objects(sequenceContent, newElement)
-      } else {
+      } else { // In this case we are appending. 
         sequenceContent.appendChild(newElement)
         let appendButton = sequence.querySelector(".sequenceAppendButtonContainer")
         newElement.appendChild(appendButton)
       }
 
-      this.fix_empty_sequence_type(sequence, sequenceContent)
+      this.fix_empty_sequence_type(sequence.closest(".heapObject"), sequenceContent)
       this.updateAllPointers();
   }
 
   make_sequence_add_button(listener, isPrepend) {
       let buttonContainer = document.createElement("div")
       buttonContainer.classList.add("sequenceAddButtonContainer")
-      buttonContainer.addEventListener("mousedown", function(e) {
-        if (e.target.elemType == "button") {
-          return
-        }
-        e.stopImmediatePropagation()
-      })
       if (isPrepend) {
         buttonContainer.classList.add("sequencePrependButtonContainer")
       } else {
@@ -609,13 +622,16 @@ class Visualizer {
       return buttonContainer;
   }
 
-  fix_empty_sequence_type(sequence, sequenceContent) {
-    let heapObj = sequence.closest(".heapObject")
+  fix_empty_sequence_type(heapObj, sequenceContent) {
     let typeLabel = heapObj.querySelector(".typeLabel")
     if (sequenceContent.children.length <= 0) {
-      typeLabel.textContent = "empty list"
+      if (typeLabel.textContent.substring(0, 5) != "empty") {
+        typeLabel.textContent = "empty " + typeLabel.textContent
+      }
     } else {
-      typeLabel.textContent = "list"
+      if (typeLabel.textContent.substring(0, 5) == "empty") {
+        typeLabel.textContent = typeLabel.textContent.substring(6)
+      }
     }
   }
   
@@ -623,6 +639,9 @@ class Visualizer {
     // Renumber the sequence after the specified item
     let comps;
     let index;
+    if (sequenceContent.children.length <= 0) {
+      return
+    }
     if (!item) {
       item = sequenceContent.children[0]
       index = -1
@@ -667,7 +686,8 @@ class Visualizer {
     this.executionVisualizer.querySelectorAll('.addVarButton').forEach(x => x.addEventListener("click", (e) => this.add_variable_listener(e)))
     this.executionVisualizer.querySelectorAll('.removeButton').forEach(x => x.addEventListener("click", (e) => this.removeListener(e)))
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keydown", (e) => this.varLengthInputListener(e)))
-    this.executionVisualizer.querySelectorAll('.pointerValueButton ').forEach(x => x.addEventListener("click", (e) => this.pointerValueToggleListener(e)))
+    this.executionVisualizer.querySelectorAll('.pointerValueButton').forEach(x => x.addEventListener("click", (e) => this.pointerValueToggleListener(e)))
+    this.executionVisualizer.querySelectorAll('.sequenceAddButtonContainer > button').forEach(x => x.addEventListener("click", (e) => this.sequenceAddButtonListener(e)))
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keyup", (e) => this.varLengthInputListener(e)))
     this.executionVisualizer.querySelector("#addFrameButton").addEventListener("click", (e) => this.add_frame(e))
     this.executionVisualizer.querySelector("#addFuncButton").addEventListener("click", (e) => this.add_function_object(e))
