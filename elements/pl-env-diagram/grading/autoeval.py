@@ -19,6 +19,8 @@ class FrameTree():
         self.framecounter = 0
         # Associates a frame object to a frame node (or in the case of Global, at least for the time being, "Global" to a frame node.) This is used to identify the parent frame of the frame being added.
         self.fobj_framenode_dict = {}
+        # Associates id(function.__code__) to a list of frames that use it. This is used so that we can assign parents to frames.
+        self.codestrID_frame_dict = {}
         # Associates id(function.__code__) to a parent frame. This is used so that we can identify the parent of each function for grading.
         self.codestrID_parent_dict = {}
         # Make sure the inputted code actually runs before generating the FrameTree
@@ -46,21 +48,21 @@ class FrameTree():
             self.root = frame
         # If this frame is not the Global frame, initialize as normal.
         else: 
-            # Get the frame object of the parent frame. 
-            parent_fobj = fobj.f_back
-            # Get the Frame of the new Frame's parent. Sometimes Frames whose parent is Global were called from some other Frame, so if we can't find their caller Frame we just say that their parent is Global.
-            parent = self.fobj_framenode_dict[parent_fobj] if parent_fobj in self.fobj_framenode_dict else self.root
             # The name of the Frame is the name of the function that it is calling. 
             name = fobj.f_code.co_name
             # Create the Frame with all of this information. Name it however many frames there are. 
-            frame = Frame(name = name, parent = parent, fobj=fobj, index=str(self.framecounter))
+            frame = Frame(name = name, fobj=fobj, index=str(self.framecounter))
             # Add the new Frame to the frame object <--> Frame dict so children of this Frame are able to find it. 
             self.fobj_framenode_dict[fobj] = frame
-            # Modify parent Frame to include the new Frame as a child
-            parent.add_child(self.fobj_framenode_dict[fobj])
+        # Add your own code object to the dictionary
+        if id(fobj.f_code) in self.codestrID_frame_dict:
+            self.codestrID_frame_dict[id(fobj.f_code)].append(frame)
+        else:
+            self.codestrID_frame_dict[id(fobj.f_code)] = [frame]
         # Increment the amount of Frames. 
         self.framecounter += 1
         return frame
+    
     
     def initialize_Frames(self, codestring):
         """This function adds a new line of code initializing the FrameNode in each function definition. 
@@ -185,7 +187,7 @@ class FrameTree():
         # TODO: 'var' might also be an issue here..     
         # TODO: var names
         code_list.insert(exitline + 2, trk_var_names_dict["frame"] + '=' "self.fobj_framenode_dict[inspect.currentframe()]")
-        code_list.insert(exitline + 3, trk_var_names_dict["frame"] + ".bind(" + trk_var_names_dict["globvar"] + "," + "exclude =  ['" + trk_var_names_dict["frame"] + "', 'self', 'inspect', '__builtins__'" "]" + "," + "codestrID_parent_dict =  self.codestrID_parent_dict" + ")") 
+        code_list.insert(exitline + 3, trk_var_names_dict["frame"] + ".bind(" + trk_var_names_dict["globvar"] + "," + "exclude =  ['" + trk_var_names_dict["frame"] + "', 'self', 'inspect', '__builtins__'" "]" + "," + "codestrID_frame_dict = self.codestrID_frame_dict" + "," + "codestrID_parent_dict =  self.codestrID_parent_dict" + ")") 
 
         # get largest exitline
         while len(exitlines_pq) > 0:
@@ -207,15 +209,15 @@ class FrameTree():
             code_list.insert(i + 2, ' '*whitespace + trk_var_names_dict["bindings"] + '=' + trk_var_names_dict["locals"])
             code_list.insert(i + 3, ' '*whitespace + trk_var_names_dict["frame"] + '=' "self.fobj_framenode_dict[inspect.currentframe()]")
             # TODO: var names
-            code_list.insert(i + 4, ' '*whitespace + trk_var_names_dict["frame"] + ".bind(" + trk_var_names_dict["bindings"] + "," + "codestrID_parent_dict =  self.codestrID_parent_dict" +")")
+            code_list.insert(i + 4, ' '*whitespace + trk_var_names_dict["frame"] + ".bind(" + trk_var_names_dict["bindings"] + "," + "codestrID_frame_dict = self.codestrID_frame_dict" + "," + "codestrID_parent_dict =  self.codestrID_parent_dict" +")")
 
         # get modified code with Frame initialization
         newcode = str.join("\n", code_list)
-        #print(newcode)
         d =  {"self":self, "inspect":inspect}
         # then execute the code
         try:
             # These two 'with' statements silence the execution so no print statements are printed, which can bug out prarielearn. 
+            # TODO: REMOVE
             with open(os.devnull, 'w') as devnull:
                 with contextlib.redirect_stdout(devnull):
                     exec(newcode, d, d)
@@ -341,9 +343,21 @@ bad_code = """def h(t):
 j = [5, 9]
 total = h(j)"""
 
+scoping_code_test = """def h(t):
+  if len(t) == 1:
+    def g():
+        return t[0]
+    return g()
+  else:
+    f = t[0]
+    return f + h(t[1:])
+j = [5, 9]
+total = h(j)"""
+
 bad_answer = """{"heap":{"func":[{"name":"h","parent":"Global","funcIndex":0,"nameWidth":2}],"sequence":[{"item":[{"val":"5","valWidth":2,"listIndex":0},{"val":"9","valWidth":2,"listIndex":1}],"type":"list","sequenceIndex":0},{"item":[{"val":"9","valWidth":2,"listIndex":0}],"type":"list","sequenceIndex":1}]},"frame":[{"var":[{"val":"#heap-func-0","name":"h","varIndex":0,"nameWidth":2},{"val":"#heap-sequence-0","name":"j","varIndex":1,"nameWidth":2},{"val":"14","name":"total","valWidth":3,"varIndex":2,"nameWidth":6}],"frameIndex":"0"},{"var":[{"val":"#heap-sequence-0","name":"t","varIndex":0,"nameWidth":2}],"name":"h","parent":"Global","return":{"val":"14"},"nameWidth":2,"frameIndex":"1"},{"var":[{"val":"#heap-sequence-1","name":"t","varIndex":0,"nameWidth":2}],"name":"h","parent":"f1","return":{"val":"9"},"nameWidth":2,"frameIndex":"2"}]}"""
 
-ft = FrameTree(bad_code)
+ft = FrameTree(scoping_code_test)
 #print(ft)
 js = ft.generate_html_json()
+print(js)
 #print(js["frame"][2])

@@ -110,13 +110,14 @@ timeout = None
 generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed)
 
 # These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.  
-# COMMENT OUT THESE LINES WHEN TESTING PRARIELEARN OR IT WILL CAUSE ERRORS
+# SET THE IF STATEMENT TO FALSE BEFORE SAVING THE CODE AND TESTING ON PRARIELEARN. PRARIELEARN ERRS ON PRINT STATEMENTS.
 
-#import random
-#try:
-#   seed = random.randint(0,5000)
-#   result_code_string = generateQ(seed = seed)
-#except:
-#   print(seed)
-#print(result_code_string)
+if True:
+    import random
+    try:
+        seed = random.randint(0,5000)
+        result_code_string = generateQ(seed = seed)
+    except:
+        print(seed)
+        print(result_code_string)
 
