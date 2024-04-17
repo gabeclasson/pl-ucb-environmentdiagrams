@@ -695,11 +695,18 @@ class Visualizer {
     this.executionVisualizer.querySelector("#addTupleButton").addEventListener("click", (e) => this.add_sequence_object("tuple"))
     this.updateAllInputLengthsToContent()
     this.updateAllPointers(true)
+
+    this.executionVisualizer.addEventListener("keydown", function(e) { // Prevent enter from saving
+      if (e.key == "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
   }
 
   inactiveInitializeStuff() {
     this.updateAllInputLengthsToContent()
-    //this.updateAllPointers(true)
+    this.updateAllPointers(true)
   }
 }
 
