@@ -32,7 +32,6 @@ import question_gen
 
 allowed_names = {
     # below are our variable names
-    "f": ["f"],
     "a": [question_gen.common_function_names], 
     "b": [question_gen.lowercase_letters],
     "c": [question_gen.lowercase_letters],
@@ -117,7 +116,32 @@ if True:
     try:
         seed = random.randint(0,5000)
         result_code_string = generateQ(seed = seed)
+        print(result_code_string)
     except:
         print(seed)
         print(result_code_string)
+
+code_string = """ 
+def a(b):
+  if len(b) == 1:
+    return b[0]
+  else:
+    f = b[0]
+    def g():
+        return f + a(b[1:])
+    return g()
+c = [1, 2, 3]
+total = a(c)
+""" 
+
+allowed_names = {
+    # below are our variable names
+    "g": ["f2", "g2", "h2"],
+    "a": [question_gen.common_function_names], 
+    "b": [question_gen.lowercase_letters],
+    "c": [question_gen.lowercase_letters],
+    }
+
+#test = question_gen.testAST(code_string, allowed_names = allowed_names)
+#print(test)
 

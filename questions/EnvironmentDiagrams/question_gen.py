@@ -3,7 +3,6 @@ import re
 import signal
 import json
 
-# AST Parser will be the panacea to all issues
 
 # built-in options for generating variable and function names
 lowercase_letters = lambda : random.choice(list("qwertyuiopasdfghjklzxcvbnm"))
