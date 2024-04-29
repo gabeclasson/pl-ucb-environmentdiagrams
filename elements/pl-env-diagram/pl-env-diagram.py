@@ -10,50 +10,6 @@ import os, contextlib
 
 def generate(element_html, data):
     pass
-    
-
-env_diagram_text_pattern = re.compile(r"""
-	(?P<index>[Gg](?:lobal)?|[Ff]\d+)[\t\f ]*(?::[\t\f ]]*
-	                    (?P<name>\w+)[\t\f ]*
-	                    \[[\t\f ]*[Pp](?:arent)?[\t\f ]*=[\t\f ]*(?P<parent>[Gg](?:lobal)?|f\d+)[\t\f ]*\])?[\t\f ]*
-	                        (?P<variables>(?:$\n[\t\f ]*(?:\w+)[\t\f ]+.*\S+.*$)*
-	                        (?:$\n[\t\f ]*\#[Rr](?:eturn)?[\t\f ]+(?:.*)$)?)
-	""", re.VERBOSE | re.MULTILINE)
-
-def parse_env_diagram_from_text(text):
-    m = env_diagram_text_pattern.findall(text)
-    if not m:
-        print("Error in instructor-provided correct environment diagram.")
-    frame_lst = []
-    for index, name, parent, vars in m:
-        frame = {}
-        index = index.strip()
-        if index[0].lower() == "g" or index == "f0":
-            frame['frameIndex'] = str(0)
-        else: 
-            frame['frameIndex'] = index[1:]
-        frame['name'] = name
-        frame['parent'] = parent
-        lines = vars.split("\n")
-        frame['var'] = bindings = []
-        for j, line in enumerate(lines):
-            line = line.strip()
-            try: 
-                index = line.index(" ")
-            except:
-                continue
-            var = line[:index].strip()
-            val = line[index:].strip()
-            if var[0] == '#':
-                frame['return'] = {'val': val}
-            else: 
-                bindings.append({
-                    'varIndex': j,
-                    'name': var,
-                    'val': val
-                })
-        frame_lst.append(frame)
-    return {'frame': frame_lst}
 
 def prepare(element_html, data):
     element = lxml.html.fragment_fromstring(element_html)
@@ -197,11 +153,7 @@ def render(element_html, data):
         return chevron.render(template, rendering_data)
 
 def grade(element_html, data):
-    try:
-        score, feedback = grading.grading(data['correct_answers'], data['submitted_answers'], partial_credit="by_frame")
-    except:
-        score = None
-        feedback = ""
+    score, feedback = grading.grading(data['correct_answers'], data['submitted_answers'], partial_credit="partial")
     if score is None:
         gradable = False
     else:
