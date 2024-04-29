@@ -7,6 +7,10 @@ import networkx as nx
 def process_dict(d, keys_to_keep=[], entries_to_add = {}):
     d = {key: d[key] for key in keys_to_keep if key in d}
     d.update(entries_to_add)
+    if 'val' in d:
+        d['val'] = clean_value(d['val'])
+    if 'name' in d:
+        d['name'] = d['name'].strip()
     return d
 
 def convert_parent_index_to_pl_key(parent_index):
@@ -15,6 +19,14 @@ def convert_parent_index_to_pl_key(parent_index):
         return "frame-0"
     else: 
         return "frame-" + parent_index[1:]
+    
+def clean_value(string):
+    """Cleans a given value string."""
+    string = string.strip()
+    # This fix is dirty and should be revisited
+    if string and string[0] == "'" and string[-1] == "'":
+        string = "\"" + string[1: -1] + "\""
+    return string
     
 def add_value_node(G, node_name, value_obj, type_name):
     """Takes in a dictionary with 'val' as a key, 
