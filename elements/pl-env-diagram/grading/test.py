@@ -399,8 +399,6 @@ print(g("hello"))"""
 #print(grading.grading(ft.generate_html_json(), student_input_correct_testfunccode, partial_credit="by_frame"))
 
 if True:
-
-    if 0:
-        print("hi")
-    t =[5,9]
-    k = t[0] + [9]
+    x = 5
+    y = x.__repr__()
+    print(y.__repr__())
