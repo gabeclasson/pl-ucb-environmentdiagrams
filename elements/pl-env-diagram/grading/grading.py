@@ -2,223 +2,168 @@ try:
     import autoeval
 except:
     import grading.autoeval as autoeval
-import hashlib
-import copy
+import networkx as nx
 
-# function that will make a hash out of a frame dictionary. Assumes input is a simplified frame dictionary
-def hash_frame(frame):
-    hashSum = 0
-    for key in frame:
-        if key == "var":
-            variable_dictList = frame["var"] + [frame["return"]] if ("return" in frame and frame["return"]) else frame["var"]
-            for variable_dict in variable_dictList:
-                # by summing all of the elements of the variable list, it makes it such that order doesn't matter.
-                for key2 in variable_dict:
-                    # we need to hash differently if the value is a pointer, since things can be arbitrarily ordered in the heap.
-                    if type(variable_dict[key2]) == str and len(variable_dict[key2]) > 0 and variable_dict[key2][0] == "#":
-                        modified_str = "".join(variable_dict[key2].split('-')[:-1])
-                        hashSum += int(hashlib.sha256((key2 + modified_str).encode('utf-8')).hexdigest(), 16)
-                    else:
-                        hashSum += int(hashlib.sha256((key2 + str(variable_dict[key2])).encode('utf-8')).hexdigest(), 16)
-        # we can skip "return" since we already handled it in the above part
-        elif key == "return":
-            continue
-        # since parent names might be different accross student v. machine frame_lists, we ignore this entry.
-        elif key == "parent" or key == "frameIndex":
-            continue
-        else:
-            hashSum += int(hashlib.sha256((key + str(frame[key])).encode('utf-8')).hexdigest(), 16)
-    return hashSum % 1073741824 
+def process_dict(d, keys_to_keep=[], entries_to_add = {}):
+    d = {key: d[key] for key in keys_to_keep if key in d}
+    d.update(entries_to_add)
+    if 'val' in d:
+        d['val'] = clean_value(d['val'])
+    if 'name' in d:
+        d['name'] = d['name'].strip()
+    return d
 
-# recursive function that removes unnecessary variables for comparison.
-# it can optionally replace a dictionary of pointer locations and parent names with other names
-def simplify_html_json(iterable, pointerlocs = {}, parentNames = {}):
-    if type(iterable) is list:
-        for i in range(len(iterable)):
-            # TODO: remove this from FrameTree?
-            iterable[i] = simplify_html_json(iterable[i])
-    elif type(iterable) is dict:
-        for badKey in ["nameWidth", "valWidth", "funcIndex", "listIndex", "tupleIndex", "varIndex", "isLastElement"]:
-            if badKey in iterable:
-                del iterable[badKey]
-        if "val" in iterable:
-            if iterable["val"] in pointerlocs:
-                iterable["val"] = pointerlocs[iterable["val"]]
-            # reformats strings so they all have the same enclosing marks
-            if len(iterable["val"]) > 0 and iterable["val"][0] == '"' and iterable["val"][-1] == '"':
-                iterable["val"] = "'" + iterable["val"][1:-1] + "'"
-        if "frameIndex" in iterable:
-            if "var" not in iterable:
-                iterable["var"] = []
-            if iterable["frameIndex"] in parentNames:
-                iterable["frameIndex"] = parentNames[iterable["frameIndex"]]
-        if "parent" in iterable and iterable["parent"] and iterable["parent"][1:] in parentNames:
-            iterable["parent"] = parentNames[iterable["parent"]] #####
-        for key in iterable:
-            iterable[key] = simplify_html_json(iterable[key])
-    return iterable
+def convert_parent_index_to_pl_key(parent_index):
+    parent_index = parent_index.lower().strip()
+    if parent_index[0] == "g":
+        return "frame-0"
+    else: 
+        return "frame-" + parent_index[1:]
+    
+def clean_value(string):
+    """Cleans a given value string."""
+    string = string.strip()
+    # This fix is dirty and should be revisited
+    if string and string[0] == "'" and string[-1] == "'":
+        string = "\"" + string[1: -1] + "\""
+    return string
+    
+def add_value_node(G, node_name, value_obj, type_name):
+    """Takes in a dictionary with 'val' as a key, 
+    and possibly also 'name' as a key. Adds to graph G
+    a node representing the value/binding, and """
+    
+    if value_obj['val'] and value_obj['val'][0] == "#":
+        G.add_node(node_name, **process_dict(value_obj, ['name'], {'type': type_name}))
+        G.add_edge(node_name, value_obj['val'][1:], type=type_name + "_pointer") # point to heap object
+    else: 
+        G.add_node(node_name, **process_dict(value_obj, ['name', 'val'], {'type': type_name}))
 
-def sort_frame_json(html_json): 
-    """
-    outputs the new html_json
-    - expects an input of a simplified frame_list. Also replaces frameIndex with a hash.
-    - modifies heap_dict by replacing frame names with the new frame names created via the sorting.
-    """
-    frame_list = html_json["frame"]
-    frame_list[0]["depth"] = 0
-    frame_list[0]["parent"] = ""
-    frame_list[0]["name"] = "Global"
-    parentpq = [("Global", 0)]
-    # insert depth into each frame. additionally create a "depths_list" which at each index i has all of the frames at depth i.
-    depth_lists = [[frame_list[0]]]
-    while len(parentpq) > 0:
-        currParent = parentpq[0][0]
-        currDepth = parentpq[0][1] + 1
-        for frame in frame_list:
-            if type(frame["frameIndex"]) != str:
-                frame["frameIndex"] = str(frame["frameIndex"])
-            if "parent" in frame and (frame["parent"] == currParent) or (frame["parent"] == "f" + currParent):
-                frame["depth"] = str(currDepth)
-                parentpq.append(("f" + str(frame["frameIndex"]), currDepth))
-                if len(depth_lists) <= currDepth:
-                    depth_lists.append([frame])
-                else:
-                    depth_lists[currDepth].append(frame)
-        parentpq = parentpq[1:]
-    # clear frame_list, and create new one in order of depth, which are then sorted deterministically by the frame hash.
-    # additionally modifies frameIndex and parent on all frames (except Global) to correspond with the ordering.
-    modified_indices = {"Global":"Global"}
-    frame_list = []
-    for depth_frames in depth_lists:
-        depth_frames = sorted(depth_frames, key = hash_frame)
-        for i in range(len(depth_frames)):
-            # sort variables in list in order of hash (NOTE: this might make the diagram non-sensical, but this is just for grading so this should be fine)
-            depth_frames[i]["var"] = sorted(depth_frames[i]["var"], key = lambda x: int(hashlib.sha256((x["name"] + x["val"]).encode('utf-8')).hexdigest(), 16))
-            if depth_frames[i]["frameIndex"] == "0":
-                continue
-           ### parent = modified_indices[depth_frames[i]["parent"]]
-            depth_frames[i]["parent"] = modified_indices[depth_frames[i]["parent"]] ###"Global" if parent == "Global" else "f" + parent
-            oldIndex = depth_frames[i]["frameIndex"]
-            depth_frames[i]["frameIndex"] = depth_frames[i]["depth"] + ":" + str(i)
-            modified_indices["f" + oldIndex] = depth_frames[i]["frameIndex"]
-        frame_list += depth_frames
-    html_json["frame"] = frame_list
-    # modifies functions in the heap in correspondence to the new frame names
-    heap_dict = html_json["heap"]
-    if "func" in heap_dict:
-        for i in range(len(heap_dict["func"])):
-            heap_dict["func"][i]["parent"] = modified_indices[heap_dict["func"][i]["parent"]]
-        html_json["heap"] = heap_dict
-    return html_json
+def make_graph(env_diagram_obj):
+    G = nx.DiGraph()
+    for frame in env_diagram_obj['frame']:
+        this_frame_key = "frame-" + frame['frameIndex']
+        G.add_node(this_frame_key, **process_dict(frame, ["name"], {'type': 'frame'}))
+        if "parent" in frame:
+            G.add_edge(convert_parent_index_to_pl_key(frame['parent']), this_frame_key, type="frame")
+        if "var" in frame:
+            for binding in frame['var']:
+                binding_key = this_frame_key + "-var-" + str(binding['varIndex'])
+                add_value_node(G, binding_key, binding, "binding")
+    if 'heap' in env_diagram_obj: 
+        for sequence_type_name in ("list", "tuple"):
+            if sequence_type_name in env_diagram_obj["heap"]:
+                for sequence in env_diagram_obj["heap"][sequence_type_name]:
+                    sequence_key = "heap-" + sequence_type_name + "-" + str(sequence[sequence_type_name + "Index"])
+                    G.add_node(sequence_key, type="sequence", sequence_type=sequence_type_name)
+                    prev_node_name = sequence_key
+                    if "item" in sequence: 
+                        for item in sequence["item"]:
+                            item_key = sequence_key + "-item-" + str(item['itemIndex'])
+                            add_value_node(G, item_key, item, "item")
+                            G.add_edge(prev_node_name, item_key, type="sequence")
+                            prev_node_name = item_key
+                    G.add_node(sequence_key + "-end", type="sequence_end", sequence_type=sequence_type_name)
+                    G.add_edge(prev_node_name, sequence_key + "-end", type="sequence")
+        if 'func' in env_diagram_obj['heap']:
+            for function in env_diagram_obj['heap']['func']:
+                function_key = 'heap-func-' + str(function['funcIndex'])
+                G.add_node(function_key, **process_dict(function, ['name'], {'type': 'func'}))
+                if "parent" in function:
+                    G.add_edge(function_key, convert_parent_index_to_pl_key(function['parent']), type="func")
+    return G
 
-def sort_heap_json(html_json):
-    """assumes input is a simplified html_json, and that the frames are sorted."""
-    heap_dict = html_json["heap"]
-    modified_indices = {}
-    newHeap_dict = {"func":[], "list":[], "tuple": []}
-    # TODO: since contents of loops in this one and the next are identical, consider moving to func.
-    for frame in html_json["frame"]:
-        variable_list = frame["var"] + [frame["return"]] if "return" in frame else frame["var"]
-        for variable in variable_list:
-            if type(variable["val"]) == str and len(variable["val"]) > 0 and variable["val"][0] == "#":
-                if variable["val"] in modified_indices:
-                    variable["val"] = modified_indices[variable["val"]]
-                    continue
-                val = variable["val"].split("-")
-                varType = val[1]
-                oldVarIndex = int(val[2])
-                if varType not in newHeap_dict:
-                    newHeap_dict[varType] = []
-                modified_indices[variable["val"]] = "-".join(val[:2] + [str(len(newHeap_dict[varType]))])
-                variable["val"] = modified_indices[variable["val"]]
-                newHeap_dict[varType].append(html_json["heap"][varType][oldVarIndex])
-    for sequence_type_name in ("list", "tuple"):
-        if sequence_type_name in html_json["heap"]:
-            for sequence in html_json["heap"][sequence_type_name]:
-                for variable in sequence["item"]:
-                    if type(variable["val"]) == str and len(variable["val"]) > 0 and variable["val"][0] == "#":
-                        if variable["val"] in modified_indices:
-                            variable["val"] = modified_indices[variable["val"]]
-                            continue
-                        val = variable["val"].split("-")
-                        varType = val[1]
-                        oldVarIndex = int(val[2])
-                        if varType not in newHeap_dict:
-                            newHeap_dict[varType] = []
-                        modified_indices[variable["val"]] = "-".join(val[:2] + [str(len(newHeap_dict[varType]))])
-                        variable["val"] = modified_indices[variable["val"]]
-                        newHeap_dict[varType].append(html_json["heap"][varType][oldVarIndex])
-    html_json["heap"] = newHeap_dict
-    return html_json
+def round_grade(raw, num_steps):
+    # Takes in a raw score and rounds it to the specified number of gradations.
+    stepped = int(raw * num_steps) / num_steps
+    return min(max(0, round(stepped, 3)), 1)
 
-def grading(generated_json, student_json, partial_credit = "by_frame"):
+def grading(generated_json, student_json, granularity = 1):
     """ returns score and feedback (if applicable) for the student.
     
-    options for partial_credit include:
-    "none" --> no partial credit
-    "by_frame" --> gets credit per correct frame, and lose points for extra frames. if heap is not identical, loses 1/3 credit."""
-    score, feedback = check_validity(student_json)
-    if feedback:
-        return score, feedback
-    student_json = copy.deepcopy(student_json)
-    orig = generated_json
-    generated_json = copy.deepcopy(generated_json)
-    try:
-        if student_json["frame"][0]["parent"] is None:
-            del student_json["frame"][0]["parent"]
-            del student_json["frame"][0]["name"]
-    except:
-        pass
-    if "heap" not in generated_json:
-        generated_json["heap"] = {}
-    if "heap" not in student_json:
-        student_json["heap"] = {}
-    generated_json = simplify_html_json(generated_json)
-    generated_json = sort_frame_json(generated_json)
-    generated_json = sort_heap_json(generated_json)
-    try:
-        student_json = simplify_html_json(student_json)
-        student_json = sort_frame_json(student_json)
-        student_json = sort_heap_json(student_json)
-    except Exception as e:
-        return None, ""
+    To allow for partial credit, set the granularity to an integer greater than 1. 
+    For example, if the granularity is set to 20, the student will
+    earn a score to the nearest increment of 5% (1/20). 
+    To disable partial credit, set the granularity to 1. 
+    """
+    correct_graph = make_graph(generated_json)
+    submitted_graph = make_graph(student_json)
 
-    if partial_credit == "by_frame":
-        feedback = []
-        if generated_json["heap"] == student_json["heap"] and generated_json["frame"] == student_json["frame"]:
-            return 1, ""
-        # if not perfect, continue to partial credit. 
-        score = 0
-        framesListG = [hash_frame(frame) for frame in generated_json["frame"]]
-        framesListS = [hash_frame(frame) for frame in student_json["frame"]]
-        student_frame_count = len(framesListS)
-        # if student provided less frames than exist, remove the amount of extras divided by their total framecount from the score.
-        score -= max(0, len(framesListG) - len(framesListS))/len(framesListG)
-        for frame in framesListG:
-            # TEMPORARY SOLUTION
-            findex = framesListG.index(frame)
-            if frame in framesListS:
-                score += 1/student_frame_count
-                framesListS.remove(frame)
-            elif findex < student_frame_count:
-                feedback.append(("Global" if findex == 0 else "f" + str(findex)) + " is incorrect.\n")
-        # for frame in generated_json["frame"]:
-            #if hash_frame(frame) in framesListS:
-            #    score += 1/len(student_json["frame"])
-            #    framesListS.remove(frame)
-            #else:
-            #    feedback.append("Frame "+ frame["name"])
-        # return the score with an upper bound of 1 and a lower bound of 0 (just to avoid rounding issues).
-        return max(0, min(1, score)), "\n".join(feedback) #+ "\n student" + student_json["frame"].__repr__() + " \n gen" + generated_json["frame"].__repr__() + "\n orig" + orig["frame"].__repr__()
+    if granularity > 1:
+        def node_subst_cost(node1, node2):
+            """Returns a number between 0 and 1"""
+            if node1['type'] != node2['type']:
+                return max_dist + 1
+            type_name = node1['type']
+            if type_name == "binding":
+                if 'val' in node1 and 'val' in node2: 
+                    return (node1['name'] != node2['name']) + (node1['val'] != node2['val'])
+                else: 
+                    return int(node1['name'] != node2['name'])
+                # Note that in the case where there is one node that has a pointer and one node
+                # that does not have a pointer, the error will be handled by the edge function.
+            else:
+                return int(node1 != node2)
+            
+        def node_del_cost(node):
+            type_name = node['type']
+            if type_name == "binding":
+                return 2
+            elif type_name == "sequence" or type_name == "sequence_end":
+                return 0.5
+            else: 
+                return 1
+            
+        node_ins_cost = node_del_cost
+            
+        def edge_subst_cost(edge1, edge2):
+            if edge1['type'] != edge2['type']:
+                return max_dist + 1
+            
+            return int(edge2 != edge1)
+        
+        def edge_del_cost(edge):
+            type_name = edge['type']
+            if type_name == 'sequence':
+                return 1/6
+            else: 
+                return 0.5
+            
+        edge_ins_cost = edge_del_cost
 
-    elif partial_credit == "none":
-        return generated_json["heap"] == student_json["heap"] and generated_json["frame"] == student_json["frame"], ""
-    
-    raise Exception("valid partial credit setting not provided")
+        max_dist = 0
+        for _, data in correct_graph.nodes(data=True):
+            max_dist += node_ins_cost(data)
+        for _, _, data in correct_graph.edges(data=True):
+            max_dist += edge_ins_cost(data)
 
-def check_validity(student_input):
-    return 1, None
+        max_dist -= 1 # Account for the fact that global frame is given
+            
+        dist = nx.graph_edit_distance(
+            submitted_graph, 
+            correct_graph,
+            node_subst_cost=node_subst_cost,
+            node_del_cost=node_del_cost,
+            node_ins_cost=node_ins_cost,
+            edge_subst_cost=edge_subst_cost,
+            edge_del_cost=edge_del_cost,
+            edge_ins_cost=edge_ins_cost,
+            upper_bound=max_dist
+        )
+        if dist is None: 
+            return 0, ""
+        return round_grade((max_dist - dist)/max_dist, granularity), ""
+    elif granularity > 0.5:
+        is_isomorphic = nx.is_isomorphic(submitted_graph, correct_graph, node_match=lambda x, y: x == y)
+        return int(is_isomorphic), ""
+
 
 def get_correctAnswerJSON(codestring):
     return autoeval.FrameTree(codestring).generate_html_json()
 
+# import json
+# corr = """{"heap":{"func":[{"name":"h","parent":"Global","funcIndex":0,"nameWidth":2}],"list":[{"item":[{"val":"-7","valWidth":3,"itemIndex":0},{"val":"'dan garcia'","valWidth":13,"itemIndex":1},{"val":"9","valWidth":2,"itemIndex":2,"isLastElement":true}],"listIndex":0}],"tuple":[]},"frame":[{"var":[{"val":"-7","name":"b","valWidth":3,"varIndex":0,"nameWidth":2},{"val":"'dan garcia'","name":"w","valWidth":13,"varIndex":1,"nameWidth":2},{"val":"#heap-func-0","name":"h","varIndex":2,"nameWidth":2},{"val":"#heap-list-0","name":"c","varIndex":3,"nameWidth":2}],"frameIndex":"0"},{"var":[{"val":"9","name":"c","valWidth":2,"varIndex":0,"nameWidth":2}],"name":"h","parent":"Global","return":{"val":"#heap-list-0"},"nameWidth":2,"frameIndex":"1"}]}"""
+# test = """{"heap":{"func":[{"name":"h","parent":"Global","funcIndex":0,"nameWidth":2}],"list":[{"item":[{"val":"-7","valWidth":3,"itemIndex":0},{"val":"'dan garcia'","valWidth":13,"itemIndex":1},{"val":"9","valWidth":2,"itemIndex":2,"isLastElement":true}],"listIndex":0}],"tuple":[]},"frame":[{"var":[{"val":"-7","name":"b","valWidth":3,"varIndex":0,"nameWidth":2},{"val":"'dan garcia'","name":"w","valWidth":13,"varIndex":1,"nameWidth":2},{"val":"#heap-func-0","name":"h","varIndex":2,"nameWidth":2},{"val":"#heap-list-0","name":"c","varIndex":3,"nameWidth":2}],"frameIndex":"0"},{"var":[{"val":"10","name":"c","valWidth":2,"varIndex":0,"nameWidth":2}],"name":"h","parent":"Global","return":{"val":"#heap-list-0"},"nameWidth":2,"frameIndex":"1"}]}"""
+# corr = json.loads(corr)
+# test = json.loads(test)
+# print(grading(corr, test, granularity=15))
