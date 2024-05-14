@@ -1,10 +1,12 @@
-# Reproducibility Document
+# Welcome to PL Environment Diagrams!
 
 ## TO FIX:
 * env-diagram-dev/ directory:  This folder is miscellaneous and will not be in our final product (please feel free to ignore). 
 * rename environmentdiagrams1
 * rename Qgen_simple.py
 * environmentdiagrams3
+* add photos
+* delete extra files
 
 ## Getting Started
 To get the PrairieLearn Environment Diagram environment locally, please clone the main branch of this Github repository.
