@@ -4,6 +4,7 @@
 * env-diagram-dev/ directory:  This folder is miscellaneous and will not be in our final product (please feel free to ignore). 
 * rename environmentdiagrams1
 * rename Qgen_simple.py
+* environmentdiagrams3
 
 ## Getting Started
 To get the PrairieLearn Environment Diagram environment locally, please clone the main branch of this Github repository.
@@ -54,79 +55,70 @@ This is where the bulk of your work goes. Let’s walk through each section. We 
 
 <em>Optional: You can change the name of this file to more accurately reflect what kind of question you are writing, but will need to modify the import statement in server.py to match the new file name.</em>
 
-code_string
+#### `code_string`
 Place your base code string here. This would be effectively the same as the code that you’d provide to students if there was only one version of the problem.
+
 Ensure to keep new lines and indentations like a normal Python interpreter would require!
 
 
-code_string = """ 
+`code_string = """ 
 a = 5
 b = "hello"
 def f(c):
     return [a, b, c]
 c = f(b)
-""" 
+"""`
 
-For example, here a = 5 would be noted as line 0.
+For example, here `a = 5` would be noted as line 0.
 
-allowed_names
-This is a dictionary that maps names from your code_string to a list of possible replacements. For example, I could set the variable ”a” within EnvironmentDiagrams1 to be [question_gen.lowercase_letters, “Gabe”, “Noemi”, “Ashley”], which would, at question generation, replace the variable ”a” with the chosen lowercase_letter from the lambda in  question_gen.py or one of the strings ”Gabe”, ”Noemi”, or ”Ashley”. You can replace any and all variable and function names. Hint: as a reminder, you can look back at question_gen.py for all built-in randomness types for help!
+#### `allowed_names`
+This is a dictionary that maps names from your code_string to a list of possible replacements. For example, I could set the variable `a` within `EnvironmentDiagrams1` to be `[question_gen.lowercase_letters, “Gabe”, “Noemi”, “Ashley”]`, which would, at question generation, replace the variable `a` with the chosen `lowercase_letter` from the lambda in  `question_gen.py` or one of the strings `”Gabe”`, `”Noemi”`, or `”Ashley”`. You can replace any and all variable and function names. Hint: as a reminder, you can look back at` question_gen.py` for all built-in randomness types for help!
 
 
 Try to randomize at least two variables/functions in your authoring!
 
-allowed_assignment_values
-Now that we’ve randomized all possible functions and variable names, let’s also randomize assignments. What allowed_assignment_values does is allow you to re-assign the right hand side of an assignment statement (after a =). Thus, allowed_assignment_values maps the line that the assignment occurs on (0-indexed) to a list of all the possible replacements as strings. 
+#### `allowed_assignment_values`
+Now that we’ve randomized all possible functions and variable names, let’s also randomize assignments. What `allowed_assignment_values` does is allow you to re-assign the right hand side of an assignment statement (after `a =`). Thus, `allowed_assignment_values` maps the line that the assignment occurs on (0-indexed) to a list of all the possible replacements as strings. 
 
 Note: Our 0-indexing includes comments and starts at the first non-whitespace line.
 
-For instance, looking at EnvironmentDiagrams1’s allowed_assignment_values,
-Line 0 (a = 5): We can replace the 5 (the right side of the =) with a question_gen.small_int
-Line 1 (b = “hello”): We can replace the ”hello”(the right side of the =) with "bok", "cvijet", "morski pas", "dan garcia", "armando fox", or "narges norouzi"
-Line 4 (c = f(b)):  We can replace the f(b) (the right side of the =) with f(b), f(a), f(9), or f('plavu')
+For instance, looking at `EnvironmentDiagrams1`’s `allowed_assignment_values`,
+* Line 0 (`a = 5`): We can replace the 5 (the right side of the =) with a `question_gen.small_int`
+* Line 1 (`b = “hello”`): We can replace the `”hello”` (the right side of the =) with `"bok"`, `"cvijet"`, `"morski pas"`, `"dan garcia"`, `"armando fox"`, or `"narges norouzi"`
+* Line 4 (`c = f(b)`):  We can replace the `f(b)` (the right side of the =) with `f(b)`, `f(a)`, `f(9)`, or `f('plavu')`
 
-Note: Every possible option is wrapped in quotes within the list. For example, for the replacement of line 4, we have the list [“f(b)”, “f(a)”, “f(9)”, “f(‘plavu’)”].
+Note: Every possible option is wrapped in quotes within the list. For example, for the replacement of line 4, we have the list `[“f(b)”, “f(a)”, “f(9)”, “f(‘plavu’)”]`.
 
-Be careful doing this since this can change the way your entire question works! For instance, EnvironmentDiagrams3 works by summing up all the elements of a list. If we modify the assignment statement on line 4 (remember that it’s 0-indexed) to be f = “a” or f = 1, this is removing a core portion of what the question is testing (or could break the question).
-
-
-special_replacements
-Special replacements are for modifications to the code that are not covered by allowed_names or allowed_assignment_values. Say for example you want your autogenerated code to include any of the following pieces of code on line 5:
-c += [5] OR   c.append(a) OR   c.extend([5]) OR   a = c[0] + 9
-In this case, the above replacements would not be sufficient to allow for all of these options. But with special_replacements I can make this modification. special_replacements works through simple regex replacement, so you will have to provide a substring to replace as a key and a list of possible replacements (as with previous replacement types, functions provided will be used to generate the replacement, lists will be used to randomly select, and strings will directly be used as a replacement.) If you want to use special replacements, you should include a sequence of characters that is unlikely to appear naturally in code in your codestring so that intentional parts of the code do not accidentally get overwritten. special_replacements is performed before name or value replacement, so don’t worry about other modifications to code when deciding a key. 
-
-If I were to implement the above example, I would modify my codestring to look like something like this:
+**Be careful** doing this: changing variable assignments can change the way your entire question works! For instance, imagine a question which contains a list, `plist`. If we modify an assignment statement for `plist` which sets it to be a list to be `plist = “a”` or `plist = 1`, this is removing a core portion of what the question is testing or could break the question if future lines of code depend on `plist` being iterable.
 
 
+### `special_replacements`
+Special replacements are for modifications to the code that are not covered by `allowed_names` or `allowed_assignment_values`. Say for example you want your autogenerated code to include any of the following pieces of code on line 5:
+`c += [5]` OR   `c.append(a)` OR   `c.extend([5])` OR   `a = c[0] + 9`
+In this case, the above replacements would not be sufficient to allow for all of these options. But with `special_replacements` we can make this modification. `special_replacements` works through simple regex replacement, so you will have to provide a substring to replace as a key and a list of possible replacements (as with previous replacement types, functions provided will be used to generate the replacement, lists will be used to randomly select, and strings will directly be used as a replacement.) If you want to use special_replacements, you should include a sequence of characters that is unlikely to appear naturally in code in your codestring so that intentional parts of the code do not accidentally get overwritten. `special_replacements` is performed before name or value replacement, so don’t worry about other modifications to code when deciding a key. 
 
-code_string = """ 
+If I were to implement the above example usecase of `special_replacements`, I would modify my codestring to look like something like this:
+
+`code_string = """ 
 a = 5
 b = "hello"
 def f(c):
     return [a, b, c]
 c = f(b)
 $%^1^%$
-""" 
+""" `
 
 And then set:
 
+`special_replacements = {"$%^1^%$": ["c += [5]", "c.append(a)",   "c.extend([5])","a = c[0] + 9]"]}`
 
-
-special_replacements = {"$%^1^%$": ["c += [5]", "c.append(a)",   "c.extend([5])","a = c[0] + 9]"]}
-
-
-
-
-
-
-
-Task Checklist
-Cloned the Environment Diagram repository (found here).
-Built the environment and loaded from disk (via localhost:3000).
-Navigated the codebase (and played around/had fun!)
-Duplicated a base question (we recommend the EnvironmentDiagrams1 question)
-Edited the info.json and Qgen_basic.py files as discussed above.
-Solved your own question! :))
+## Task Checklist
+- [ ] Cloned the Environment Diagram repository (found here).
+- [ ] Built the environment and loaded from disk (via localhost:3000).
+- [ ] Navigated the codebase (and played around/had fun!)
+- [ ] Duplicated a base question (we recommend the EnvironmentDiagrams1 question)
+- [ ] Edited the info.json and Qgen_basic.py files as discussed above.
+- [ ] Solved your own question! :)
 
 Congrats, you have successfully authored a PrairieLearn Environment Diagram question! Give yourself a pat on the back.
 
