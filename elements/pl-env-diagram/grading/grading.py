@@ -160,10 +160,3 @@ def grading(generated_json, student_json, granularity = 1):
 
 def get_correctAnswerJSON(codestring):
     return autoeval.FrameTree(codestring).generate_html_json()
-
-# import json
-# corr = """{"heap":{"func":[{"name":"h","parent":"Global","funcIndex":0,"nameWidth":2}],"list":[{"item":[{"val":"-7","valWidth":3,"itemIndex":0},{"val":"'dan garcia'","valWidth":13,"itemIndex":1},{"val":"9","valWidth":2,"itemIndex":2,"isLastElement":true}],"listIndex":0}],"tuple":[]},"frame":[{"var":[{"val":"-7","name":"b","valWidth":3,"varIndex":0,"nameWidth":2},{"val":"'dan garcia'","name":"w","valWidth":13,"varIndex":1,"nameWidth":2},{"val":"#heap-func-0","name":"h","varIndex":2,"nameWidth":2},{"val":"#heap-list-0","name":"c","varIndex":3,"nameWidth":2}],"frameIndex":"0"},{"var":[{"val":"9","name":"c","valWidth":2,"varIndex":0,"nameWidth":2}],"name":"h","parent":"Global","return":{"val":"#heap-list-0"},"nameWidth":2,"frameIndex":"1"}]}"""
-# test = """{"heap":{"func":[{"name":"h","parent":"Global","funcIndex":0,"nameWidth":2}],"list":[{"item":[{"val":"-7","valWidth":3,"itemIndex":0},{"val":"'dan garcia'","valWidth":13,"itemIndex":1},{"val":"9","valWidth":2,"itemIndex":2,"isLastElement":true}],"listIndex":0}],"tuple":[]},"frame":[{"var":[{"val":"-7","name":"b","valWidth":3,"varIndex":0,"nameWidth":2},{"val":"'dan garcia'","name":"w","valWidth":13,"varIndex":1,"nameWidth":2},{"val":"#heap-func-0","name":"h","varIndex":2,"nameWidth":2},{"val":"#heap-list-0","name":"c","varIndex":3,"nameWidth":2}],"frameIndex":"0"},{"var":[{"val":"10","name":"c","valWidth":2,"varIndex":0,"nameWidth":2}],"name":"h","parent":"Global","return":{"val":"#heap-list-0"},"nameWidth":2,"frameIndex":"1"}]}"""
-# corr = json.loads(corr)
-# test = json.loads(test)
-# print(grading(corr, test, granularity=15))
