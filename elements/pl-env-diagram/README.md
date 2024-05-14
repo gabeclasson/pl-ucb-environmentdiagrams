@@ -67,7 +67,8 @@ b = "hello"
 def f(c):
     return [a, b, c]
 c = f(b)
-"""```
+"""
+```
 
 For example, here `a = 5` would be noted as line 0.
 
@@ -106,7 +107,8 @@ def f(c):
     return [a, b, c]
 c = f(b)
 $%^1^%$
-""" ```
+"""
+```
 
 And then set:
 
