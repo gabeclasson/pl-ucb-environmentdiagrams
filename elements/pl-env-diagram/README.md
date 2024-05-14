@@ -1,11 +1,5 @@
 # Welcome to PL Environment Diagrams!
 
-## TO FIX:
-* rename Qgen_simple.py
-* environmentdiagrams3
-* add photos
-* delete extra files
-
 ## Getting Started
 To get the PrairieLearn Environment Diagram environment locally, please clone the main branch of this Github repository.
 https://github.com/gabeclasson/pl-ucb-environmentdiagrams 
@@ -22,7 +16,7 @@ Included here are grading files and the javascript that makes the Environment Di
 
 
 ## Questions/ Directory
-For each question directory, there will be five files that you’ll need to create. Let’s walk through an example within the `env_diagram_simple_list` question (the first one within the `questions/` directory). The `env_diagram_simple_list` question has a `info.json`, `Qgen_simple.py`, `question_gen.py`, `question.html`, and `server.py` file. For the purposes of authoring a question, feel free to copy and paste the exact files over to create a new question. We’ll walk through the steps to modify these to create your own new questions!
+For each question directory, there will be five files that you’ll need to create. Let’s walk through an example within the `env_diagram_simple_list` question (the first one within the `questions/` directory). The `env_diagram_simple_list` question has a `info.json`, `Qgen_customization.py`, `question_gen.py`, `question.html`, and `server.py` file. For the purposes of authoring a question, feel free to copy and paste the exact files over to create a new question. We’ll walk through the steps to modify these to create your own new questions!
 
 ### `info.json`
 **You will need to edit this file.**
@@ -49,7 +43,7 @@ You’ll notice in this file that we include a codestring: this is the generated
 **You will not need to edit this file.**
 Much like a lot of PrairieLearn `server.py` files, this does the work of actually pulling from the question generating packages to generate the Environment Diagram question. There is no customization here for you to do.
 
-### `Qgen_simple.py`
+### `Qgen_customization.py`
 **You will need to edit this file.**
 This is where the bulk of your work goes. Let’s walk through each section. We also have documentation within the sections themselves.
 
@@ -134,3 +128,6 @@ Congrats, you have successfully authored a PrairieLearn Environment Diagram ques
 
 Sincerely,
 Gabe, Noemi, and Ashley
+
+Here is a link to our group's [slidedeck](https://docs.google.com/presentation/d/19rc5fJAJRxillrcni0znCmDxr3anMgpYXDJRbrAilK8/edit#slide=id.g26d92601f0e_2_0), which we used to take notes and track progress throughout the semester.
+
