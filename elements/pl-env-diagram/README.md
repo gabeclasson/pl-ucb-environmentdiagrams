@@ -61,13 +61,13 @@ Place your base code string here. This would be effectively the same as the code
 Ensure to keep new lines and indentations like a normal Python interpreter would require!
 
 
-`code_string = """ 
+```code_string = """ 
 a = 5
 b = "hello"
 def f(c):
     return [a, b, c]
 c = f(b)
-"""`
+"""```
 
 For example, here `a = 5` would be noted as line 0.
 
@@ -99,14 +99,14 @@ In this case, the above replacements would not be sufficient to allow for all of
 
 If I were to implement the above example usecase of `special_replacements`, I would modify my codestring to look like something like this:
 
-`code_string = """ 
+```code_string = """ 
 a = 5
 b = "hello"
 def f(c):
     return [a, b, c]
 c = f(b)
 $%^1^%$
-""" `
+""" ```
 
 And then set:
 
