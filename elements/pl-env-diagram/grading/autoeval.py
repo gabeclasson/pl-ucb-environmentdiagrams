@@ -7,7 +7,7 @@ except:
 import os, contextlib
 import re
 
-# i refer to this as "framenode" in some places. this is to avoid ambiguity. we can discuss changing the name.
+# i refer to this as "framenode" in some places. this is to avoid ambiguity. 
 Frame = frame.Frame
 
 class FrameTree():
@@ -85,33 +85,7 @@ class FrameTree():
         ### i = 1
         # Keep track of how much the current line has been shifted by (for example, if I am on what was line 2 but I added 3 lines before it, the shift is 3)
         shift = 0
-        while i < len(code_list):
-            # If the line contains a lambda, rewrite it as a def statement on the previous line so we can do frame tracking. 
-            # THIS CURRENTLY DOES NOT WORK. REGEX IS DIFFICULT. 
-            if False and re.search("lambda.*:", code_list[i]):
-                def_line = i
-                # Get size of whitespace before the line of code
-                whitespace = len(code_list[i]) - len(code_list[i].lstrip(' '))
-                # Split the line into parts that are not lambda statements and parts that are. 
-                # More comprehensive search that includes = with lambda arguments: ((?![^\w\d_])lambda(\s*(((\s+(_?\w)+(\w*\d*_*)*(\s*=\s*(([^:,\n()\[\]{}\"'])*(\[.*\])*\9*(\{.*\})*\9*(\(.*\))*\9*(\".*\")*\9*('.*')*\7*)*)?\s*),\s*))*((_?\w)+(\w*\d*_*)*(\s*=\s*(([^:,\n()\[\]{}\"'])*(\[.*\])*\9*(\{.*\})*\9*(\(.*\))*\9*(\".*\")*\9*('.*')*\9*)*)?\s*)?)(:)(([^:,\n()\[\]{}\"'])*(\[.*\])*\28*(\{.*\})*\28*(\(.*\))*\28*(\".*\")*\28*('.*')*\28*)*)
-                split_line = re.split("((?![^\w\d_])lambda(\s*(((\s+(_?\w)+(\w*\d*_*)*\s*),\s*)*(\s+(_?\w)+(\w*\d*_*)*\s*)\s+)?(:)(([^:,\n()\[\]{}\"'])*(\[.*\])*\13*(\{.*\})*\13*(\(.*\))*\13*(\".*\")*\13*('.*')*\13*)*))", code_list[i])
-                # Technically its possible that there are multiple lambda statements on one line, so we have to loop through. 
-                for k in range(len(split_line)):
-                    if re.search("((?![^\w\d_])lambda(\s*(((\s+(_?\w)+(\w*\d*_*)*\s*),\s*)*(\s+(_?\w)+(\w*\d*_*)*\s*)\s+)?(:)))", split_line[k]):
-                        # Split it to get the left side (lambda (args):) and the right side.
-                        split_line[k] = re.split("((?![^\w\d_])lambda(\s*(((\s+(_?\w)+(\w*\d*_*)*\s*),\s*)*(\s+(_?\w)+(\w*\d*_*)*\s*)\s+)?(:)))", split_line[k])
-                        print("test", split_line[k], re.split("(lambda)", split_line[k][0]))
-                        arguments = re.split("(lambda)", split_line[k][0])[1][:-1]
-                        code = split_line[k][1]
-                        code_list.insert(i, ' '*whitespace + "def ghjk__lambda__line_" + str(i - shift) + "(" + arguments + "):") 
-                        code_list.insert(i + 1, ' '*whitespace + '  ' + "return " + code)
-                        i += 2
-                        shift += 2
-                        # Redefine this part of the line to be the name of the function lambda has been replaced with.
-                        split_line[k] = "ghjk__lambda__line_" + str(i - shift)
-                code_list[i] = "".join(split_line)   
-                # set i back to def_line so it can get modified in the next if statement. 
-                i = def_line
+        while i < len(code_list):     
             if code_list[i].lstrip(' ')[:4] == "def ":
                 def_line = i
                 # find the indent size after the def
