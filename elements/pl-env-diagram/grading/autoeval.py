@@ -150,11 +150,6 @@ class FrameTree():
         # TODO: fix to include correct variable names
         # set variable names for things we are using to store tracking info. (TODO: CHNAGE NAME GLOBVAR)
         trk_var_names_dict = {"self":"self", "frame":"frame","return":"returnval", "locals":"locs", "globvar":"globvar", "bindings":"bindings", "fobj_framenode_dict":"fobj_framenode_dict"}
-        # if any of the initial variable names are in the local variable scope, we need to change the offending name(s). TODO: check if this is true once impl is done?
-        #for k in range(len(trk_var_names)):
-        #    while trk_var_names[k] in exitlines_to_fobj_dict[exitline].f_code.co_varnames:
-        #        trk_var_names[k] = "h_"+str(hash(trk_var_names[k] + str(exitline)))[:7]
-
         # handle the Global frame
         exitline = heapq._heappop_max(exitlines_pq)
         code_list.insert(exitline + 1, trk_var_names_dict["globvar"] + '=' "locals()")
@@ -298,31 +293,3 @@ class FrameTree():
                 framepq.append(child)
             framepq = framepq[1:]
         return "\n".join(line_list)
-
-bad_code = """def h(t):
-  if len(t) == 1:
-    return t[0]
-  else:
-    f = t[0]
-    return f + h(t[1:])
-j = [5, 9]
-total = h(j)"""
-
-scoping_code_test = """def h(t):
-  if len(t) == 1:
-    def g():
-        return t[0]
-    return g()
-  else:
-    f = t[0]
-    return f + h(t[1:])
-j = [5, 9]
-total = h(j)"""
-
-bad_answer = """{"heap":{"func":[{"name":"h","parent":"Global","funcIndex":0,"nameWidth":2}],"sequence":[{"item":[{"val":"5","valWidth":2,"listIndex":0},{"val":"9","valWidth":2,"listIndex":1}],"type":"list","sequenceIndex":0},{"item":[{"val":"9","valWidth":2,"listIndex":0}],"type":"list","sequenceIndex":1}]},"frame":[{"var":[{"val":"#heap-func-0","name":"h","varIndex":0,"nameWidth":2},{"val":"#heap-sequence-0","name":"j","varIndex":1,"nameWidth":2},{"val":"14","name":"total","valWidth":3,"varIndex":2,"nameWidth":6}],"frameIndex":"0"},{"var":[{"val":"#heap-sequence-0","name":"t","varIndex":0,"nameWidth":2}],"name":"h","parent":"Global","return":{"val":"14"},"nameWidth":2,"frameIndex":"1"},{"var":[{"val":"#heap-sequence-1","name":"t","varIndex":0,"nameWidth":2}],"name":"h","parent":"f1","return":{"val":"9"},"nameWidth":2,"frameIndex":"2"}]}"""
-
-ft = FrameTree(scoping_code_test)
-#print(ft)
-js = ft.generate_html_json()
-print(js)
-#print(js["frame"][2])
