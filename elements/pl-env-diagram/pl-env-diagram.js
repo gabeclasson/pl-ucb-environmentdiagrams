@@ -387,6 +387,9 @@ class Visualizer {
   }
   
   pointerValueToggleListener(e) {
+    if (this.preventClicks) {
+      return
+    }
     let button = e.target
     if (button.classList.contains("pointerButton")) {
       this.handlePointerClick(button);
@@ -396,6 +399,7 @@ class Visualizer {
   }
   
   handlePointerClick(button) {
+    this.preventClicks = true;
     let valueContainer = button.closest(".valueContainer")
     let valueInput = valueContainer.children[0]
     let pointer = this.makePointer("pointer-" + valueInput.id)
@@ -410,8 +414,6 @@ class Visualizer {
     this.executionVisualizer.addEventListener("mousemove", mouseListener)
     this.vizLayoutTd.appendChild(pointer)
 
-    let preventClicks = true;
-
     function mouseupListener(mouseupEvent) {
       mouseupEvent.stopPropagation()
       if (mouseupEvent.target == button) { // do nothing
@@ -423,7 +425,7 @@ class Visualizer {
       }
       viz.executionVisualizer.removeEventListener("mousemove", mouseListener)
       
-      preventClicks = false;
+      viz.preventClicks = false;
       let targetObj = mouseupEvent.target.closest(".topLevelHeapObject")
       if (targetObj == null) {
         viz.vizLayoutTd.removeChild(pointer)
@@ -436,7 +438,7 @@ class Visualizer {
 
     function clickListener(e) {
       e.stopPropagation();
-      if (!preventClicks) {
+      if (!viz.preventClicks) {
         viz.executionVisualizer.removeEventListener("click", clickListener)
       }
     }
@@ -446,7 +448,8 @@ class Visualizer {
       once: true
     })
 
-    this.executionVisualizer.addEventListener("click", clickListener)
+    this.executionVisualizer.addEventListener("click", clickListener, {
+      capture: true})
   }
   
   handleValueClick(button) {
