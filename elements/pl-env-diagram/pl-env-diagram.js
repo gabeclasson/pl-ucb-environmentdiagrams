@@ -187,7 +187,7 @@ class Visualizer {
     let pointerButton = document.createElement("button");
     pointerButton.className = "btn pointerButton pointerValueButton"
     pointerButton.type = "button"
-    pointerButton.addEventListener("mousedown", (e) => this.pointerValueToggleListener(e))
+    pointerButton.addEventListener("pointerdown", (e) => this.pointerValueToggleListener(e))
     container.appendChild(pointerButton)
     return container
   }
@@ -360,15 +360,15 @@ class Visualizer {
     this.updateAllPointers();
 
     function handleClick(e) {
-      heapObject.addEventListener("mousemove", handleMouseMove)
+      heapObject.addEventListener("pointermove", handlepointermove)
     }
 
-    function handleMouseMove(e) {
+    function handlepointermove(e) {
 
     }
 
-    function handleMouseUp(e) {
-      heapObject.removeEventListener("mousemove", handleMouseMove)
+    function handlePointerup(e) {
+      heapObject.removeEventListener("pointermove", handlepointermove)
     }
 
   }
@@ -410,22 +410,22 @@ class Visualizer {
       let coords = viz.relative_coordinates_obj_to_pointer(valueInput, mouseEvent)
       viz.update_arrow_svg(coords, pointer)
     }
-    this.executionVisualizer.addEventListener("mousemove", mouseListener)
+    this.executionVisualizer.addEventListener("pointermove", mouseListener)
     this.vizLayoutTd.appendChild(pointer)
 
-    function mouseupListener(mouseupEvent) {
-      mouseupEvent.stopPropagation()
-      if (mouseupEvent.target == button) { // do nothing
-        viz.executionVisualizer.addEventListener("mouseup", mouseupListener, {
+    function pointerupListener(pointerupEvent) {
+      pointerupEvent.stopPropagation()
+      if (pointerupEvent.target == button) { // do nothing
+        viz.executionVisualizer.addEventListener("pointerup", pointerupListener, {
           capture: true,
           once: true
         })
         return
       }
-      viz.executionVisualizer.removeEventListener("mousemove", mouseListener)
+      viz.executionVisualizer.removeEventListener("pointermove", mouseListener)
       
       viz.preventClicks = false;
-      let targetObj = mouseupEvent.target.closest(".topLevelHeapObject")
+      let targetObj = pointerupEvent.target.closest(".topLevelHeapObject")
       if (targetObj == null) {
         viz.vizLayoutTd.removeChild(pointer)
         return 
@@ -443,7 +443,7 @@ class Visualizer {
       }
     }
 
-    this.executionVisualizer.addEventListener("mouseup", mouseupListener, {
+    this.executionVisualizer.addEventListener("pointerup", pointerupListener, {
       capture: true,
       once: true
     })
@@ -723,7 +723,7 @@ class Visualizer {
     this.executionVisualizer.querySelectorAll('.addVarButton').forEach(x => x.addEventListener("click", (e) => this.add_variable_listener(e)))
     this.executionVisualizer.querySelectorAll('.removeButton').forEach(x => x.addEventListener("click", (e) => this.removeListener(e)))
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keydown", (e) => this.varLengthInputListener(e)))
-    this.executionVisualizer.querySelectorAll('.pointerValueButton').forEach(x => x.addEventListener("mousedown", (e) => this.pointerValueToggleListener(e)))
+    this.executionVisualizer.querySelectorAll('.pointerValueButton').forEach(x => x.addEventListener("pointerdown", (e) => this.pointerValueToggleListener(e)))
     this.executionVisualizer.querySelectorAll('.sequenceAddButtonContainer > button').forEach(x => x.addEventListener("click", (e) => this.sequenceAddButtonListener(e)))
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keyup", (e) => this.varLengthInputListener(e)))
     this.executionVisualizer.querySelector("#addFrameButton").addEventListener("click", (e) => this.add_frame(e))
