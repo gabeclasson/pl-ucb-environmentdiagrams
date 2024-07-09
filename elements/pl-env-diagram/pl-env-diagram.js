@@ -22,7 +22,6 @@ class Visualizer {
   }
 
   add_variable_listener(e) {
-    console.log(e)
     let button = e.target
     let frame = button.closest(".stackFrame")
     let variables = frame.querySelector(".stackFrameVarTable").children[0]
@@ -432,6 +431,7 @@ class Visualizer {
         return 
       } 
       pointer.classList.add( "pointerTo-" + targetObj.id)
+      pointer.classList.remove("pointerArrowTentative")
       
       viz.updatePointer(pointer, true)
     }
@@ -439,7 +439,7 @@ class Visualizer {
     function clickListener(e) {
       e.stopPropagation();
       if (!viz.preventClicks) {
-        viz.executionVisualizer.removeEventListener("click", clickListener)
+        viz.executionVisualizer.removeEventListener("click", clickListener, {capture: true})
       }
     }
 
@@ -560,7 +560,7 @@ class Visualizer {
   
   makePointer(id) {
     let container = document.createElement("div")
-    container.className = "pointerArrow"
+    container.className = "pointerArrow pointerArrowTentative"
     container.id = id;
     let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
     svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")

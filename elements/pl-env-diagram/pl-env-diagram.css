@@ -976,6 +976,10 @@
     fill: none;
   }
 
+  div.ExecutionVisualizer .pointerArrowTentative path {
+    stroke-dasharray: 2px;
+  }
+
   div.ExecutionVisualizer .pointerArrow input {
     display: none;
   }
