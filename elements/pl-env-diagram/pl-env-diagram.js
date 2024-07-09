@@ -409,25 +409,13 @@ class Visualizer {
   handlePointerPointerdown(button) {
     let valueContainer = button.closest(".valueContainer")
     let valueInput = valueContainer.children[0]
-    let pointer = this.makePointer("pointer-" + valueInput.id)
-    let svg = pointer.children[0]
+    let pointer = this.makePointer("pointer-" + valueInput.id, valueInput, button)
     let viz = this
-    this.update_arrow_svg(this.relative_coordinates_obj_to_obj(valueInput, button), pointer)
-
-    this.mouseListener = function(mouseEvent) {
-      let coords = viz.relative_coordinates_obj_to_pointer(valueInput, mouseEvent)
-      viz.update_arrow_svg(coords, pointer)
-    }
-
-    this.executionVisualizer.addEventListener("pointermove", this.mouseListener)
-    
-    this.vizLayoutTd.appendChild(pointer)
 
     function pointerupListener(e) {
       if (e.target == button) { // do nothing
         return;
       }
-      viz.executionVisualizer.removeEventListener("pointermove", viz.mouseListener)
       viz.finalizePointer(e, pointer)
     }
 
@@ -446,15 +434,16 @@ class Visualizer {
     button.disabled = true;
     let valueContainer = button.closest(".valueContainer")
     let valueInput = valueContainer.children[0]
-    let pointer = this.executionVisualizer.querySelector("#pointer-" + valueInput.id)
-    let svg = pointer.children[0]
-    let viz = this
-
-    console.log("Handling initial pointer click.")
-
+    let pointer;
+    let viz = this;
+    try {
+      pointer = this.executionVisualizer.querySelector("#pointer-" + valueInput.id)
+    } catch (error) {
+      pointer = this.makePointer("pointer-" + valueInput.id, valueInput, button)
+    }
+    
     function clickListener(clickEvent) {
       clickEvent.stopPropagation()
-      viz.executionVisualizer.removeEventListener("pointermove", viz.mouseListener)
       viz.finalizePointer(clickEvent, pointer)
       button.disabled = false;
     }
@@ -475,6 +464,7 @@ class Visualizer {
     pointer.classList.remove("pointerArrowTentative")
     
     this.updatePointer(pointer, true)
+    this.executionVisualizer.removeEventListener("pointermove", this.mouseListener)
   }
 
   handleValueClick(button) {
@@ -583,7 +573,7 @@ class Visualizer {
     }
   }
   
-  makePointer(id) {
+  makePointer(id, origin, initialDestination) {
     let container = document.createElement("div")
     container.className = "pointerArrow pointerArrowTentative"
     container.id = id;
@@ -595,6 +585,19 @@ class Visualizer {
     container.appendChild(svg)
     let input = this.makeInput("pointerInput", id + "-input")
     container.appendChild(input)
+
+    let viz = this;
+    this.update_arrow_svg(this.relative_coordinates_obj_to_obj(origin, initialDestination), container)
+
+    this.mouseListener = function(mouseEvent) {
+      let coords = viz.relative_coordinates_obj_to_pointer(origin, mouseEvent)
+      viz.update_arrow_svg(coords, container)
+    }
+
+    this.executionVisualizer.addEventListener("pointermove", this.mouseListener)
+    
+    this.vizLayoutTd.appendChild(container)
+
     return container
   }
   
