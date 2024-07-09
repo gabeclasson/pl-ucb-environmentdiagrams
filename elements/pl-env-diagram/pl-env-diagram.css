@@ -697,10 +697,10 @@
     padding-right: 8px;
     padding-top: 10px;
     padding-bottom: 10px;
-    /*
-    border: 2px dotted white;
-    border-color: white;
-    */
+    background: aliceblue;
+    border: 1px black solid;
+    border-radius: 3px;
+    width: min-content;
     z-index: 20;
   }
   

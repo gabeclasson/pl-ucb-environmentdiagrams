@@ -188,7 +188,7 @@ class Visualizer {
     let pointerButton = document.createElement("button");
     pointerButton.className = "btn pointerButton pointerValueButton"
     pointerButton.type = "button"
-    pointerButton.addEventListener("click", (e) => this.pointerValueToggleListener(e))
+    pointerButton.addEventListener("mousedown", (e) => this.pointerValueToggleListener(e))
     container.appendChild(pointerButton)
     return container
   }
@@ -359,6 +359,19 @@ class Visualizer {
     heapObject.appendChild(content)
     this.executionVisualizer.querySelector("#heap").appendChild(topLevelHeapObject);
     this.updateAllPointers();
+
+    function handleClick(e) {
+      heapObject.addEventListener("mousemove", handleMouseMove)
+    }
+
+    function handleMouseMove(e) {
+
+    }
+
+    function handleMouseUp(e) {
+      heapObject.removeEventListener("mousemove", handleMouseMove)
+    }
+
   }
   
   add_function_object() {
@@ -396,11 +409,22 @@ class Visualizer {
     }
     this.executionVisualizer.addEventListener("mousemove", mouseListener)
     this.vizLayoutTd.appendChild(pointer)
-  
-    function clickListener(clickEvent) {
-      clickEvent.stopPropagation()
+
+    let preventClicks = true;
+
+    function mouseupListener(mouseupEvent) {
+      mouseupEvent.stopPropagation()
+      if (mouseupEvent.target == button) { // do nothing
+        viz.executionVisualizer.addEventListener("mouseup", mouseupListener, {
+          capture: true,
+          once: true
+        })
+        return
+      }
       viz.executionVisualizer.removeEventListener("mousemove", mouseListener)
-      let targetObj = clickEvent.target.closest(".topLevelHeapObject")
+      
+      preventClicks = false;
+      let targetObj = mouseupEvent.target.closest(".topLevelHeapObject")
       if (targetObj == null) {
         viz.vizLayoutTd.removeChild(pointer)
         return 
@@ -409,10 +433,20 @@ class Visualizer {
       
       viz.updatePointer(pointer, true)
     }
-    this.executionVisualizer.addEventListener("click", clickListener, {
+
+    function clickListener(e) {
+      e.stopPropagation();
+      if (!preventClicks) {
+        viz.executionVisualizer.removeEventListener("click", clickListener)
+      }
+    }
+
+    this.executionVisualizer.addEventListener("mouseup", mouseupListener, {
       capture: true,
       once: true
     })
+
+    this.executionVisualizer.addEventListener("click", clickListener)
   }
   
   handleValueClick(button) {
@@ -686,7 +720,7 @@ class Visualizer {
     this.executionVisualizer.querySelectorAll('.addVarButton').forEach(x => x.addEventListener("click", (e) => this.add_variable_listener(e)))
     this.executionVisualizer.querySelectorAll('.removeButton').forEach(x => x.addEventListener("click", (e) => this.removeListener(e)))
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keydown", (e) => this.varLengthInputListener(e)))
-    this.executionVisualizer.querySelectorAll('.pointerValueButton').forEach(x => x.addEventListener("click", (e) => this.pointerValueToggleListener(e)))
+    this.executionVisualizer.querySelectorAll('.pointerValueButton').forEach(x => x.addEventListener("mousedown", (e) => this.pointerValueToggleListener(e)))
     this.executionVisualizer.querySelectorAll('.sequenceAddButtonContainer > button').forEach(x => x.addEventListener("click", (e) => this.sequenceAddButtonListener(e)))
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keyup", (e) => this.varLengthInputListener(e)))
     this.executionVisualizer.querySelector("#addFrameButton").addEventListener("click", (e) => this.add_frame(e))
