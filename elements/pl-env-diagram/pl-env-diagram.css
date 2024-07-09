@@ -1044,6 +1044,12 @@
     display: none;
   }
 
+  @media (hover: none) {
+    div.ExecutionVisualizer button .btn {
+      opacity: 1 !important;
+    }
+  }
+
   .ExecutionVisualizerInactive input {
     pointer-events:none !important;
   }

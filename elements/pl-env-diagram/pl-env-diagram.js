@@ -187,6 +187,7 @@ class Visualizer {
     let pointerButton = document.createElement("button");
     pointerButton.className = "btn pointerButton pointerValueButton"
     pointerButton.type = "button"
+    pointerButton.addEventListener("click", (e) => this.pointerValueToggleListener(e))
     pointerButton.addEventListener("pointerdown", (e) => this.pointerValueToggleListener(e))
     container.appendChild(pointerButton)
     return container
@@ -386,72 +387,96 @@ class Visualizer {
   }
   
   pointerValueToggleListener(e) {
-    if (this.preventClicks) {
-      return
-    }
+    console.log(e)
     let button = e.target
+    
     if (button.classList.contains("pointerButton")) {
-      this.handlePointerClick(button);
+      if (button.disabled) {
+        return;
+      }
+      if (e.type == "click") {
+        this.handleInitialPointerClick(button);
+      } else if (e.type == "pointerdown") {
+        this.handlePointerPointerdown(button);
+      }
     } else {
-      this.handleValueClick(button);
+      if (e.type == "click") {
+        this.handleValueClick(button);
+      } 
     }
   }
-  
-  handlePointerClick(button) {
-    this.preventClicks = true;
+
+  handlePointerPointerdown(button) {
     let valueContainer = button.closest(".valueContainer")
     let valueInput = valueContainer.children[0]
     let pointer = this.makePointer("pointer-" + valueInput.id)
     let svg = pointer.children[0]
     let viz = this
     this.update_arrow_svg(this.relative_coordinates_obj_to_obj(valueInput, button), pointer)
-  
-    function mouseListener(mouseEvent) {
+
+    this.mouseListener = function(mouseEvent) {
       let coords = viz.relative_coordinates_obj_to_pointer(valueInput, mouseEvent)
       viz.update_arrow_svg(coords, pointer)
     }
-    this.executionVisualizer.addEventListener("pointermove", mouseListener)
+
+    this.executionVisualizer.addEventListener("pointermove", this.mouseListener)
+    
     this.vizLayoutTd.appendChild(pointer)
 
-    function pointerupListener(pointerupEvent) {
-      pointerupEvent.stopPropagation()
-      if (pointerupEvent.target == button) { // do nothing
-        viz.executionVisualizer.addEventListener("pointerup", pointerupListener, {
-          capture: true,
-          once: true
-        })
-        return
+    function pointerupListener(e) {
+      if (e.target == button) { // do nothing
+        return;
       }
-      viz.executionVisualizer.removeEventListener("pointermove", mouseListener)
-      
-      viz.preventClicks = false;
-      let targetObj = pointerupEvent.target.closest(".topLevelHeapObject")
-      if (targetObj == null) {
-        viz.vizLayoutTd.removeChild(pointer)
-        return 
-      } 
-      pointer.classList.add( "pointerTo-" + targetObj.id)
-      pointer.classList.remove("pointerArrowTentative")
-      
-      viz.updatePointer(pointer, true)
-    }
-
-    function clickListener(e) {
-      e.stopPropagation();
-      if (!viz.preventClicks) {
-        viz.executionVisualizer.removeEventListener("click", clickListener, {capture: true})
-      }
+      viz.executionVisualizer.removeEventListener("pointermove", viz.mouseListener)
+      viz.finalizePointer(e, pointer)
     }
 
     this.executionVisualizer.addEventListener("pointerup", pointerupListener, {
       capture: true,
       once: true
     })
-
-    this.executionVisualizer.addEventListener("click", clickListener, {
-      capture: true})
+    this.executionVisualizer.addEventListener("pointercancel", pointerupListener, {
+      capture: true,
+      once: true
+    })
   }
   
+  handleInitialPointerClick(button) {
+    
+    button.disabled = true;
+    let valueContainer = button.closest(".valueContainer")
+    let valueInput = valueContainer.children[0]
+    let pointer = this.executionVisualizer.querySelector("#pointer-" + valueInput.id)
+    let svg = pointer.children[0]
+    let viz = this
+
+    console.log("Handling initial pointer click.")
+
+    function clickListener(clickEvent) {
+      clickEvent.stopPropagation()
+      viz.executionVisualizer.removeEventListener("pointermove", viz.mouseListener)
+      viz.finalizePointer(clickEvent, pointer)
+      button.disabled = false;
+    }
+
+    this.executionVisualizer.addEventListener("click", clickListener, {
+      capture: true,
+      once: true
+    })
+  }
+
+  finalizePointer(clickEvent, pointer) {
+    let targetObj = clickEvent.target.closest(".topLevelHeapObject")
+    if (targetObj == null) {
+      this.vizLayoutTd.removeChild(pointer)
+      return 
+    } 
+    pointer.classList.add("pointerTo-" + targetObj.id)
+    pointer.classList.remove("pointerArrowTentative")
+    
+    this.updatePointer(pointer, true)
+  }
+
   handleValueClick(button) {
     let valueContainer = button.closest(".valueContainer")
     let valueInput = valueContainer.children[0]
@@ -723,6 +748,7 @@ class Visualizer {
     this.executionVisualizer.querySelectorAll('.addVarButton').forEach(x => x.addEventListener("click", (e) => this.add_variable_listener(e)))
     this.executionVisualizer.querySelectorAll('.removeButton').forEach(x => x.addEventListener("click", (e) => this.removeListener(e)))
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keydown", (e) => this.varLengthInputListener(e)))
+    this.executionVisualizer.querySelectorAll('.pointerValueButton').forEach(x => x.addEventListener("click", (e) => this.pointerValueToggleListener(e)))
     this.executionVisualizer.querySelectorAll('.pointerValueButton').forEach(x => x.addEventListener("pointerdown", (e) => this.pointerValueToggleListener(e)))
     this.executionVisualizer.querySelectorAll('.sequenceAddButtonContainer > button').forEach(x => x.addEventListener("click", (e) => this.sequenceAddButtonListener(e)))
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keyup", (e) => this.varLengthInputListener(e)))
