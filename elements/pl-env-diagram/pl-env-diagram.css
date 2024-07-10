@@ -702,6 +702,7 @@
     border-radius: 3px;
     width: min-content;
     z-index: 20;
+    position: relative;
   }
   
   div.ExecutionVisualizer div.heapObject {
@@ -984,6 +985,17 @@
     display: none;
   }
 
+  div.ExecutionVisualizer .connectButton {
+    position: absolute;
+    background: transparent;
+    border-radius: 10em;
+    width: 5px;
+    height: 5px;
+    padding: 0;
+    left: 2px;
+    top: calc(50% - 3px);
+    display: none;
+  }
   div.ExecutionVisualizer .valueContainer {
     display: flex;
     flex-direction: row;

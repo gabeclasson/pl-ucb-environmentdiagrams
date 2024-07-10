@@ -338,6 +338,13 @@ class Visualizer {
     let topLevelHeapObject = document.createElement("div")
     topLevelHeapObject.classList.add("topLevelHeapObject", "removable", "removablePrimary")
     topLevelHeapObject.id = id;
+
+    let hiddenConnectButton = document.createElement("button")
+    hiddenConnectButton.className = "btn connectButton"
+    hiddenConnectButton.type = "button"
+    hiddenConnectButton.ariaLabel = "Connect pointer to object"
+    topLevelHeapObject.appendChild(hiddenConnectButton)
+
     let heapObject = document.createElement("div")
     heapObject.className = "heapObject";
     topLevelHeapObject.appendChild(heapObject)
@@ -391,9 +398,6 @@ class Visualizer {
     let button = e.target
     
     if (button.classList.contains("pointerButton")) {
-      if (button.disabled) {
-        return;
-      }
       if (e.type == "click") {
         this.handleInitialPointerClick(button);
       } else if (e.type == "pointerdown") {
@@ -417,6 +421,14 @@ class Visualizer {
         return;
       }
       viz.finalizePointer(e, pointer)
+      viz.executionVisualizer.removeEventListener("pointerup", pointerupListener, {
+        capture: true,
+        once: true
+      })
+      viz.executionVisualizer.removeEventListener("pointercancel", pointerupListener, {
+        capture: true,
+        once: true
+      })
     }
 
     this.executionVisualizer.addEventListener("pointerup", pointerupListener, {
@@ -430,22 +442,37 @@ class Visualizer {
   }
   
   handleInitialPointerClick(button) {
-    
-    button.disabled = true;
     let valueContainer = button.closest(".valueContainer")
     let valueInput = valueContainer.children[0]
     let pointer;
     let viz = this;
-    try {
-      pointer = this.executionVisualizer.querySelector("#pointer-" + valueInput.id)
-    } catch (error) {
+    pointer = this.executionVisualizer.querySelector("#pointer-" + valueInput.id)
+    if (pointer == null) {
       pointer = this.makePointer("pointer-" + valueInput.id, valueInput, button)
     }
-    
+
+    button.classList.add("valueButton")
+    button.classList.remove("pointerButton")
+
+    this.executionVisualizer.querySelectorAll("input,button:not(.connectButton)").forEach(function (elem) {
+      elem.disabled = true
+    })
+
+    this.executionVisualizer.querySelectorAll(".connectButton").forEach(function (elem) {
+      elem.style.display = "block"
+    })
+
     function clickListener(clickEvent) {
       clickEvent.stopPropagation()
       viz.finalizePointer(clickEvent, pointer)
-      button.disabled = false;
+
+      viz.executionVisualizer.querySelectorAll("input,button:not(.connectButton)").forEach(function (elem) {
+        elem.disabled = false
+      })
+  
+      viz.executionVisualizer.querySelectorAll(".connectButton").forEach(function (elem) {
+        elem.style.display = "none"
+      })
     }
 
     this.executionVisualizer.addEventListener("click", clickListener, {
@@ -457,7 +484,7 @@ class Visualizer {
   finalizePointer(clickEvent, pointer) {
     let targetObj = clickEvent.target.closest(".topLevelHeapObject")
     if (targetObj == null) {
-      this.vizLayoutTd.removeChild(pointer)
+      this.removePointer(pointer)
       return 
     } 
     pointer.classList.add("pointerTo-" + targetObj.id)
