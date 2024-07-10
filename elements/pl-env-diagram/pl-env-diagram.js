@@ -455,11 +455,21 @@ class Visualizer {
     button.classList.remove("pointerButton")
 
     this.executionVisualizer.querySelectorAll("input,button:not(.connectButton)").forEach(function (elem) {
-      elem.disabled = true
+      if (elem != button) {
+        elem.disabled = true
+      }
     })
+
+    function focusListener(e) {
+      let target = e.target;
+      let heapObject = target.closest(".topLevelHeapObject");
+      let coords = viz.relative_coordinates_obj_to_obj(valueInput, heapObject)
+      viz.update_arrow_svg(coords, pointer)
+    }
 
     this.executionVisualizer.querySelectorAll(".connectButton").forEach(function (elem) {
       elem.style.display = "block"
+      elem.addEventListener("focus", focusListener)
     })
 
     function clickListener(clickEvent) {
@@ -472,6 +482,7 @@ class Visualizer {
   
       viz.executionVisualizer.querySelectorAll(".connectButton").forEach(function (elem) {
         elem.style.display = "none"
+        elem.removeEventListener("focus", focusListener)
       })
     }
 
@@ -479,6 +490,8 @@ class Visualizer {
       capture: true,
       once: true
     })
+
+    
   }
 
   finalizePointer(clickEvent, pointer) {
