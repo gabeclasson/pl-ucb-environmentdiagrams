@@ -35,7 +35,7 @@ def add_value_node(G, node_name, value_obj, type_name):
     
     if value_obj['val'] and value_obj['val'][0] == "#":
         G.add_node(node_name, **process_dict(value_obj, ['name'], {'type': type_name}))
-        G.add_edge(node_name, value_obj['val'][1:], type=type_name + "_pointer") # point to heap object
+        G.add_edge(node_name, value_obj['val'][1:], type="pointer") # point to heap object
     else: 
         G.add_node(node_name, **process_dict(value_obj, ['name', 'val'], {'type': type_name}))
 
@@ -50,6 +50,7 @@ def make_graph(env_diagram_obj):
             for binding in frame['var']:
                 binding_key = this_frame_key + "-var-" + str(binding['varIndex'])
                 add_value_node(G, binding_key, binding, "binding")
+                G.add_edge(this_frame_key, binding_key, type="link_to_binding")
     if 'heap' in env_diagram_obj: 
         for sequence_type_name in ("list", "tuple"):
             if sequence_type_name in env_diagram_obj["heap"]:
@@ -71,8 +72,8 @@ def make_graph(env_diagram_obj):
                 G.add_node(function_key, **process_dict(function, ['name'], {'type': 'func'}))
                 if "parent" in function:
                     G.add_edge(function_key, convert_parent_index_to_pl_key(function['parent']), type="func")
-    # data1 = nx.node_link_data(G, link="edges")
-    # print(data1)
+    data1 = nx.node_link_data(G)
+    print(data1)
     return G
 
 def round_grade(raw, num_steps):
