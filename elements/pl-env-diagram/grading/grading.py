@@ -40,7 +40,7 @@ def add_value_node(G, node_name, value_obj, type_name):
         G.add_node(node_name, **process_dict(value_obj, ['name', 'val'], {'type': type_name}))
 
 def make_graph(env_diagram_obj):
-    G = nx.Graph()
+    G = nx.DiGraph()
     for frame in env_diagram_obj['frame']:
         this_frame_key = "frame-" + frame['frameIndex']
         G.add_node(this_frame_key, **process_dict(frame, ["name"], {'type': 'frame'}))
@@ -72,8 +72,8 @@ def make_graph(env_diagram_obj):
                 G.add_node(function_key, **process_dict(function, ['name'], {'type': 'func'}))
                 if "parent" in function:
                     G.add_edge(function_key, convert_parent_index_to_pl_key(function['parent']), type="func")
-    data1 = nx.node_link_data(G)
-    print(data1)
+    # data1 = nx.node_link_data(G)
+    # print(data1)
     return G
 
 def round_grade(raw, num_steps):
