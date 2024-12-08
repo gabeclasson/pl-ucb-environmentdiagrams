@@ -40,7 +40,7 @@ def add_value_node(G, node_name, value_obj, type_name):
         G.add_node(node_name, **process_dict(value_obj, ['name', 'val'], {'type': type_name}))
 
 def make_graph(env_diagram_obj):
-    G = nx.DiGraph()
+    G = nx.Graph()
     for frame in env_diagram_obj['frame']:
         this_frame_key = "frame-" + frame['frameIndex']
         G.add_node(this_frame_key, **process_dict(frame, ["name"], {'type': 'frame'}))
@@ -71,6 +71,8 @@ def make_graph(env_diagram_obj):
                 G.add_node(function_key, **process_dict(function, ['name'], {'type': 'func'}))
                 if "parent" in function:
                     G.add_edge(function_key, convert_parent_index_to_pl_key(function['parent']), type="func")
+    # data1 = nx.node_link_data(G, link="edges")
+    # print(data1)
     return G
 
 def round_grade(raw, num_steps):
@@ -78,13 +80,20 @@ def round_grade(raw, num_steps):
     stepped = int(raw * num_steps) / num_steps
     return min(max(0, round(stepped, 3)), 1)
 
-def grading(generated_json, student_json, granularity = 1):
+def grading(generated_json, student_json, granularity = 1, error_tolerance = -1):
     """ returns score and feedback (if applicable) for the student.
     
     To allow for partial credit, set the granularity to an integer greater than 1. 
     For example, if the granularity is set to 20, the student will
     earn a score to the nearest increment of 5% (1/20). 
     To disable partial credit, set the granularity to 1. 
+
+    Error tolerance indicates the maximum distance that is permitted before setting
+    the score for the diagram to 0. This allows the instructor to modify the "harshness"
+    of grading: a higher error tolerance makes grading less harsh; a lower error tolerance
+    makes grading more harsh. A negative error tolerance indicates that the error tolerance
+    should be set to the maximum amount (the distance from the null environment diagram to
+    the correct environment diagram).
     """
     correct_graph = make_graph(generated_json)
     submitted_graph = make_graph(student_json)
@@ -93,7 +102,7 @@ def grading(generated_json, student_json, granularity = 1):
         def node_subst_cost(node1, node2):
             """Returns a number between 0 and 1"""
             if node1['type'] != node2['type']:
-                return max_dist + 1
+                return error_tolerance + 1
             type_name = node1['type']
             if type_name == "binding":
                 if 'val' in node1 and 'val' in node2: 
@@ -118,7 +127,7 @@ def grading(generated_json, student_json, granularity = 1):
             
         def edge_subst_cost(edge1, edge2):
             if edge1['type'] != edge2['type']:
-                return max_dist + 1
+                return error_tolerance + 1
             
             return int(edge2 != edge1)
         
@@ -131,13 +140,14 @@ def grading(generated_json, student_json, granularity = 1):
             
         edge_ins_cost = edge_del_cost
 
-        max_dist = 0
-        for _, data in correct_graph.nodes(data=True):
-            max_dist += node_ins_cost(data)
-        for _, _, data in correct_graph.edges(data=True):
-            max_dist += edge_ins_cost(data)
+        if error_tolerance < 0: 
+            error_tolerance = 0
+            for _, data in correct_graph.nodes(data=True):
+                error_tolerance += node_ins_cost(data)
+            for _, _, data in correct_graph.edges(data=True):
+                error_tolerance += edge_ins_cost(data)
 
-        max_dist -= 1 # Account for the fact that global frame is given
+            error_tolerance -= 1 # Account for the fact that global frame is given
             
         dist = nx.graph_edit_distance(
             submitted_graph, 
@@ -148,11 +158,11 @@ def grading(generated_json, student_json, granularity = 1):
             edge_subst_cost=edge_subst_cost,
             edge_del_cost=edge_del_cost,
             edge_ins_cost=edge_ins_cost,
-            upper_bound=max_dist
+            upper_bound=error_tolerance
         )
         if dist is None: 
             return 0, ""
-        return round_grade((max_dist - dist)/max_dist, granularity), ""
+        return round_grade((error_tolerance - dist)/error_tolerance, granularity), ""
     elif granularity > 0.5:
         is_isomorphic = nx.is_isomorphic(submitted_graph, correct_graph, node_match=lambda x, y: x == y)
         return int(is_isomorphic), ""

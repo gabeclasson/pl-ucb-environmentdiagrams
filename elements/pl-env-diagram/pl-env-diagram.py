@@ -17,6 +17,7 @@ def prepare(element_html, data):
         # TODO: add handling
         pass
     data['params']['granularity'] = int(element.get("granularity") or 1)
+    data['params']['tolerance'] = int(element.get("tolerance") or -1)
     for sub_element in element.iter():
         if sub_element.tag == "base-code":
             base_code = sub_element.text
@@ -154,7 +155,7 @@ def render(element_html, data):
         return chevron.render(template, rendering_data)
 
 def grade(element_html, data):
-    score, feedback = grading.grading(data['correct_answers'], data['submitted_answers'], granularity=data['params']['granularity'])
+    score, feedback = grading.grading(data['correct_answers'], data['submitted_answers'], granularity=data['params']['granularity'], error_tolerance=data['params']['tolerance'])
     if score is None:
         gradable = False
     else:
