@@ -697,11 +697,12 @@
     padding-right: 8px;
     padding-top: 10px;
     padding-bottom: 10px;
-    /*
-    border: 2px dotted white;
-    border-color: white;
-    */
+    background: aliceblue;
+    border: 1px black solid;
+    border-radius: 3px;
+    width: min-content;
     z-index: 20;
+    position: relative;
   }
   
   div.ExecutionVisualizer div.heapObject {
@@ -976,10 +977,25 @@
     fill: none;
   }
 
+  div.ExecutionVisualizer .pointerArrowTentative path {
+    stroke-dasharray: 2px;
+  }
+
   div.ExecutionVisualizer .pointerArrow input {
     display: none;
   }
 
+  div.ExecutionVisualizer .connectButton {
+    position: absolute;
+    background: transparent;
+    border-radius: 10em;
+    width: 5px;
+    height: 5px;
+    padding: 0;
+    left: 2px;
+    top: calc(50% - 3px);
+    display: none;
+  }
   div.ExecutionVisualizer .valueContainer {
     display: flex;
     flex-direction: row;
@@ -1038,6 +1054,12 @@
 
   div.ExecutionVisualizer .pointerInput {
     display: none;
+  }
+
+  @media (hover: none) {
+    div.ExecutionVisualizer button .btn {
+      opacity: 1 !important;
+    }
   }
 
   .ExecutionVisualizerInactive input {
