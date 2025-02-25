@@ -970,6 +970,7 @@
     position: absolute;
     pointer-events:none;
     overflow: visible;
+    z-index: 1000;
   }
 
   div.ExecutionVisualizer .pointerArrow path {
