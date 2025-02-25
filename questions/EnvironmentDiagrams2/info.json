@@ -4,5 +4,6 @@
     "topic": "Environment Diagrams",
     "type": "v3",
     "singleVariant": false,
-    "partialCredit": true
+    "partialCredit": true,
+    "showCorrectAnswer": false
   }
