@@ -311,7 +311,7 @@ class Visualizer {
     
     variable_button.className = "btn"
     variable_button.type = "button"
-    variable_button.innerHTML = "Add variable";
+    variable_button.innerHTML = "Add Variable";
     variable_button.onclick = ((e) => this.add_variable_listener(e))
   
   

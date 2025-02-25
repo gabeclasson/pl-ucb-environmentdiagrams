@@ -703,6 +703,7 @@
     width: min-content;
     z-index: 20;
     position: relative;
+    margin-bottom: 10px;
   }
   
   div.ExecutionVisualizer div.heapObject {
