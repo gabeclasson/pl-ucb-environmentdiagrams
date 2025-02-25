@@ -30,11 +30,7 @@ class Visualizer {
     if (frame.id == "frame-0") {
       variables.appendChild(this.make_variable(frame.id + "-var-" + index))
     } else {
-      console.log(button)
-      console.log(frame)
       let returnVal = frame.querySelector(".returnValueTr");
-      console.log(variables)
-      console.log(returnVal)
       variables.insertBefore(this.make_variable(frame.id + "-var-" + index), returnVal)
       this.updatePointerFrom(frame.id + "-return-val", false)
       this.updateAllPointers()
@@ -124,14 +120,12 @@ class Visualizer {
   
   updateAllPointers(thorough) {
     for (let pointer of Array.from(this.executionVisualizer.querySelectorAll(".pointerArrow"))) {
-      console.log(pointer)
       this.updatePointer(pointer, thorough)
     }
   }
   
   updatePointersTo(destinationId, remove) {
     for (let pointer of Array.from(this.executionVisualizer.querySelectorAll(".pointerTo-" + destinationId))) {
-      console.log(pointer)
       if (remove) {
         this.removePointer(pointer)
       } else {
@@ -394,7 +388,6 @@ class Visualizer {
   }
   
   pointerValueToggleListener(e) {
-    console.log(e)
     let button = e.target
     
     if (button.classList.contains("pointerButton")) {
@@ -803,7 +796,7 @@ class Visualizer {
     this.updateAllPointers(true)
 
     this.executionVisualizer.addEventListener("keydown", function(e) { // Prevent enter from saving
-      if (e.key == "Enter") {
+      if (e.key == "Enter" && e.target && e.target.tagName == "INPUT") {
         e.preventDefault();
         e.stopPropagation();
       }
