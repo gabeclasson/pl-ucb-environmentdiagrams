@@ -334,6 +334,11 @@ class Visualizer {
     topLevelHeapObject.classList.add("topLevelHeapObject", "removable", "removablePrimary")
     topLevelHeapObject.id = id;
 
+    let input = this.makeInput("positionInput", id + "-position");
+    input.style.display = "none";
+    input.value = "top: 0; left: 0;"
+    topLevelHeapObject.appendChild(input);
+
     let hiddenConnectButton = document.createElement("button")
     hiddenConnectButton.className = "btn connectButton"
     hiddenConnectButton.type = "button"
