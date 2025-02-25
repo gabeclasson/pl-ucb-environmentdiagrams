@@ -1,7 +1,6 @@
 import random
 import re
-import signal
-import json
+import ast
 
 # built-in options for generating variable and function names
 lowercase_letters = lambda : random.choice(list("qwertyuiopasdfghjklzxcvbnm"))
@@ -16,12 +15,6 @@ digit_str = lambda : str(random.randint(0,9)).__repr__()
 
 def generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed):
     """ generates an environment diagram question using input from a setup file. """
-    # Makes the generation time out if it takes too long.
-    #if timeout:
-    #    def timeout_handler(signum, frame):
-    #        raise Exception("Question Generator took longer than ", timeout, " seconds to run. The most likely cause of this error is not enough options for variable names, or just very bad luck.")
-    #    signal.signal(signal.SIGALRM, timeout_handler)
-    #    signal.alarm(timeout)
     # Sets the random seed
     random.seed(seed)
     if code_string and code_filepath:
@@ -41,8 +34,8 @@ def generate_question(allowed_names, allowed_assignment_values, special_replacem
     # Do value replacements
     line_list = replace_values(allowed_assignment_values, line_list)
     # Do namespace replacements
-    line_list = replace_names(allowed_names, line_list)
     new_code_string = "\n".join(line_list)
+    new_code_string = replace_names(allowed_names, new_code_string)
     # Make sure the code properly executes before returning- and if it doesn't, try again until we get a working codestring. 
     try:
         d = {}
@@ -51,7 +44,7 @@ def generate_question(allowed_names, allowed_assignment_values, special_replacem
         # Return a new string with a different seed. If this also doesn't work, the generator is likely not good.
         print("WARNING: Initial code generation failed. Please verify that your randomization does not cause issues. Seed is:", seed, ". Attempting with new seed.")
         return generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed + 1)
-    return "\n".join(line_list)
+    return new_code_string
 
 def replace_special(special_replacements, code_string):
     for key in special_replacements:
@@ -81,39 +74,64 @@ def replace_values(allowed_assignment_values, line_list):
                 raise Exception("Expected new value on line ", str(i), " to be string. Instead, it is ", str(type(new_val)), ".\n This may have occured because you provided an option for a non-string to be chosen for this value. You still need to write all options as strings for them to be correctly processed. This includes adding other quotations outside of strings. Please see the comments on OPTIONS FOR VALUE ASSIGNMENT.")
             line_list[i] = line[0] + "= " + new_val
     return line_list
-         
-def replace_names(allowed_names, line_list):
-    # generate all the replacement names
+
+def generate_NewNames(allowed_names, all_names):
     newNames_dict = {}
-    for key in allowed_names:
-        new_name = None
-        while new_name is None:
-            new_name =  random.choice(allowed_names[key])
-            if callable(new_name):
-                new_name = new_name()
-            elif type(new_name) is list:
-                new_name = random.choice(new_name)
-            # Check that new_name is now a string. If not, throw an error.
-            if type(new_name) != str:
-                raise Exception("Expected new name for variable or function ", key, " to be string. Instead, it is ", type(new_name))
-            # if the new name has already been given to a different variable, we need a different value. 
-            if new_name in newNames_dict.values():
-                new_name = None
+    for name in all_names:
+        # If the name isn't in the list of names to be changed, it gets precedence and gets to keep its own name.
+        if name not in allowed_names:
+            newNames_dict[name] = name
+    for name in allowed_names:
+        if name in newNames_dict:
+            return newNames_dict[name]
+        else:
+            new_name = None
+            while new_name is None:
+                new_name =  random.choice(allowed_names[name])
+                if callable(new_name):
+                    new_name = new_name()
+                elif type(new_name) is list:
+                    new_name = random.choice(new_name)
+                # Check that new_name is now a string. If not, throw an error.
+                if type(new_name) != str:
+                    raise Exception("Expected new name for variable or function ", name, " to be string. Instead, it is ", type(new_name))
+                # if the new name has already been given to a different variable, we need a different value. 
+                if new_name in newNames_dict.values():
+                    new_name = None
+                else:
+                    newNames_dict[name] = new_name
+    return newNames_dict
+
+def replace_names(allowed_names, code_string):
+    parsed_code_string = ast.parse(code_string)
+    all_names = list({node.id: None for node in ast.walk(parsed_code_string) if isinstance(node, ast.Name)})
+    newNames_dict = generate_NewNames(allowed_names, all_names)
+    class replaceVars(ast.NodeTransformer):
+        def visit_arg(self, node):
+
+            return ast.arg(**{**node.__dict__, 'arg':newNames_dict[node.arg]})
+        
+        def visit_FunctionDef(self, node):
+            args = self.visit(node.args)
+            body = [self.visit(subpart) for subpart in node.body]
+            decorator_list = [self.visit(subpart) for subpart in node.decorator_list]
+            if node.returns:
+                # TODO: test if this works
+                returns = self.visit(node.returns)
             else:
-                newNames_dict[key] = new_name
-    # modify all variable names in correspondence with what we've generated
-    for i in range(len(line_list)):
-        # This separates the line into non-string and string parts, so > a = b + "hello 'world' " + '' would become ['a = b + ', '"hello \'world\' " + '\'\''].
-        line = line_list[i].split('(\"[^\"]*\"|\'[^\']*\')')
-        # Now further split the line by splitting the line when any character occurs that could not appear in a variable name (not a letter, number, or underscore)
-        split_line = []
-        for part in line:
-            split_line.extend(re.split('([^\w\d_]+)', part))
-        for k in range(len(split_line)):
-            # If this part of the line cannot be a variable/function name, skip it without modifying it. 
-            if re.search('[^\w\d_]+', split_line[k]) is not None:
-                continue
-            if split_line[k] in newNames_dict:
-                split_line[k] = newNames_dict[split_line[k]]
-        line_list[i] = "".join(split_line)
-    return line_list
+                returns = None
+            return ast.FunctionDef(**{**node.__dict__, 'name':newNames_dict[node.name],
+            'args':args,
+            'body':body,
+            'decorator_list':decorator_list,
+            'returns':returns,
+            })
+
+        def visit_Attribute(self, node):
+            raise NotImplementedError
+
+        def visit_Name(self, node):
+            return ast.Name(**{**node.__dict__, 'id':newNames_dict[node.id]})
+
+    new_code = ast.unparse(replaceVars().visit(parsed_code_string))
+    return new_code

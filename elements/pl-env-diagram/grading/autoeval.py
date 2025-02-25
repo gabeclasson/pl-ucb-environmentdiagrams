@@ -7,7 +7,7 @@ except:
 import os, contextlib
 import re
 
-# i refer to this as "framenode" in some places. this is to avoid ambiguity. we can discuss changing the name.
+# i refer to this as "framenode" in some places. this is to avoid ambiguity. 
 Frame = frame.Frame
 
 class FrameTree():
@@ -19,6 +19,8 @@ class FrameTree():
         self.framecounter = 0
         # Associates a frame object to a frame node (or in the case of Global, at least for the time being, "Global" to a frame node.) This is used to identify the parent frame of the frame being added.
         self.fobj_framenode_dict = {}
+        # Associates id(function.__code__) to a list of frames that use it. This is used so that we can assign parents to frames.
+        self.codestrID_frame_dict = {}
         # Associates id(function.__code__) to a parent frame. This is used so that we can identify the parent of each function for grading.
         self.codestrID_parent_dict = {}
         # Make sure the inputted code actually runs before generating the FrameTree
@@ -46,21 +48,21 @@ class FrameTree():
             self.root = frame
         # If this frame is not the Global frame, initialize as normal.
         else: 
-            # Get the frame object of the parent frame. 
-            parent_fobj = fobj.f_back
-            # Get the Frame of the new Frame's parent. Sometimes Frames whose parent is Global were called from some other Frame, so if we can't find their caller Frame we just say that their parent is Global.
-            parent = self.fobj_framenode_dict[parent_fobj] if parent_fobj in self.fobj_framenode_dict else self.root
             # The name of the Frame is the name of the function that it is calling. 
             name = fobj.f_code.co_name
             # Create the Frame with all of this information. Name it however many frames there are. 
-            frame = Frame(name = name, parent = parent, fobj=fobj, index=str(self.framecounter))
+            frame = Frame(name = name, fobj=fobj, index=str(self.framecounter))
             # Add the new Frame to the frame object <--> Frame dict so children of this Frame are able to find it. 
             self.fobj_framenode_dict[fobj] = frame
-            # Modify parent Frame to include the new Frame as a child
-            parent.add_child(self.fobj_framenode_dict[fobj])
+        # Add your own code object to the dictionary
+        if id(fobj.f_code) in self.codestrID_frame_dict:
+            self.codestrID_frame_dict[id(fobj.f_code)].append(frame)
+        else:
+            self.codestrID_frame_dict[id(fobj.f_code)] = [frame]
         # Increment the amount of Frames. 
         self.framecounter += 1
         return frame
+    
     
     def initialize_Frames(self, codestring):
         """This function adds a new line of code initializing the FrameNode in each function definition. 
@@ -83,33 +85,7 @@ class FrameTree():
         ### i = 1
         # Keep track of how much the current line has been shifted by (for example, if I am on what was line 2 but I added 3 lines before it, the shift is 3)
         shift = 0
-        while i < len(code_list):
-            # If the line contains a lambda, rewrite it as a def statement on the previous line so we can do frame tracking. 
-            # THIS CURRENTLY DOES NOT WORK. REGEX IS DIFFICULT. 
-            if False and re.search("lambda.*:", code_list[i]):
-                def_line = i
-                # Get size of whitespace before the line of code
-                whitespace = len(code_list[i]) - len(code_list[i].lstrip(' '))
-                # Split the line into parts that are not lambda statements and parts that are. 
-                # More comprehensive search that includes = with lambda arguments: ((?![^\w\d_])lambda(\s*(((\s+(_?\w)+(\w*\d*_*)*(\s*=\s*(([^:,\n()\[\]{}\"'])*(\[.*\])*\9*(\{.*\})*\9*(\(.*\))*\9*(\".*\")*\9*('.*')*\7*)*)?\s*),\s*))*((_?\w)+(\w*\d*_*)*(\s*=\s*(([^:,\n()\[\]{}\"'])*(\[.*\])*\9*(\{.*\})*\9*(\(.*\))*\9*(\".*\")*\9*('.*')*\9*)*)?\s*)?)(:)(([^:,\n()\[\]{}\"'])*(\[.*\])*\28*(\{.*\})*\28*(\(.*\))*\28*(\".*\")*\28*('.*')*\28*)*)
-                split_line = re.split("((?![^\w\d_])lambda(\s*(((\s+(_?\w)+(\w*\d*_*)*\s*),\s*)*(\s+(_?\w)+(\w*\d*_*)*\s*)\s+)?(:)(([^:,\n()\[\]{}\"'])*(\[.*\])*\13*(\{.*\})*\13*(\(.*\))*\13*(\".*\")*\13*('.*')*\13*)*))", code_list[i])
-                # Technically its possible that there are multiple lambda statements on one line, so we have to loop through. 
-                for k in range(len(split_line)):
-                    if re.search("((?![^\w\d_])lambda(\s*(((\s+(_?\w)+(\w*\d*_*)*\s*),\s*)*(\s+(_?\w)+(\w*\d*_*)*\s*)\s+)?(:)))", split_line[k]):
-                        # Split it to get the left side (lambda (args):) and the right side.
-                        split_line[k] = re.split("((?![^\w\d_])lambda(\s*(((\s+(_?\w)+(\w*\d*_*)*\s*),\s*)*(\s+(_?\w)+(\w*\d*_*)*\s*)\s+)?(:)))", split_line[k])
-                        print("test", split_line[k], re.split("(lambda)", split_line[k][0]))
-                        arguments = re.split("(lambda)", split_line[k][0])[1][:-1]
-                        code = split_line[k][1]
-                        code_list.insert(i, ' '*whitespace + "def ghjk__lambda__line_" + str(i - shift) + "(" + arguments + "):") 
-                        code_list.insert(i + 1, ' '*whitespace + '  ' + "return " + code)
-                        i += 2
-                        shift += 2
-                        # Redefine this part of the line to be the name of the function lambda has been replaced with.
-                        split_line[k] = "ghjk__lambda__line_" + str(i - shift)
-                code_list[i] = "".join(split_line)   
-                # set i back to def_line so it can get modified in the next if statement. 
-                i = def_line
+        while i < len(code_list):     
             if code_list[i].lstrip(' ')[:4] == "def ":
                 def_line = i
                 # find the indent size after the def
@@ -174,18 +150,13 @@ class FrameTree():
         # TODO: fix to include correct variable names
         # set variable names for things we are using to store tracking info. (TODO: CHNAGE NAME GLOBVAR)
         trk_var_names_dict = {"self":"self", "frame":"frame","return":"returnval", "locals":"locs", "globvar":"globvar", "bindings":"bindings", "fobj_framenode_dict":"fobj_framenode_dict"}
-        # if any of the initial variable names are in the local variable scope, we need to change the offending name(s). TODO: check if this is true once impl is done?
-        #for k in range(len(trk_var_names)):
-        #    while trk_var_names[k] in exitlines_to_fobj_dict[exitline].f_code.co_varnames:
-        #        trk_var_names[k] = "h_"+str(hash(trk_var_names[k] + str(exitline)))[:7]
-
         # handle the Global frame
         exitline = heapq._heappop_max(exitlines_pq)
         code_list.insert(exitline + 1, trk_var_names_dict["globvar"] + '=' "locals()")
         # TODO: 'var' might also be an issue here..     
         # TODO: var names
         code_list.insert(exitline + 2, trk_var_names_dict["frame"] + '=' "self.fobj_framenode_dict[inspect.currentframe()]")
-        code_list.insert(exitline + 3, trk_var_names_dict["frame"] + ".bind(" + trk_var_names_dict["globvar"] + "," + "exclude =  ['" + trk_var_names_dict["frame"] + "', 'self', 'inspect', '__builtins__'" "]" + "," + "codestrID_parent_dict =  self.codestrID_parent_dict" + ")") 
+        code_list.insert(exitline + 3, trk_var_names_dict["frame"] + ".bind(" + trk_var_names_dict["globvar"] + "," + "exclude =  ['" + trk_var_names_dict["frame"] + "', 'self', 'inspect', '__builtins__'" "]" + "," + "codestrID_frame_dict = self.codestrID_frame_dict" + "," + "codestrID_parent_dict =  self.codestrID_parent_dict" + ")") 
 
         # get largest exitline
         while len(exitlines_pq) > 0:
@@ -207,15 +178,15 @@ class FrameTree():
             code_list.insert(i + 2, ' '*whitespace + trk_var_names_dict["bindings"] + '=' + trk_var_names_dict["locals"])
             code_list.insert(i + 3, ' '*whitespace + trk_var_names_dict["frame"] + '=' "self.fobj_framenode_dict[inspect.currentframe()]")
             # TODO: var names
-            code_list.insert(i + 4, ' '*whitespace + trk_var_names_dict["frame"] + ".bind(" + trk_var_names_dict["bindings"] + "," + "codestrID_parent_dict =  self.codestrID_parent_dict" +")")
+            code_list.insert(i + 4, ' '*whitespace + trk_var_names_dict["frame"] + ".bind(" + trk_var_names_dict["bindings"] + "," + "codestrID_frame_dict = self.codestrID_frame_dict" + "," + "codestrID_parent_dict =  self.codestrID_parent_dict" +")")
 
         # get modified code with Frame initialization
         newcode = str.join("\n", code_list)
-        #print(newcode)
         d =  {"self":self, "inspect":inspect}
         # then execute the code
         try:
             # These two 'with' statements silence the execution so no print statements are printed, which can bug out prarielearn. 
+            # TODO: REMOVE
             with open(os.devnull, 'w') as devnull:
                 with contextlib.redirect_stdout(devnull):
                     exec(newcode, d, d)
@@ -302,9 +273,9 @@ class FrameTree():
                 if varname == "returnval":
                     variable = handle_variable(frame.bindings[varname], name = varname, varIndex=i)
                     newframe["return"] = {"val":variable["val"]}
-                    break
                 # TODO: MOVE TO FRAMETREE DEF
-                newframe["var"].append(handle_variable(frame.bindings[varname], name = varname, varIndex=i))
+                else:
+                    newframe["var"].append(handle_variable(frame.bindings[varname], name = varname, varIndex=i))
                 i = i + 1
             for child in frame.children:
                 addFrameToJson(child)

@@ -1,8 +1,3 @@
-# TODO: move question_gen.py to elements/pl-env-diagram and figure out how to import it from there
-#import sys
-# caution: path[0] is reserved for script path (or '' in REPL)
-#sys.path.insert(0, "../elements/pl-env-diagram/")
-#print(sys.path)
 import question_gen
 
 ######################################################################
@@ -29,8 +24,11 @@ import question_gen
 ################## OPTIONS FOR NAMESPACE REPLACEMENT #################
 ######################################################################
 
-# Provide possible options to rename variables and functions with. 
+# Provide possible options to rename variables and functions with. You should provide all function/variable names here, even if you would like to leave them unchanged. The code will not necessarily err if you neglect to do this, but in some cases or on some seeds it might. This is because the question generation stage cannot detect all of the variables in the codestring unless you provide them, so it won't know if there are overlapping names.
 # WARNING: If you do not provide enough options such that each variable can get a unique name, the question generator will time out. 
+# WARNING 2: If you provide options for some variables but not for others, and it is possible for other variables to be given the same name as the unchanged variable(s),
+# the code may err or you may just be testing students on a different kind of environment diagram in some cases. If you would like to leave a variable unchanged, just 
+# provide the variable name and only itself as an option in the list, and it should go before randomizable variable names. For example, if you wanted to leave "f" unchanged, provide "f":["f"], and it should go first.
 
 allowed_names = {
     # below are our variable names

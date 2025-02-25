@@ -32,9 +32,10 @@ import question_gen
 
 allowed_names = {
     # below are our variable names
-    "a": [question_gen.common_function_names], 
+    "a": [question_gen.lowercase_letters], 
     "b": [question_gen.lowercase_letters],
     "c": [question_gen.lowercase_letters],
+    "f": [question_gen.common_function_names], 
     }
 
 ######################################################################
@@ -54,8 +55,9 @@ allowed_names = {
     # If you want the new value to include the name of a variable, use the name in the default code. See the example in line 3 below. 
 
 allowed_assignment_values = {
-    6:["[1, 2, 3]", "[5, 9]", "[4, 27, 18]"],
-    7: ["a(c)", "a(c) * a(c)", "a(c) * 2"]
+    0:[question_gen.small_int],
+    1:['"bok"', '"cvijet"', '"morski pas"', '"dan garcia"', '"armando fox"', '"narges norouzi"'],
+    4:["f(b)", "f(a)", "f(9)", "f('plavu')"],
     }
 
 ######################################################################
@@ -80,14 +82,11 @@ special_replacements = {
 # You can choose to input the problem's base code as a string,
 
 code_string = """ 
-def a(b):
-  if len(b) == 1:
-    return b[0]
-  else:
-    f = b[0]
-    return f + a(b[1:])
-c = [1, 2, 3]
-total = a(c)
+a = 5
+b = "hello"
+def f(c):
+    return [a, b, c]
+c = f(b)
 """ 
 
 # Or as a filepath (from question_gen.py). If you do both, the generator will prioritize the string. 
@@ -109,39 +108,9 @@ timeout = None
 generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed)
 
 # These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.  
-# SET THE IF STATEMENT TO FALSE BEFORE SAVING THE CODE AND TESTING ON PRARIELEARN. PRARIELEARN ERRS ON PRINT STATEMENTS.
+# COMMENT OUT THESE LINES WHEN TESTING PRARIELEARN OR IT WILL CAUSE ERRORS
 
-if True:
-    import random
-    try:
-        seed = random.randint(0,5000)
-        result_code_string = generateQ(seed = seed)
-        print(result_code_string)
-    except:
-        print(seed)
-        print(result_code_string)
-
-code_string = """ 
-def a(b):
-  if len(b) == 1:
-    return b[0]
-  else:
-    f = b[0]
-    def g():
-        return f + a(b[1:])
-    return g()
-c = [1, 2, 3]
-total = a(c)
-""" 
-
-allowed_names = {
-    # below are our variable names
-    "g": ["f2", "g2", "h2"],
-    "a": [question_gen.common_function_names], 
-    "b": [question_gen.lowercase_letters],
-    "c": [question_gen.lowercase_letters],
-    }
-
-#test = question_gen.testAST(code_string, allowed_names = allowed_names)
-#print(test)
+#import random
+#result_code_string = generateQ(seed = random.randint(0, 50))
+#print(result_code_string)
 
