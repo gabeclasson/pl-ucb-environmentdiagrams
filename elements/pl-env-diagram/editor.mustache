@@ -81,6 +81,7 @@
                 {{#heap}}
                   {{#func}}
                     <div class="topLevelHeapObject removable removablePrimary" id="heap-func-{{funcIndex}}">
+                      <button class="btn connectButton" type="button" aria-label="Connect pointer to object" style="display: none;"></button>
                       <div class="heapObject">
                         <div><div class="typeLabel">function</div><button class="btn removeButton removeButtonPrimary" type="button"></button></div>
                         <div class="funcObj">
@@ -93,6 +94,7 @@
                   {{/func}}
                   {{#list}}
                     <div class="topLevelHeapObject removable removablePrimary" id="heap-list-{{listIndex}}">
+                    <button class="btn connectButton" type="button" aria-label="Connect pointer to object" style="display: none;"></button>
                     <div class="heapObject">
                       <div>
                         <div class="typeLabel">{{^item}}empty{{/item}} list</div>
@@ -129,6 +131,7 @@
                   {{/list}}
                   {{#tuple}}
                     <div class="topLevelHeapObject removable removablePrimary" id="heap-tuple-{{tupleIndex}}">
+                    <button class="btn connectButton" type="button" aria-label="Connect pointer to object" style="display: none;"></button>
                     <div class="heapObject">
                       <div>
                         <div class="typeLabel">{{^item}}empty{{/item}} tuple</div>
