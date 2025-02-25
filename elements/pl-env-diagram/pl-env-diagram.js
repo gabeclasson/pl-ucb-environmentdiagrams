@@ -22,7 +22,6 @@ class Visualizer {
   }
 
   add_variable_listener(e) {
-    console.log(e)
     let button = e.target
     let frame = button.closest(".stackFrame")
     let variables = frame.querySelector(".stackFrameVarTable").children[0]
@@ -31,11 +30,7 @@ class Visualizer {
     if (frame.id == "frame-0") {
       variables.appendChild(this.make_variable(frame.id + "-var-" + index))
     } else {
-      console.log(button)
-      console.log(frame)
       let returnVal = frame.querySelector(".returnValueTr");
-      console.log(variables)
-      console.log(returnVal)
       variables.insertBefore(this.make_variable(frame.id + "-var-" + index), returnVal)
       this.updatePointerFrom(frame.id + "-return-val", false)
       this.updateAllPointers()
@@ -125,14 +120,12 @@ class Visualizer {
   
   updateAllPointers(thorough) {
     for (let pointer of Array.from(this.executionVisualizer.querySelectorAll(".pointerArrow"))) {
-      console.log(pointer)
       this.updatePointer(pointer, thorough)
     }
   }
   
   updatePointersTo(destinationId, remove) {
     for (let pointer of Array.from(this.executionVisualizer.querySelectorAll(".pointerTo-" + destinationId))) {
-      console.log(pointer)
       if (remove) {
         this.removePointer(pointer)
       } else {
@@ -189,6 +182,7 @@ class Visualizer {
     pointerButton.className = "btn pointerButton pointerValueButton"
     pointerButton.type = "button"
     pointerButton.addEventListener("click", (e) => this.pointerValueToggleListener(e))
+    pointerButton.addEventListener("pointerdown", (e) => this.pointerValueToggleListener(e))
     container.appendChild(pointerButton)
     return container
   }
@@ -311,7 +305,7 @@ class Visualizer {
     
     variable_button.className = "btn"
     variable_button.type = "button"
-    variable_button.innerHTML = "Add variable";
+    variable_button.innerHTML = "Add Variable";
     variable_button.onclick = ((e) => this.add_variable_listener(e))
   
   
@@ -338,6 +332,13 @@ class Visualizer {
     let topLevelHeapObject = document.createElement("div")
     topLevelHeapObject.classList.add("topLevelHeapObject", "removable", "removablePrimary")
     topLevelHeapObject.id = id;
+
+    let hiddenConnectButton = document.createElement("button")
+    hiddenConnectButton.className = "btn connectButton"
+    hiddenConnectButton.type = "button"
+    hiddenConnectButton.ariaLabel = "Connect pointer to object"
+    topLevelHeapObject.appendChild(hiddenConnectButton)
+
     let heapObject = document.createElement("div")
     heapObject.className = "heapObject";
     topLevelHeapObject.appendChild(heapObject)
@@ -359,6 +360,19 @@ class Visualizer {
     heapObject.appendChild(content)
     this.executionVisualizer.querySelector("#heap").appendChild(topLevelHeapObject);
     this.updateAllPointers();
+
+    function handleClick(e) {
+      heapObject.addEventListener("pointermove", handlepointermove)
+    }
+
+    function handlepointermove(e) {
+
+    }
+
+    function handlePointerup(e) {
+      heapObject.removeEventListener("pointermove", handlepointermove)
+    }
+
   }
   
   add_function_object() {
@@ -375,46 +389,117 @@ class Visualizer {
   
   pointerValueToggleListener(e) {
     let button = e.target
+    
     if (button.classList.contains("pointerButton")) {
-      this.handlePointerClick(button);
+      if (e.type == "click") {
+        this.handleInitialPointerClick(button);
+      } else if (e.type == "pointerdown") {
+        this.handlePointerPointerdown(button);
+      }
     } else {
-      this.handleValueClick(button);
+      if (e.type == "click") {
+        this.handleValueClick(button);
+      } 
     }
   }
-  
-  handlePointerClick(button) {
+
+  handlePointerPointerdown(button) {
     let valueContainer = button.closest(".valueContainer")
     let valueInput = valueContainer.children[0]
-    let pointer = this.makePointer("pointer-" + valueInput.id)
-    let svg = pointer.children[0]
+    let pointer = this.makePointer("pointer-" + valueInput.id, valueInput, button)
     let viz = this
-    this.update_arrow_svg(this.relative_coordinates_obj_to_obj(valueInput, button), pointer)
-  
-    function mouseListener(mouseEvent) {
-      let coords = viz.relative_coordinates_obj_to_pointer(valueInput, mouseEvent)
-      viz.update_arrow_svg(coords, pointer)
+
+    function pointerupListener(e) {
+      if (e.target == button) { // do nothing
+        return;
+      }
+      viz.finalizePointer(e, pointer)
+      viz.executionVisualizer.removeEventListener("pointerup", pointerupListener, {
+        capture: true,
+        once: true
+      })
+      viz.executionVisualizer.removeEventListener("pointercancel", pointerupListener, {
+        capture: true,
+        once: true
+      })
     }
-    this.executionVisualizer.addEventListener("mousemove", mouseListener)
-    this.vizLayoutTd.appendChild(pointer)
-  
-    function clickListener(clickEvent) {
-      clickEvent.stopPropagation()
-      viz.executionVisualizer.removeEventListener("mousemove", mouseListener)
-      let targetObj = clickEvent.target.closest(".topLevelHeapObject")
-      if (targetObj == null) {
-        viz.vizLayoutTd.removeChild(pointer)
-        return 
-      } 
-      pointer.classList.add( "pointerTo-" + targetObj.id)
-      
-      viz.updatePointer(pointer, true)
-    }
-    this.executionVisualizer.addEventListener("click", clickListener, {
+
+    this.executionVisualizer.addEventListener("pointerup", pointerupListener, {
+      capture: true,
+      once: true
+    })
+    this.executionVisualizer.addEventListener("pointercancel", pointerupListener, {
       capture: true,
       once: true
     })
   }
   
+  handleInitialPointerClick(button) {
+    let valueContainer = button.closest(".valueContainer")
+    let valueInput = valueContainer.children[0]
+    let pointer;
+    let viz = this;
+    pointer = this.executionVisualizer.querySelector("#pointer-" + valueInput.id)
+    if (pointer == null) {
+      pointer = this.makePointer("pointer-" + valueInput.id, valueInput, button)
+    }
+
+    button.classList.add("valueButton")
+    button.classList.remove("pointerButton")
+
+    this.executionVisualizer.querySelectorAll("input,button:not(.connectButton)").forEach(function (elem) {
+      if (elem != button) {
+        elem.disabled = true
+      }
+    })
+
+    function focusListener(e) {
+      let target = e.target;
+      let heapObject = target.closest(".topLevelHeapObject");
+      let coords = viz.relative_coordinates_obj_to_obj(valueInput, heapObject)
+      viz.update_arrow_svg(coords, pointer)
+    }
+
+    this.executionVisualizer.querySelectorAll(".connectButton").forEach(function (elem) {
+      elem.style.display = "block"
+      elem.addEventListener("focus", focusListener)
+    })
+
+    function clickListener(clickEvent) {
+      clickEvent.stopPropagation()
+      viz.finalizePointer(clickEvent, pointer)
+
+      viz.executionVisualizer.querySelectorAll("input,button:not(.connectButton)").forEach(function (elem) {
+        elem.disabled = false
+      })
+  
+      viz.executionVisualizer.querySelectorAll(".connectButton").forEach(function (elem) {
+        elem.style.display = "none"
+        elem.removeEventListener("focus", focusListener)
+      })
+    }
+
+    this.executionVisualizer.addEventListener("click", clickListener, {
+      capture: true,
+      once: true
+    })
+
+    
+  }
+
+  finalizePointer(clickEvent, pointer) {
+    let targetObj = clickEvent.target.closest(".topLevelHeapObject")
+    if (targetObj == null) {
+      this.removePointer(pointer)
+      return 
+    } 
+    pointer.classList.add("pointerTo-" + targetObj.id)
+    pointer.classList.remove("pointerArrowTentative")
+    
+    this.updatePointer(pointer, true)
+    this.executionVisualizer.removeEventListener("pointermove", this.mouseListener)
+  }
+
   handleValueClick(button) {
     let valueContainer = button.closest(".valueContainer")
     let valueInput = valueContainer.children[0]
@@ -521,9 +606,9 @@ class Visualizer {
     }
   }
   
-  makePointer(id) {
+  makePointer(id, origin, initialDestination) {
     let container = document.createElement("div")
-    container.className = "pointerArrow"
+    container.className = "pointerArrow pointerArrowTentative"
     container.id = id;
     let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
     svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
@@ -533,6 +618,19 @@ class Visualizer {
     container.appendChild(svg)
     let input = this.makeInput("pointerInput", id + "-input")
     container.appendChild(input)
+
+    let viz = this;
+    this.update_arrow_svg(this.relative_coordinates_obj_to_obj(origin, initialDestination), container)
+
+    this.mouseListener = function(mouseEvent) {
+      let coords = viz.relative_coordinates_obj_to_pointer(origin, mouseEvent)
+      viz.update_arrow_svg(coords, container)
+    }
+
+    this.executionVisualizer.addEventListener("pointermove", this.mouseListener)
+    
+    this.vizLayoutTd.appendChild(container)
+
     return container
   }
   
@@ -687,6 +785,7 @@ class Visualizer {
     this.executionVisualizer.querySelectorAll('.removeButton').forEach(x => x.addEventListener("click", (e) => this.removeListener(e)))
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keydown", (e) => this.varLengthInputListener(e)))
     this.executionVisualizer.querySelectorAll('.pointerValueButton').forEach(x => x.addEventListener("click", (e) => this.pointerValueToggleListener(e)))
+    this.executionVisualizer.querySelectorAll('.pointerValueButton').forEach(x => x.addEventListener("pointerdown", (e) => this.pointerValueToggleListener(e)))
     this.executionVisualizer.querySelectorAll('.sequenceAddButtonContainer > button').forEach(x => x.addEventListener("click", (e) => this.sequenceAddButtonListener(e)))
     this.executionVisualizer.querySelectorAll('.varLengthInput').forEach(x => x.addEventListener("keyup", (e) => this.varLengthInputListener(e)))
     this.executionVisualizer.querySelector("#addFrameButton").addEventListener("click", (e) => this.add_frame(e))
@@ -695,11 +794,18 @@ class Visualizer {
     this.executionVisualizer.querySelector("#addTupleButton").addEventListener("click", (e) => this.add_sequence_object("tuple"))
     this.updateAllInputLengthsToContent()
     this.updateAllPointers(true)
+
+    this.executionVisualizer.addEventListener("keydown", function(e) { // Prevent enter from saving
+      if (e.key == "Enter" && e.target && e.target.tagName == "INPUT") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
   }
 
   inactiveInitializeStuff() {
     this.updateAllInputLengthsToContent()
-    //this.updateAllPointers(true)
+    this.updateAllPointers(true)
   }
 }
 

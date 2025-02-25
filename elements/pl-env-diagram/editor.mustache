@@ -81,6 +81,7 @@
                 {{#heap}}
                   {{#func}}
                     <div class="topLevelHeapObject removable removablePrimary" id="heap-func-{{funcIndex}}">
+                      <button class="btn connectButton" type="button" aria-label="Connect pointer to object" style="display: none;"></button>
                       <div class="heapObject">
                         <div><div class="typeLabel">function</div><button class="btn removeButton removeButtonPrimary" type="button"></button></div>
                         <div class="funcObj">
@@ -93,6 +94,7 @@
                   {{/func}}
                   {{#list}}
                     <div class="topLevelHeapObject removable removablePrimary" id="heap-list-{{listIndex}}">
+                    <button class="btn connectButton" type="button" aria-label="Connect pointer to object" style="display: none;"></button>
                     <div class="heapObject">
                       <div>
                         <div class="typeLabel">{{^item}}empty{{/item}} list</div>
@@ -129,6 +131,7 @@
                   {{/list}}
                   {{#tuple}}
                     <div class="topLevelHeapObject removable removablePrimary" id="heap-tuple-{{tupleIndex}}">
+                    <button class="btn connectButton" type="button" aria-label="Connect pointer to object" style="display: none;"></button>
                     <div class="heapObject">
                       <div>
                         <div class="typeLabel">{{^item}}empty{{/item}} tuple</div>
@@ -165,9 +168,9 @@
                   {{/tuple}}
                 {{/heap}}
             </div>
-            <button type="button" class="btn" id="addFuncButton" {{^show_controls}}disabled{{/show_controls}}>Add function</button>
-            <button type="button" class="btn" id="addListButton" {{^show_controls}}disabled{{/show_controls}}>Add list</button>
-            <button type="button" class="btn" id="addTupleButton" {{^show_controls}}disabled{{/show_controls}}>Add tuple</button>
+            <button type="button" class="btn" id="addFuncButton" {{^show_controls}}disabled{{/show_controls}}>Add Function</button>
+            <button type="button" class="btn" id="addListButton" {{^show_controls}}disabled{{/show_controls}}>Add List</button>
+            <button type="button" class="btn" id="addTupleButton" {{^show_controls}}disabled{{/show_controls}}>Add Tuple</button>
             </td>
         </tr>
         </tbody></table>

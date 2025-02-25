@@ -1,10 +1,6 @@
 import random
 import re
-import signal
-import json
 import ast
-
-# AST Parser will be the panacea to all issues
 
 # built-in options for generating variable and function names
 lowercase_letters = lambda : random.choice(list("qwertyuiopasdfghjklzxcvbnm"))
@@ -19,12 +15,6 @@ digit_str = lambda : str(random.randint(0,9)).__repr__()
 
 def generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed):
     """ generates an environment diagram question using input from a setup file. """
-    # Makes the generation time out if it takes too long.
-    #if timeout:
-    #    def timeout_handler(signum, frame):
-    #        raise Exception("Question Generator took longer than ", timeout, " seconds to run. The most likely cause of this error is not enough options for variable names, or just very bad luck.")
-    #    signal.signal(signal.SIGALRM, timeout_handler)
-    #    signal.alarm(timeout)
     # Sets the random seed
     random.seed(seed)
     if code_string and code_filepath:
@@ -118,11 +108,10 @@ def replace_names(allowed_names, code_string):
     newNames_dict = generate_NewNames(allowed_names, all_names)
     class replaceVars(ast.NodeTransformer):
         def visit_arg(self, node):
-            #print("arg", node.arg, newNames_dict)
+
             return ast.arg(**{**node.__dict__, 'arg':newNames_dict[node.arg]})
         
         def visit_FunctionDef(self, node):
-            #print("func", node.name, newNames_dict)
             args = self.visit(node.args)
             body = [self.visit(subpart) for subpart in node.body]
             decorator_list = [self.visit(subpart) for subpart in node.decorator_list]
@@ -131,21 +120,17 @@ def replace_names(allowed_names, code_string):
                 returns = self.visit(node.returns)
             else:
                 returns = None
-            # TODO: check this no longer exists?
-            #type_params = [self.visit(subpart) for subpart in node.type_params]
             return ast.FunctionDef(**{**node.__dict__, 'name':newNames_dict[node.name],
             'args':args,
             'body':body,
             'decorator_list':decorator_list,
             'returns':returns,
-            #'type_params':type_params
             })
 
         def visit_Attribute(self, node):
             raise NotImplementedError
 
         def visit_Name(self, node):
-            #print("name", node.id, newNames_dict)
             return ast.Name(**{**node.__dict__, 'id':newNames_dict[node.id]})
 
     new_code = ast.unparse(replaceVars().visit(parsed_code_string))

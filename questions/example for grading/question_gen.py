@@ -1,7 +1,6 @@
 import random
 import re
-import signal
-import json
+import ast
 
 # built-in options for generating variable and function names
 lowercase_letters = lambda : random.choice(list("qwertyuiopasdfghjklzxcvbnm"))
@@ -16,12 +15,6 @@ digit_str = lambda : str(random.randint(0,9)).__repr__()
 
 def generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed):
     """ generates an environment diagram question using input from a setup file. """
-    # Makes the generation time out if it takes too long.
-    #if timeout:
-    #    def timeout_handler(signum, frame):
-    #        raise Exception("Question Generator took longer than ", timeout, " seconds to run. The most likely cause of this error is not enough options for variable names, or just very bad luck.")
-    #    signal.signal(signal.SIGALRM, timeout_handler)
-    #    signal.alarm(timeout)
     # Sets the random seed
     random.seed(seed)
     if code_string and code_filepath:
@@ -41,8 +34,8 @@ def generate_question(allowed_names, allowed_assignment_values, special_replacem
     # Do value replacements
     line_list = replace_values(allowed_assignment_values, line_list)
     # Do namespace replacements
-    line_list = replace_names(allowed_names, line_list)
     new_code_string = "\n".join(line_list)
+    new_code_string = replace_names(allowed_names, new_code_string)
     # Make sure the code properly executes before returning- and if it doesn't, try again until we get a working codestring. 
     try:
         d = {}
@@ -51,7 +44,7 @@ def generate_question(allowed_names, allowed_assignment_values, special_replacem
         # Return a new string with a different seed. If this also doesn't work, the generator is likely not good.
         print("WARNING: Initial code generation failed. Please verify that your randomization does not cause issues. Seed is:", seed, ". Attempting with new seed.")
         return generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed + 1)
-    return "\n".join(line_list)
+    return new_code_string
 
 def replace_special(special_replacements, code_string):
     for key in special_replacements:
@@ -81,39 +74,4 @@ def replace_values(allowed_assignment_values, line_list):
                 raise Exception("Expected new value on line ", str(i), " to be string. Instead, it is ", str(type(new_val)), ".\n This may have occured because you provided an option for a non-string to be chosen for this value. You still need to write all options as strings for them to be correctly processed. This includes adding other quotations outside of strings. Please see the comments on OPTIONS FOR VALUE ASSIGNMENT.")
             line_list[i] = line[0] + "= " + new_val
     return line_list
-         
-def replace_names(allowed_names, line_list):
-    # generate all the replacement names
-    newNames_dict = {}
-    for key in allowed_names:
-        new_name = None
-        while new_name is None:
-            new_name =  random.choice(allowed_names[key])
-            if callable(new_name):
-                new_name = new_name()
-            elif type(new_name) is list:
-                new_name = random.choice(new_name)
-            # Check that new_name is now a string. If not, throw an error.
-            if type(new_name) != str:
-                raise Exception("Expected new name for variable or function ", key, " to be string. Instead, it is ", type(new_name))
-            # if the new name has already been given to a different variable, we need a different value. 
-            if new_name in newNames_dict.values():
-                new_name = None
-            else:
-                newNames_dict[key] = new_name
-    # modify all variable names in correspondence with what we've generated
-    for i in range(len(line_list)):
-        # This separates the line into non-string and string parts, so > a = b + "hello 'world' " + '' would become ['a = b + ', '"hello \'world\' " + '\'\''].
-        line = line_list[i].split('(\"[^\"]*\"|\'[^\']*\')')
-        # Now further split the line by splitting the line when any character occurs that could not appear in a variable name (not a letter, number, or underscore)
-        split_line = []
-        for part in line:
-            split_line.extend(re.split('([^\w\d_]+)', part))
-        for k in range(len(split_line)):
-            # If this part of the line cannot be a variable/function name, skip it without modifying it. 
-            if re.search('[^\w\d_]+', split_line[k]) is not None:
-                continue
-            if split_line[k] in newNames_dict:
-                split_line[k] = newNames_dict[split_line[k]]
-        line_list[i] = "".join(split_line)
-    return line_list
+
