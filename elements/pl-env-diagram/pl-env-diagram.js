@@ -119,6 +119,7 @@ class Visualizer {
   }
   
   updateAllPointers(thorough) {
+    console.log(this.executionVisualizer)
     for (let pointer of Array.from(this.executionVisualizer.querySelectorAll(".pointerArrow"))) {
       this.updatePointer(pointer, thorough)
     }
@@ -537,6 +538,9 @@ class Visualizer {
     let path = svg.children[0]
     let width = Math.abs(x2 - x1)
     let height = Math.abs(y2 - y1)
+    if (width == 0 && height == 0) {
+      return; // Prevent updating arrows so that they have no height/width.
+    }
     let outerContainerX = Math.min(x1, x2)
     let outerContainerY = Math.min(y1, y2)
     svg.setAttribute("style", "top: " + outerContainerY + "px; left: " + outerContainerX + "px;")
@@ -562,6 +566,8 @@ class Visualizer {
   
   // TODO: fix bug where changing widths mess things up. 
   updatePointer(pointer, thorough) {
+    console.log("Update pointer")
+    console.log(pointer)
     if (pointer == null) {
       return
     }
@@ -816,7 +822,42 @@ window.addEventListener('load', function() {
   viz.initializeStuff()
 
   for (let visualizerDOM of document.querySelectorAll('.ExecutionVisualizerInactive')) {
-    let inactiveViz = new Visualizer(visualizerDOM)
-    inactiveViz.inactiveInitializeStuff()
+    function updateInactive() {
+      let inactiveViz = new Visualizer(visualizerDOM)
+      inactiveViz.inactiveInitializeStuff()
+    }
+
+    let closestCollapse = visualizerDOM.closest(".collapse");
+    if (closestCollapse && !closestCollapse.classList.contains("show")) {
+      // Attach mutation observe to observe when the thing is unhidden. 
+
+      // See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver/observe
+      function callback(mutationList) {
+        mutationList.forEach((mutation) => {
+          switch (mutation.type) {
+            case "attributes":
+              switch (mutation.attributeName) {
+                case "class":
+                  if (closestCollapse.classList.contains("show")) {
+                    observer.disconnect();
+                    updateInactive();
+                  }
+                  break;
+              }
+              break;
+          }
+        });
+      }
+            
+      const observer = new MutationObserver(callback);
+      observer.observe(closestCollapse, {
+        attributeFilter: ["class"]
+      });
+    } 
+
+    let boundingClientRect = visualizerDOM.getBoundingClientRect();
+    if (boundingClientRect.width != 0 && boundingClientRect.height != 0) { // Only update if it is currently rendered
+      updateInactive();
+    }
   }
 });
