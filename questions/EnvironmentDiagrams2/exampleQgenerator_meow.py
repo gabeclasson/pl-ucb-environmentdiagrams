@@ -120,8 +120,13 @@ code_filepath = None #"meow.py"
 
 generateQ = lambda seed : question_gen.generate_question(allowed_names, allowed_assignment_values, special_replacements, code_string, code_filepath, seed)
 
-# These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.
-# You might want to comment them out when you actually run it, because otherwise Prarielearn will show errors.  
+######################################################################
+############################ TESTING #################################
+######################################################################
 
-#result_code_string = generateQ(325)
-#print(result_code_string)
+# These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.  
+
+if __name__ == "__main__":
+    import random
+    result_code_string = generateQ(seed = random.randint(0, 50))
+    print(result_code_string)

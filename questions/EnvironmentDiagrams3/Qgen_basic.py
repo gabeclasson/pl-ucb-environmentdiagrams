@@ -142,6 +142,13 @@ allowed_names = {
     "c": [question_gen.lowercase_letters],
     }
 
-#test = question_gen.testAST(code_string, allowed_names = allowed_names)
-#print(test)
+######################################################################
+############################ TESTING #################################
+######################################################################
 
+# These lines show you a potential result of your problem. We recommend running this file a few times to see if it works how you expect before testing it on Prarielearn.  
+
+if __name__ == "__main__":
+    import random
+    result_code_string = generateQ(seed = random.randint(0, 50))
+    print(result_code_string)
