@@ -32,10 +32,9 @@ import question_gen
 
 allowed_names = {
     # below are our variable names
-    "a": [question_gen.lowercase_letters], 
+    "a": ["x", "y", "z"], 
     "b": [question_gen.lowercase_letters],
-    "c": [question_gen.lowercase_letters],
-    "f": [question_gen.common_function_names], 
+    "f": [question_gen.common_function_names, "k"], 
     }
 
 ######################################################################
@@ -55,9 +54,8 @@ allowed_names = {
     # If you want the new value to include the name of a variable, use the name in the default code. See the example in line 3 below. 
 
 allowed_assignment_values = {
-    0:[question_gen.small_int],
-    1:['"bok"', '"cvijet"', '"morski pas"', '"dan garcia"', '"armando fox"', '"narges norouzi"'],
-    4:["f(b)", "f(a)", "f(9)", "f('plavu')"],
+    0 : [question_gen.small_int],
+    2 : ["1","2","8","9"],
     }
 
 ######################################################################
@@ -83,10 +81,10 @@ special_replacements = {
 
 code_string = """ 
 a = 5
-b = "hello"
-def f(c):
-    return [a, b, c]
-c = f(b)
+def f():
+    a = 8
+    return a + 3
+b = f()
 """ 
 
 # Or as a filepath (from question_gen.py). If you do both, the generator will prioritize the string. 

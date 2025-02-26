@@ -135,7 +135,7 @@ def parse(element_html, data):
     data['submitted_answers'] = structured_answers
     return data
 
-default_global_frame = {'name': None, 'frameIndex': 0, 'var': [], 'parent': None}
+default_global_frame = {"frameIndex":"0"}
 default_submission = {'frame': [default_global_frame], 'heap': {}}
 def render(element_html, data):
     with open("editor.mustache", "r") as f:
