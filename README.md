@@ -1,7 +1,9 @@
-# Welcome!  New here?
+# PL Environment Diagramming Tool
 
-If you're new, please use [this repo's wiki](https://github.com/ace-lab/pl-ucb-csxxx/wiki)
-to get started!
+
+# Front-end only demo
+You can try out a [front-end-only version of our user interface](https://gabeclasson.github.io/pl-ucb-environmentdiagrams/frontend-demo.html),
+which will allow you to create an environment diagram but will not allow you to save or grade it. 
 
 # Did you just have a course created for  you?
 
