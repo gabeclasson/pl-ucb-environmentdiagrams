@@ -1,11 +1,11 @@
 # PL Environment Diagramming Tool
 
 
-# Front-end only demo
+## Front-end only demo
 You can try out a [front-end-only version of our user interface](https://gabeclasson.github.io/pl-ucb-environmentdiagrams/frontend-demo.html),
 which will allow you to create an environment diagram but will not allow you to save or grade it. 
 
-# Did you just have a course created for  you?
+## Did you just have a course created for  you?
 
 If so, this repo was used as a template, and your course repo's name should be `pl-SSS-CCC`, 
 where `SSS` is your project
