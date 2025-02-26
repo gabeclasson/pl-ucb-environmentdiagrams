@@ -3,8 +3,8 @@ This tool allows environment diagramming problems to be hosted and graded on [Pr
 
 Our version of this tool is based on the diagramming and visual conventions of [PythonTutor](https://pythontutor.com/cp/composingprograms.html#mode=edit), a popular program visualization website. The styling of Python Tutor was originally released under an open-source license and is used with permission. 
 
-![An example of our ](https://github.com/user-attachments/assets/ff811f3e-8bed-479d-b099-71590abd2492)
 
+<img src="[https://github.com/favicon.ico](https://github.com/user-attachments/assets/ff811f3e-8bed-479d-b099-71590abd2492)" width="400px" alt="An example problem of our tool on PrairieLearn">
 
 ## Demos
 You can try out a [front-end-only version of our user interface](https://gabeclasson.github.io/pl-ucb-environmentdiagrams/frontend-demo.html),
