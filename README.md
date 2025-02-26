@@ -3,9 +3,14 @@ This tool allows environment diagramming problems to be hosted and graded on [Pr
 
 Our version of this tool is based on the diagramming and visual conventions of [PythonTutor](https://pythontutor.com/cp/composingprograms.html#mode=edit), a popular program visualization website. The styling of Python Tutor was originally released under an open-source license and is used with permission. 
 
-## Front-end only demo
+![An example of our ](https://github.com/user-attachments/assets/ff811f3e-8bed-479d-b099-71590abd2492)
+
+
+## Demos
 You can try out a [front-end-only version of our user interface](https://gabeclasson.github.io/pl-ucb-environmentdiagrams/frontend-demo.html),
 which will allow you to create an environment diagram as a student would but will not allow you to save or grade it. 
+
+We've also created demo videos for both the instructor and the student interfaces, which you can see below. 
 
 ## SIGCSE TS
 We presented a poster about our tool at the SIGCSE Technical Symposium in February 2025. 
