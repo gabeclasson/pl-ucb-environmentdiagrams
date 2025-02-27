@@ -143,8 +143,6 @@ class FrameTree():
         self.framecounter = 0
         self.root = None
 
-        # 
-        #exitlines_pq = exitlines_pq.copy()
         code_list = codestring.split("\n")
 
         # TODO: fix to include correct variable names
