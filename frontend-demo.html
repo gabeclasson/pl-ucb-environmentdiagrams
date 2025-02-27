@@ -1,0 +1,69 @@
+<html>
+    <head></head>
+    <body>
+        
+        <link href="/pl-ucb-environmentdiagrams/elements/pl-env-diagram/pl-env-diagram.css" rel="stylesheet">
+        <script type="text/javascript" src="/pl-ucb-environmentdiagrams/elements/pl-env-diagram/pl-env-diagram.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+        <h1 style="text-align: center;">Frontend-only Demo of Environment Diagramming Tool</h1>
+        <div style="width: 800px; margin-left: auto; margin-right: auto;">
+        <!-- The following below is copied from Prairielearn and should be periodically updated. -->
+
+
+
+
+        <div class="ExecutionVisualizer ExecutionVisualizerActive ">
+            <!-- source: https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="pointerArrowHeadDefSvg">
+        <defs>
+          <!-- A marker to be used as an arrowhead -->
+          <marker id="pointerArrowHead" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+        </defs>
+        </svg>
+        <datalist id="frame-indices">
+          <option value="Global"></option>
+          <option value="f0"></option>
+        </datalist>
+        <div class="vizLayoutTd" id="vizLayoutTdSecond">
+        <div id="dataViz">
+            <table id="stackHeapTable">
+              <tbody>
+              <tr>
+                <td id="stack_td">
+                  <div id="globals_area">
+                    <div id="stackHeader">Frames</div>
+                      <div class="stackFrame removable removablePrimary" id="frame-0">
+                        <label class="frameHeader">Global frame</label>
+                        <table class="stackFrameVarTable"><tbody>
+                        </tbody></table><button class="btn addVarButton" type="button">Add Variable</button></div>
+                </div>
+                <button type="button" class="btn" id="addFrameButton">Add Frame</button>
+                </td>
+                <td id="heap_td">
+                  <div id="heap">
+                    <div id="heapHeader">Objects</div>
+                </div>
+                <button type="button" class="btn" id="addFuncButton">Add Function</button>
+                <button type="button" class="btn" id="addListButton">Add List</button>
+                <button type="button" class="btn" id="addTupleButton">Add Tuple</button>
+                </td>
+            </tr>
+            </tbody></table>
+          </div>
+          </div>
+          </div>
+          <p>This tool is based on Python Tutor: <a href="https://pythontutor.com/">pythontutor.com</a></p>
+
+        <!-- END PL COPY -->
+
+
+
+        </div>
+    </body>
+</html>
+
+
