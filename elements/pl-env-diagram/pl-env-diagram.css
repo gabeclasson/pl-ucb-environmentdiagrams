@@ -590,6 +590,10 @@
     color: #444;
     margin-bottom: 2px;
   }
+
+  div.ExecutionVisualizer .heapObjectHeader {
+    white-space: nowrap;
+  }
   
   div.ExecutionVisualizer .typeLabel {
     display: inline;

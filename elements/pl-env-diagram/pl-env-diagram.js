@@ -349,6 +349,7 @@ class Visualizer {
     topLevelHeapObject.appendChild(heapObject)
 
     let header = document.createElement("div")
+    header.classList.add("heapObjectHeader");
     
     if (typeName instanceof HTMLElement) {
       header.appendChild(typeName)
