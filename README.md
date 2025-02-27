@@ -20,10 +20,3 @@ We presented a poster about our tool at the SIGCSE Technical Symposium in Februa
 * See our poster's [information page on the SIGCSE TS 2025 website](https://sigcse2025.sigcse.org/details/sigcse-ts-2025-posters/164/Dynamic-Randomizable-Autogradable-Visual-Programming-Simulations-for-Python-Using-P)
 
 Noemi Chulo, Gabriel Classon, Ashley Chiu, Dan Garcia, Armando Fox, and Narges Norouzi. 2025. Dynamic, Randomizable, Autogradable Visual Programming Simulations for Python Using Prairielearn. In Proceedings of the 56th ACM Technical Symposium on Computer Science Education V. 2 (SIGCSETS 2025). Association for Computing Machinery, New York, NY, USA, 1419–1420. https://doi.org/10.1145/3641555.3705169
-
-
-**Note:** Although it has become customary to name the primary Git
-branch `main` rather than `master`, **do not do so for PL repos** as
-the server will not be able to sync them.  The server will only sync
-to the `master` branch.
-
