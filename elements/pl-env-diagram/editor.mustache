@@ -84,7 +84,8 @@
                       <input id="heap-func-{{funcIndex}}-position" name="heap-func-{{funcIndex}}-position" class="positionInput" style="display: none;" value="{{position}}">
                       <button class="btn connectButton" type="button" aria-label="Connect pointer to object" style="display: none;"></button>
                       <div class="heapObject">
-                        <div class="heapObjectHeader"><div class="typeLabel">function</div><button class="btn removeButton removeButtonPrimary" type="button"></button></div>
+                        <div class="heapObjectHeader"><div class="typeLabel">function</div>
+                        <button class="btn removeButton removeButtonPrimary" type="button"></button></div>
                         <div class="funcObj">
                           func 
                           <input class="funcNameInput varLengthInput" id="heap-func-{{funcIndex}}-name" name="heap-func-{{funcIndex}}-name" value="{{name}}" {{^show_controls}}disabled{{/show_controls}} style="min-width: {{nameWidth}}ch">

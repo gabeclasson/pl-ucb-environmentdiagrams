@@ -316,6 +316,7 @@ class Visualizer {
     frame.id = "frame-" + index
     
     frame.appendChild(removeframe);
+    frame.append(" ");
     frame.appendChild(frame_name_label);
     frame.appendChild(frame_name);
     frame.appendChild(this.make_parent_marker("label", "frame-" + index));
@@ -359,7 +360,7 @@ class Visualizer {
       typeMarker.className = "typeLabel"
       typeMarker.innerText = typeName
     }
-
+    header.append(" ");
     header.appendChild(this.make_remove_button(false))
 
     heapObject.append(header)
