@@ -32,9 +32,8 @@ class Visualizer {
     } else {
       let returnVal = frame.querySelector(".returnValueTr");
       variables.insertBefore(this.make_variable(frame.id + "-var-" + index), returnVal)
-      this.updatePointerFrom(frame.id + "-return-val", false)
-      this.updateAllPointers()
     }
+    this.updateAllPointers()
   }
 
   make_variable(plKey, returnValue=false) {
