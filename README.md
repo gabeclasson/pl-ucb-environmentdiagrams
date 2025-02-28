@@ -1,5 +1,6 @@
 # PL Environment Diagram Element
 [![Thumbnail of a Youtube Video Featuring an Python Environment Diagram/VPS in the PrairieLearn Tool](//imgur.com/a/ttgG23a)](https://www.youtube.com/watch?v=naG9yE0Ed4M)
+
 <iframe width="560" height="315" src="https://www.youtube.com/embed/naG9yE0Ed4M?si=6AjhmYsQ2ChAr62c" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 This tool allows environment diagramming problems to be hosted and graded on [PrairieLearn](https://www.prairielearn.com/), an online assessment system. Environment diagrams are a kind of interactive program visualization exercise where students are asked to execute a program as a computer would and draw out a diagram representing the state of the computer. 
