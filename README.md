@@ -1,9 +1,5 @@
-# Youtube Demo
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/naG9yE0Ed4M?si=XV0GV2pYpuO2SwQO" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-[![Thumbnail of a Youtube Video Featuring an Python Environment Diagram/VPS in the PrairieLearn Tool](http://img.youtube.com/vi/naG9yE0Ed4M/0.jpg)](https://www.youtube.com/watch?v=naG9yE0Ed4M)
-Click to watch!
+# [Youtube Demo](https://www.youtube.com/watch?v=naG9yE0Ed4M)
+[Click link to view demo.](https://www.youtube.com/watch?v=naG9yE0Ed4M)
 
 # PL Environment Diagram Element
 
