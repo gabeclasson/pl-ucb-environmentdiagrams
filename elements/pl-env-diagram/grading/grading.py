@@ -3,6 +3,7 @@ try:
 except:
     import grading.autoeval as autoeval
 import networkx as nx
+import re
 
 def process_dict(d, keys_to_keep=[], entries_to_add = {}):
     d = {key: d[key] for key in keys_to_keep if key in d}
@@ -13,12 +14,16 @@ def process_dict(d, keys_to_keep=[], entries_to_add = {}):
         d['name'] = d['name'].strip()
     return d
 
+valid_frame_regex = r"f(\n+)"
+
 def convert_parent_index_to_pl_key(parent_index):
     parent_index = parent_index.lower().strip()
-    if parent_index[0] == "g":
+    if parent_index == 'global':
         return "frame-0"
-    else: 
-        return "frame-" + parent_index[1:]
+    matchObj = re.match(valid_frame_regex, parent_index)
+    if matchObj:
+        return "frame-" + matchObj[1]
+    return None
     
 def clean_value(string):
     """Cleans a given value string."""
@@ -45,7 +50,9 @@ def make_graph(env_diagram_obj):
         this_frame_key = "frame-" + frame['frameIndex']
         G.add_node(this_frame_key, **process_dict(frame, ["name"], {'type': 'frame'}))
         if "parent" in frame:
-            G.add_edge(convert_parent_index_to_pl_key(frame['parent']), this_frame_key, type="frame")
+            parent_pl_key = convert_parent_index_to_pl_key(frame['parent'])
+            if parent_pl_key:
+                G.add_edge(parent_pl_key, this_frame_key, type="frame")
         if "var" in frame:
             for binding in frame['var']:
                 binding_key = this_frame_key + "-var-" + str(binding['varIndex'])
@@ -71,7 +78,9 @@ def make_graph(env_diagram_obj):
                 function_key = 'heap-func-' + str(function['funcIndex'])
                 G.add_node(function_key, **process_dict(function, ['name'], {'type': 'func'}))
                 if "parent" in function:
-                    G.add_edge(function_key, convert_parent_index_to_pl_key(function['parent']), type="func")
+                    parent_pl_key = convert_parent_index_to_pl_key(function['parent'])
+                    if parent_pl_key:
+                        G.add_edge(function_key, parent_pl_key, type="func")
     # data1 = nx.node_link_data(G)
     # print(data1)
     return G
