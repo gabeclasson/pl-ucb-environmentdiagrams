@@ -1,5 +1,5 @@
 # PL Environment Diagram Element
-[![Thumbnail of a Youtube Video Featuring an Python Environment Diagram/VPS in the PrairieLearn Tool](https://imgur.com/a/ttgG23a)](https://www.youtube.com/watch?v=naG9yE0Ed4M)
+[![Thumbnail of a Youtube Video Featuring an Python Environment Diagram/VPS in the PrairieLearn Tool](https://imgur.com/a/ttgG23a.png)](https://www.youtube.com/watch?v=naG9yE0Ed4M)
 This tool allows environment diagramming problems to be hosted and graded on [PrairieLearn](https://www.prairielearn.com/), an online assessment system. Environment diagrams are a kind of interactive program visualization exercise where students are asked to execute a program as a computer would and draw out a diagram representing the state of the computer. 
 
 Our version of this tool is based on the diagramming and visual conventions of [PythonTutor](https://pythontutor.com/cp/composingprograms.html#mode=edit), a popular program visualization website. The styling of Python Tutor was originally released under an open-source license and is used with permission. 
