@@ -1,6 +1,9 @@
 # [Youtube Demo](https://www.youtube.com/watch?v=naG9yE0Ed4M)
 [Click link to view demo.](https://www.youtube.com/watch?v=naG9yE0Ed4M)
 
+## Documentation
+You can read documentation about how to use and set up the element on the [wiki](https://github.com/gabeclasson/pl-ucb-environmentdiagrams/wiki). 
+
 # PL Environment Diagram Element
 
 This tool allows environment diagramming problems to be hosted and graded on [PrairieLearn](https://www.prairielearn.com/), an online assessment system. Environment diagrams are a kind of interactive program visualization exercise where students are asked to execute a program as a computer would and draw out a diagram representing the state of the computer. 
@@ -14,9 +17,6 @@ You can try out a [front-end-only version of our user interface](https://gabecla
 which will allow you to create an environment diagram as a student would but will not allow you to save or grade it. 
 
 We've also created demo videos for both the instructor and the student interfaces, which you can see below. 
-
-## Documentation
-You can read documentation about how to use and set up the element on the [wiki](https://github.com/gabeclasson/pl-ucb-environmentdiagrams/wiki). 
 
 ## SIGCSE TS
 We presented a poster about our tool at the SIGCSE Technical Symposium in February 2025. 
